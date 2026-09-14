@@ -13,15 +13,16 @@ from server.api.leica_lab import PackInput, build_pack
 
 class LeicaExportTests(unittest.TestCase):
     def test_pack_is_deterministic_and_every_payload_is_verified(self) -> None:
-        first = build_pack(PackInput(look_ids=[1004, 1001]))
-        second = build_pack(PackInput(look_ids=[1001, 1004]))
+        first = build_pack(PackInput(look_ids=[1204, 1201]))
+        second = build_pack(PackInput(look_ids=[1201, 1204]))
         self.assertEqual(first.body, second.body)
         self.assertEqual(hashlib.sha256(first.body).hexdigest(), first.headers["x-pack-sha256"])
         with zipfile.ZipFile(io.BytesIO(first.body)) as archive:
             names = archive.namelist()
             self.assertEqual(names[0], "manifest.json")
             manifest = json.loads(archive.read("manifest.json"))
-            self.assertEqual([look["id"] for look in manifest["looks"]], [1001, 1004])
+            self.assertEqual([look["id"] for look in manifest["looks"]], [1201, 1204])
+            self.assertEqual([look["name"] for look in manifest["looks"]], ["Silver Grain", "Warm Negative"])
             self.assertTrue(all(look["compile_parse_verified"] for look in manifest["looks"]))
             self.assertEqual(len(names), 11)
             checksum_lines = archive.read("checksums.txt").decode().splitlines()
@@ -42,7 +43,7 @@ class LeicaExportTests(unittest.TestCase):
 
     def test_pack_rejects_duplicate_looks(self) -> None:
         with self.assertRaisesRegex(Exception, "duplicate"):
-            build_pack(PackInput(look_ids=[1004, 1004]))
+            build_pack(PackInput(look_ids=[1204, 1204]))
 
 
 if __name__ == "__main__":

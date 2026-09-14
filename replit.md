@@ -1,4 +1,4 @@
-# Infinite Arch Photo Lab — Persistent Agent Context
+# Film Look Studio — Persistent Agent Context
 
 ## Authority
 
@@ -23,7 +23,7 @@ The actual authoritative v1.2 manifest must override older chat summaries, previ
 
 ## Product direction
 
-Build **Infinite Arch Photo Lab** as a web-first camera-independent color system. Leica and Fuji are target implementations of the same Look families.
+Build **Film Look Studio** as a web-first camera-independent color system. Leica and Fuji are target implementations of generic Look families. Legacy named Looks are internal regression fixtures only.
 
 ## Hard rule
 

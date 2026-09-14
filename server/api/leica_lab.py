@@ -11,10 +11,11 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from core.leica.authoritative import get_authoritative_look, read_look_asset
-from core.color.cube import parse_cube, serialize_leica_cube
+from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cube
 from core.color.film_builder import build_film_cube
 from core.assets.inspect import inspect_source_asset
 from core.film.samples import SAMPLES, get_sample
+from core.film.icons import generic_film_icon
 from core.leica.compiler import compile_look_payload
 from core.leica.package import build_look_package, generated_injector_source, package_readme
 from core.leica.parser import parse_look_payload
@@ -36,6 +37,13 @@ def _source_id(sample_or_fixture_id: int) -> int:
         return get_sample(sample_or_fixture_id)["source_id"]
     except KeyError:
         return sample_or_fixture_id
+
+
+def _source_icon(sample_or_fixture_id: int) -> bytes:
+    try:
+        return generic_film_icon(get_sample(sample_or_fixture_id)["name"])
+    except KeyError:
+        return read_look_asset(sample_or_fixture_id, "icon")
 
 
 def _summary(parsed: dict) -> dict:
@@ -96,7 +104,7 @@ async def compile_payload(
 ):
     source_id = _source_id(source_look_id or look_id)
     try:
-        icon_data = await _read_limited(icon) if icon else read_look_asset(source_id, "icon")
+        icon_data = await _read_limited(icon) if icon else _source_icon(source_look_id or look_id)
         source_cube = await _read_limited(cube) if cube else read_look_asset(source_id, "cube")
         cube_data = serialize_leica_cube(parse_cube(source_cube), look_id, name.strip(), base)
         payload, report = compile_look_payload(look_id, name, icon_data, cube_data, d864, base)
@@ -127,7 +135,7 @@ async def compile_package(
 ):
     source_id = _source_id(source_look_id or look_id)
     try:
-        icon_data = await _read_limited(icon) if icon else read_look_asset(source_id, "icon")
+        icon_data = await _read_limited(icon) if icon else _source_icon(source_look_id or look_id)
         source_cube = await _read_limited(cube) if cube else read_look_asset(source_id, "cube")
         cube_data = serialize_leica_cube(parse_cube(source_cube), look_id, name.strip(), base)
         payload, report = compile_look_payload(look_id, name, icon_data, cube_data, 2, base)
@@ -191,6 +199,20 @@ async def smart_cube(
     )
 
 
+@router.post("/render-cube")
+async def render_custom_cube(
+    image: UploadFile = File(...),
+    cube: UploadFile = File(...),
+):
+    image_data = await _read_limited(image)
+    cube_data = await _read_limited(cube)
+    try:
+        rendered = apply_cube_to_image(image_data, parse_cube(cube_data))
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Could not render custom transform: {exc}") from exc
+    return Response(rendered, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+
 @router.post("/inspect")
 async def inspect_uploaded_payload(payload: UploadFile = File(...)):
     data = await _read_limited(payload)
@@ -243,13 +265,17 @@ def build_pack(pack: PackInput):
             fixture = get_authoritative_look(sample["source_id"])
             look = {**fixture, **sample, "name": sample["name"]}
             cube = serialize_leica_cube(parse_cube(read_look_asset(sample["source_id"], "cube")), look_id, sample["name"], fixture["base"])
-            icon = read_look_asset(sample["source_id"], "icon")
+            icon = generic_film_icon(sample["name"])
             payload, report = compile_look_payload(look_id, sample["name"], icon, cube, 2, fixture["base"])
             slug = _slug(look["name"])
             records.append({
                 **look,
                 "payload": f"looks/{slug}.leica-payload.bin",
                 "payload_sha256": hashlib.sha256(payload).hexdigest(),
+                "cube_sha256": hashlib.sha256(cube).hexdigest(),
+                "cube_bytes": len(cube),
+                "icon_sha256": hashlib.sha256(icon).hexdigest(),
+                "icon_bytes": len(icon),
                 "compile_parse_verified": all(report["verification"].values()),
             })
             artifacts.append((f"looks/{slug}.leica-payload.bin", payload))

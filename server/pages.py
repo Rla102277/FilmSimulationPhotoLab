@@ -72,7 +72,7 @@ def look_building_page() -> HTMLResponse:
     for green in range(17):
         for red in range(17):
             write(red, green, blue)</pre>
-      <p>The project learned this from a deliberately obvious constant-magenta test and corrected IA Presence after an earlier neutral-looking result was traced to the wrong row order.</p>
+      <p>The project confirmed this with a deliberately obvious constant-magenta regression test after an earlier neutral-looking result exposed the wrong row order.</p>
     </section>
 
     <section class="section">
@@ -119,4 +119,35 @@ def look_building_page() -> HTMLResponse:
 </body>
 </html>
 """
+    )
+
+
+def install_guide_page() -> HTMLResponse:
+    return HTMLResponse(
+        """
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera Installation Guide · Film Look Studio</title>
+<style>:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif}*{box-sizing:border-box}body{margin:0;background:#10110e;color:#eeeae1}main{width:min(920px,calc(100% - 32px));margin:auto;padding:54px 0 90px}a{color:#d2b474}h1{font:500 clamp(2.6rem,7vw,5rem)/1 Georgia,serif;margin:16px 0}.lede,p,li{color:#aaa79f;line-height:1.7}.step{margin:18px 0;padding:22px;border:1px solid #302f2a;border-radius:12px;background:#181915}.step b{color:#eeeae1}.warn{padding:18px;border-left:3px solid #d2b474;background:#1b1914}code,pre{color:#e7d3aa;background:#0b0c0a}pre{padding:16px;border-radius:8px;overflow:auto}h2{margin-top:42px;font:500 1.8rem Georgia,serif}</style></head>
+<body><main><a href="/">← Back to Film Look Studio</a><h1>Install a Look on Leica Q3 / Q3 43</h1>
+<p class="lede">These instructions match the injector included in each downloaded package. The website never connects to your camera. The downloaded Python script runs locally and uses the previously proven Leica FOTOS-assisted PTP/IP handoff.</p>
+<p class="warn"><b>Important:</b> This is a reverse-engineered workflow, not an official Leica import method. Charge the camera, do not interrupt a write, and inspect the camera before rerunning after any ambiguous network failure.</p>
+<h2>Before you begin</h2>
+<div class="step"><b>1. Prepare the computer.</b><p>Install Python 3. Extract the entire downloaded ZIP into one folder. Do not move only <code>injector.py</code>; it needs the manifest, CUBE, icon, and payload files beside it.</p></div>
+<div class="step"><b>2. Validate without connecting.</b><pre>cd /path/to/extracted-package
+python3 injector.py --list</pre><p>Continue only if every Look prints <b>PASS</b> and the script ends with “VALIDATION ONLY.” This command performs no camera connection or write.</p></div>
+<div class="step"><b>3. Make room in the camera.</b><p>A Q3-family camera has nine downloadable Look slots in the proven workflow. In Leica FOTOS, remove downloadable Looks you do not need. The injector safely stops if non-matching downloaded Looks are present.</p></div>
+<div class="step"><b>4. Establish the authorized FOTOS state.</b><p>Turn on the camera, enable its normal Leica FOTOS connectivity, and connect with the Leica FOTOS app as you normally do. Confirm FOTOS can see the camera.</p></div>
+<div class="step"><b>5. Keep the camera network connection.</b><p>Keep the computer or Python-capable device on the camera’s network. Force-quit or fully close FOTOS so it releases its sockets while leaving the authenticated camera session in the known working state.</p></div>
+<div class="step"><b>6. Run the local injector.</b><pre>python3 injector.py</pre><p>The script waits for the camera, initializes the inherited session, and stops before writing unless the expected session and current Look table can be read.</p></div>
+<div class="step"><b>7. Watch each verification.</b><p>For each missing Look, the injector uploads once, reads the Look table again, and checks the exact ID, name, type, and base. Success is reported as <b>VERIFIED</b>. A final <b>SUCCESS</b> means the package was installed and re-read.</p></div>
+<div class="step"><b>8. Confirm on the camera.</b><p>Open the Leica Look selection on the camera and confirm the new name and icon appear. Make test photographs before depending on the Look for important work.</p></div>
+<h2>If it stops</h2><ul>
+<li><b>SessionAlreadyOpen / 0x201E:</b> this is expected in the proven FOTOS handoff and is accepted by the injector.</li>
+<li><b>SAFE STOP:</b> no write occurred. Follow the printed instruction, usually removing conflicting downloadable Looks or re-establishing FOTOS.</li>
+<li><b>TIMEOUT BEFORE WRITE:</b> the camera/session was not found; no upload was attempted.</li>
+<li><b>AMBIGUOUS WRITE STATE:</b> do not immediately rerun. Inspect the camera’s Look list first.</li>
+<li><b>0x2001:</b> this is the known successful Leica operation response used by the injector.</li>
+</ul>
+<h2>Fujifilm cameras</h2><p>Leica payloads and the Python injector are not compatible with Fujifilm cameras. Fuji output in this app is a human-readable recipe. Enter supported settings manually in the camera menu and verify them against the exact body and firmware; the app does not claim an automated Fuji installer.</p>
+</main></body></html>"""
     )

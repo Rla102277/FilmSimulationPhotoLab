@@ -5,16 +5,16 @@ from fastapi.responses import FileResponse, HTMLResponse, Response
 from server.api.leica import router as leica_router
 from server.api.leica_lab import router as leica_lab_router
 from server.api.lab import router as lab_router
-from server.pages import look_building_page
+from server.pages import install_guide_page, look_building_page
 
-app = FastAPI(title="Infinite Arch Photo Lab", version="0.1.0")
+app = FastAPI(title="Film Look Studio", version="1.0.0")
 app.include_router(leica_router, prefix="/api")
 app.include_router(leica_lab_router, prefix="/api")
 app.include_router(lab_router, prefix="/api")
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "service": "infinite-arch-photo-lab"}
+    return {"ok": True, "service": "film-look-studio"}
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -25,6 +25,11 @@ def favicon():
 @app.get("/look-building", response_class=HTMLResponse)
 def look_building():
     return look_building_page()
+
+
+@app.get("/install-guide", response_class=HTMLResponse)
+def install_guide():
+    return install_guide_page()
 
 
 WEB_DIST = Path(__file__).resolve().parents[1] / "apps" / "web" / "dist"
@@ -46,7 +51,7 @@ else:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Infinite Arch Photo Lab</title>
+  <title>Film Look Studio</title>
   <style>
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     * { box-sizing: border-box; }
@@ -70,7 +75,7 @@ else:
 <body>
   <main>
     <div class="eyebrow">Server scaffolding</div>
-    <h1>Infinite Arch<br>Photo Lab</h1>
+    <h1>Film Look<br>Studio</h1>
     <p class="lede">A web-based Look development and compilation system. Create, inspect, preview, validate, and download target-specific color files without connecting to a camera.</p>
     <div class="status"><span class="dot"></span><span id="health">Checking service…</span></div>
     <section class="grid">

@@ -1,4 +1,4 @@
-# Infinite Arch Photo Lab
+# Film Look Studio
 
 A browser-based Look development and compilation tool.
 

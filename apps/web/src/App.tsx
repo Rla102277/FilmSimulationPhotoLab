@@ -54,7 +54,7 @@ export function App() {
   const [rendering, setRendering] = useState(false);
   const [recipeMessage, setRecipeMessage] = useState("");
   const [editorName, setEditorName] = useState("");
-  const [editorId, setEditorId] = useState(1004);
+  const [editorId, setEditorId] = useState(1204);
   const [editorBase, setEditorBase] = useState(0);
   const [editorCube, setEditorCube] = useState<File | null>(null);
   const [editorIcon, setEditorIcon] = useState<File | null>(null);
@@ -129,8 +129,9 @@ export function App() {
     setOriginalUrl(URL.createObjectURL(file));
     const form = new FormData();
     form.append("image", file);
+    if (editorCube) form.append("cube", editorCube);
     try {
-      const response = await fetch(`/api/looks/${selected}/render`, { method: "POST", body: form });
+      const response = await fetch(editorCube ? "/api/leica/render-cube" : `/api/looks/${selected}/render`, { method: "POST", body: form });
       if (!response.ok) throw new Error((await response.json()).detail);
       setRenderedUrl(URL.createObjectURL(await response.blob()));
     } catch (reason) {
@@ -326,8 +327,8 @@ export function App() {
             <section className="look-strip" aria-label="Looks">
               {looks.map((look) => (
                 <button className={selected === look.id ? "selected" : ""} onClick={() => setSelected(look.id)} key={look.id}>
-                  <img src={`/api/looks/${look.id}/icon`} alt="" />
-                  <span>{look.name.replace("IA ", "")}</span>
+                  <img src={`/api/looks/${look.id}/icon?v=generic-1`} alt="" />
+                  <span>{look.name}</span>
                   <small>{look.id} · {look.base_name}</small>
                 </button>
               ))}
@@ -357,7 +358,7 @@ export function App() {
                 </article>
                 <article className="preview-panel">
                   <div className="preview-head">
-                    <div><p className="eyebrow">Software preview</p><h3>Approximate the film look</h3></div>
+                    <div><p className="eyebrow">Actual software preview</p><h3>{editorCube ? "Generated transform" : "Selected sample transform"}</h3></div>
                     <label className="upload-button">Choose image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => e.target.files?.[0] && renderImage(e.target.files[0])} /></label>
                   </div>
                   {rendering && <div className="empty-preview">Rendering {detail.name}…</div>}

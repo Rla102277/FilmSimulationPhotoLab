@@ -16,6 +16,7 @@ from core.color.cube import apply_cube_to_image, parse_cube
 from core.color.graph import default_color_graph
 from core.fuji.recipes import load_camera_profiles, validate_recipe
 from core.film.samples import SAMPLES, get_sample
+from core.film.icons import generic_film_icon
 from core.leica.authoritative import (
     archive_inventory,
     get_authoritative_look,
@@ -69,7 +70,7 @@ def look_detail(look_id: int):
         cube_data = read_look_asset(sample["source_id"], "cube")
         cube = parse_cube(cube_data)
         from core.leica.compiler import compile_look_payload
-        payload_bytes, _ = compile_look_payload(look_id, sample["name"], read_look_asset(sample["source_id"], "icon"), cube_data, 2, fixture["base"])
+        payload_bytes, _ = compile_look_payload(look_id, sample["name"], generic_film_icon(sample["name"]), cube_data, 2, fixture["base"])
         payload = inspect_payload(payload_bytes)
     except (KeyError, ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=404 if isinstance(exc, KeyError) else 500, detail=str(exc)) from exc
@@ -94,10 +95,10 @@ def look_detail(look_id: int):
 @router.get("/looks/{look_id}/icon")
 def look_icon(look_id: int):
     try:
-        data = read_look_asset(get_sample(look_id)["source_id"], "icon")
+        data = generic_film_icon(get_sample(look_id)["name"])
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return Response(data, media_type="image/bmp", headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    return Response(data, media_type="image/bmp", headers={"Cache-Control": "no-store"})
 
 
 @router.post("/looks/{look_id}/render")
