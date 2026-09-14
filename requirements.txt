@@ -1,2 +1,4 @@
 # The migration validator and authoritative uploader use Python's standard library.
 # Add web-app dependencies only after the integrity tests pass.
+fastapi>=0.115
+uvicorn[standard]>=0.30

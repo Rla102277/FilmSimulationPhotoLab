@@ -33,3 +33,11 @@ Before changing any working Leica implementation, create a regression test provi
 
 Replit: UI, API, DB, asset metadata, color engine, Look versioning, compilers, job queue.
 Local IA Camera Bridge: direct camera transport only.
+
+## Running on Replit
+
+The main web workflow runs `bash scripts/run.sh`, which starts FastAPI on
+`0.0.0.0:5000`. The preview status page is at `/`, interactive API documentation
+is at `/docs`, and the health endpoint is `/api/health`.
+
+Run `python main.py` separately for the offline migration integrity report.
