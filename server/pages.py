@@ -9,7 +9,7 @@ def look_building_page() -> HTMLResponse:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>How a Look is Built · Infinite Arch Photo Lab</title>
+  <title>How a Look is Built · Film Look Studio</title>
   <style>
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     * { box-sizing: border-box; }
@@ -37,14 +37,14 @@ def look_building_page() -> HTMLResponse:
 </head>
 <body>
   <main>
-    <a class="back" href="/">← Back to Photo Lab</a>
+     <a class="back" href="/">← Back to Film Look Studio</a>
     <div class="eyebrow">Build notes</div>
     <h1>How a Look<br>is built</h1>
     <p class="lede">A Look starts as visual intent, becomes a target-specific color transform, and is complete for download only after the generated payload has been parsed and verified against its requested properties.</p>
 
     <section class="section">
       <h2>One Look, multiple implementations</h2>
-      <p><strong>IA Presence</strong> is the master Look concept. It can have separate implementations for Leica Q3/Q3 43, Fuji X-E5, Fuji GFX50R, software/CUBE, and Lightroom/DCP. The visual family and each camera implementation are versioned separately.</p>
+      <p>A generic film concept can have separate implementations for Leica Q3/Q3 43, Fuji bodies, software/CUBE, and Lightroom/DCP. The visual family and each camera implementation are versioned separately.</p>
     </section>
 
     <section class="section">
@@ -79,7 +79,7 @@ def look_building_page() -> HTMLResponse:
       <h2>4. Package the Leica payload</h2>
       <p>A Leica upload is not just a CUBE file. The known-good payload contains six property records:</p>
       <div class="grid">
-        <div class="card"><h3><code>D861</code></h3><p>Look ID, such as 1004 for IA Presence.</p></div>
+        <div class="card"><h3><code>D861</code></h3><p>The numeric Look ID.</p></div>
         <div class="card"><h3><code>DC44</code></h3><p>UTF-16 Look name.</p></div>
         <div class="card"><h3><code>DC86</code></h3><p>180×90, 1-bit BMP icon.</p></div>
         <div class="card"><h3><code>D860</code></h3><p>Plaintext 17³ CUBE data.</p></div>
@@ -101,7 +101,7 @@ def look_building_page() -> HTMLResponse:
 
     <section class="section">
       <h2>6. Download the validated artifact</h2>
-      <p>Photo Lab returns the verified six-property payload as a downloadable binary. Packs also include the source CUBEs, icons, and a checksum manifest.</p>
+      <p>Film Look Studio returns the verified six-property payload as a downloadable binary. Packs also include the source CUBEs, icons, local injector, instructions, and a checksum manifest.</p>
       <ol>
         <li>Compile the requested fields using the authoritative v1.2 binary representation.</li>
         <li>Parse the newly generated payload.</li>

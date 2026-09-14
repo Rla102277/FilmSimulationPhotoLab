@@ -44,7 +44,7 @@ const api = async <T,>(path: string, options?: RequestInit): Promise<T> => {
 
 export function App() {
   const [looks, setLooks] = useState<Look[]>([]);
-  const [selected, setSelected] = useState<number>(1004);
+  const [selected, setSelected] = useState<number>(1204);
   const [detail, setDetail] = useState<LookDetail | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [view, setView] = useState<"library" | "sources" | "inventory" | "fuji">("library");
@@ -65,6 +65,7 @@ export function App() {
   const [packIds, setPackIds] = useState<number[]>([]);
   const [sourceAssets, setSourceAssets] = useState<SourceAsset[]>([]);
   const [sourceMessage, setSourceMessage] = useState("");
+  const [profileFile, setProfileFile] = useState<File | null>(null);
 
   useEffect(() => {
     api<{ looks: Look[] }>("/api/library")
@@ -216,6 +217,29 @@ export function App() {
     }
   }
 
+  async function buildSmartCube() {
+    if (!description.trim()) {
+      setCompileMessage("Describe the film look you want first.");
+      return;
+    }
+    setCompileMessage("Building a free local film transform…");
+    const form = new FormData();
+    form.append("name", editorName);
+    form.append("look_id", String(editorId));
+    form.append("intent", description);
+    if (profileFile) form.append("profile", profileFile);
+    try {
+      const response = await fetch("/api/leica/smart-cube", { method: "POST", body: form });
+      if (!response.ok) throw new Error((await response.json()).detail);
+      const blob = await response.blob();
+      setEditorCube(new File([blob], `${editorName.replace(/[^a-z0-9]+/gi, "-")}.CUBE`, { type: "text/plain" }));
+      const settings = response.headers.get("X-Film-Settings");
+      setCompileMessage(`LOCAL BUILD READY · ${settings || "bounded film settings"} · now build the package`);
+    } catch (reason) {
+      setCompileMessage(String(reason));
+    }
+  }
+
   async function inspectPayload(file: File) {
     const form = new FormData();
     form.append("payload", file);
@@ -234,7 +258,7 @@ export function App() {
         body: JSON.stringify({ look_ids: packIds }),
       });
       if (!response.ok) throw new Error((await response.json()).detail);
-      saveBlob(await response.blob(), "infinite-arch-leica-look-pack.zip");
+      saveBlob(await response.blob(), "generic-leica-film-look-pack.zip");
     } catch (reason) {
       setError(String(reason));
     }
@@ -264,8 +288,8 @@ export function App() {
     <div className="app-shell">
       <aside>
         <a className="brand" href="/">
-          <span>IA</span>
-          <strong>Infinite Arch<br />Photo Lab</strong>
+          <span>FL</span>
+          <strong>Film Look<br />Studio</strong>
         </a>
         <nav aria-label="Primary">
           {[
@@ -280,8 +304,9 @@ export function App() {
           ))}
         </nav>
         <div className="aside-foot">
-          <span className="online-dot" /> Archive verified
-          <a href="/look-building">How a Look is built</a>
+          <span className="online-dot" /> Compiler verified
+          <a href="/look-building">How Looks are built</a>
+          <a href="/install-guide">Camera installation guide</a>
           <a href="/docs">API documentation</a>
         </div>
       </aside>
@@ -293,11 +318,11 @@ export function App() {
             <header>
               <div>
                 <p className="eyebrow">General-purpose creation tool</p>
-                <h1>Leica Look Factory</h1>
+                <h1>Film Look Studio</h1>
               </div>
               <button className="primary" onClick={startNewLook}>New Look</button>
             </header>
-            <p className="intro">Create an original Leica Look from arbitrary source material. The nine v1.2 Looks below are known-good examples and regression fixtures.</p>
+            <p className="intro">Create an original film-style Leica Look from a description, DCP, Lightroom template, XMP, or CUBE. Samples are generic starting points—not branded recipes.</p>
             <section className="look-strip" aria-label="Looks">
               {looks.map((look) => (
                 <button className={selected === look.id ? "selected" : ""} onClick={() => setSelected(look.id)} key={look.id}>
@@ -312,17 +337,19 @@ export function App() {
                 <article className="hero-panel">
                   <p className="eyebrow">Leica Look Lab</p>
                   <h2>{detail.name}</h2>
-                  <p>Edit a controlled copy of the authoritative record. The v1.2 archive remains unchanged.</p>
+                  <p>Start from this generic film sample, describe your intent, or add a profile/template. The local builder creates the LUT; the Leica compiler verifies the package.</p>
                   <div className="compact-form">
                     <label>Name<input value={editorName} onChange={(event) => setEditorName(event.target.value)} /></label>
                     <label>Custom ID<input type="number" min="1000" value={editorId} onChange={(event) => setEditorId(Number(event.target.value))} /></label>
                     <label>Base<select value={editorBase} onChange={(event) => setEditorBase(Number(event.target.value))}><option value={0}>Standard</option><option value={1}>Monochrome</option></select></label>
                     <label>Primary LUT<input type="file" accept=".cube" onChange={(event) => setEditorCube(event.target.files?.[0] || null)} /></label>
                     <label>Icon BMP<input type="file" accept=".bmp" onChange={(event) => setEditorIcon(event.target.files?.[0] || null)} /></label>
-                    <label className="wide">Visual intent<input value={description} placeholder="Warm documentary color with restrained highlights" onChange={(event) => setDescription(event.target.value)} /></label>
+                    <label className="wide">Describe the film look<input value={description} placeholder="Warm faded negative, soft highlights, muted greens, gentle portrait contrast" onChange={(event) => setDescription(event.target.value)} /></label>
+                    <label className="wide">Optional DCP / XMP / Lightroom template<input type="file" accept=".dcp,.xmp,.lrtemplate" onChange={(event) => setProfileFile(event.target.files?.[0] || null)} /></label>
                     <label className="wide">Source provenance<input value={provenance} onChange={(event) => setProvenance(event.target.value)} /></label>
                   </div>
                   <div className="button-row">
+                    <button className="secondary" onClick={buildSmartCube}>Build film transform</button>
                     <button className="primary" onClick={buildLookPackage}>Build Look package</button>
                     <button className="secondary" onClick={compileAndDownload}>Payload only</button>
                   </div>
@@ -330,7 +357,7 @@ export function App() {
                 </article>
                 <article className="preview-panel">
                   <div className="preview-head">
-                    <div><p className="eyebrow">Software preview</p><h3>Test the authoritative CUBE</h3></div>
+                    <div><p className="eyebrow">Software preview</p><h3>Approximate the film look</h3></div>
                     <label className="upload-button">Choose image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => e.target.files?.[0] && renderImage(e.target.files[0])} /></label>
                   </div>
                   {rendering && <div className="empty-preview">Rendering {detail.name}…</div>}
@@ -383,8 +410,8 @@ export function App() {
 
         {view === "inventory" && (
           <>
-            <header><div><p className="eyebrow">Immutable source record</p><h1>Provenance</h1></div></header>
-            <p className="intro">Every member is read from the authoritative ZIP and classified without modifying the original.</p>
+            <header><div><p className="eyebrow">Internal verification</p><h1>Provenance</h1></div></header>
+            <p className="intro">Internal regression fixtures remain immutable and are used to verify the Leica compiler. They are not public product branding.</p>
             <div className="table-wrap"><table><thead><tr><th>File</th><th>Classification</th><th>Bytes</th><th>SHA-256</th></tr></thead>
               <tbody>{inventory.map((item) => <tr key={item.relative_path}><td>{item.relative_path}</td><td>{item.classification.replaceAll("_", " ")}</td><td>{item.size.toLocaleString()}</td><td><code>{item.sha256.slice(0, 16)}…</code></td></tr>)}</tbody>
             </table></div>
@@ -394,7 +421,7 @@ export function App() {
         {view === "sources" && (
           <>
             <header><div><p className="eyebrow">General-purpose factory</p><h1>Source Library</h1></div></header>
-            <p className="intro">Import arbitrary CUBE, DCP, LRTemplate, XMP, Hald, image, DNG, or RAF material. Originals are preserved by checksum and never replaced by generated derivatives.</p>
+            <p className="intro">Import CUBE, DCP, Lightroom Template, XMP, Hald, image, DNG, or RAF material. DCP and templates can also be supplied directly to the Smart Film Builder. Originals are preserved by checksum.</p>
             <form className="source-upload" onSubmit={uploadSource}>
               <label>Source file<input name="asset" type="file" required accept=".cube,.dcp,.lrtemplate,.xmp,.jpg,.jpeg,.png,.tif,.tiff,.dng,.raf" /></label>
               <label>Provenance<input name="provenance" required minLength={3} placeholder="Source, author, license, and intended use" /></label>

@@ -1,0 +1,1491 @@
+# STOP — PRODUCT DEFINITION CORRECTION
+
+The current implementation is too focused on my existing Infinite Arch recipes.
+
+Those existing recipes are ONLY:
+
+- examples
+- regression fixtures
+- validation material
+- known-good reference implementations
+
+They are NOT the main purpose of the application.
+
+The product I want is a:
+
+# GENERAL-PURPOSE LEICA LOOK CREATION FACTORY
+
+It should allow me to take arbitrary photographic color sources such as:
+
+- DCP profiles
+- .CUBE LUTs
+- Lightroom .lrtemplate files
+- Lightroom / Camera Raw .xmp profiles/presets
+- Hald LUTs
+- reference JPEGs
+- reference TIFFs
+- existing Leica Looks
+- combinations/blends of the above
+
+and use those to CREATE ENTIRELY NEW LEICA LOOKS.
+
+The system must then produce:
+
+1. the generated Leica Look payload/files
+2. a Python injector script that uses the known FOTOS-assisted Leica installation workflow
+3. documentation explaining exactly how the injector works and how to use it
+4. an AI-generated visual sample showing approximately what the Look should look like
+5. a human-readable cheat sheet explaining the Look
+6. optionally a downloadable ZIP containing everything for that Look
+
+The existing Infinite Arch Looks are test cases.
+
+They are not the boundary of the system.
+
+---
+
+# THE REAL USER WORKFLOW
+
+The workflow I want is:
+
+SOURCE MATERIAL
+        ↓
+COLOR ANALYSIS
+        ↓
+LOOK BUILDER
+        ↓
+LEICA COMPILER
+        ↓
+PAYLOAD VALIDATION
+        ↓
+PYTHON FOTOS INJECTOR PACKAGE
+        ↓
+DOCUMENTATION
+        ↓
+AI SAMPLE IMAGE
+        ↓
+CHEAT SHEET
+        ↓
+DOWNLOADABLE LOOK PACKAGE
+
+For example:
+
+I upload:
+
+Kodak Portra 160.dcp
+
+or:
+
+Fuji Pro 400H.cube
+
+or:
+
+Kodak Ektar.lrtemplate
+
+or:
+
+three sources I want blended together
+
+and the system should help me turn that into a new Leica Look.
+
+---
+
+# DO NOT HARDCODE MY LOOKS AS THE PRODUCT
+
+The following:
+
+IA Presence
+IA Invitation
+IA Witness
+etc.
+
+must exist as:
+
+KNOWN-GOOD EXAMPLES
+
+and:
+
+REGRESSION TESTS
+
+but I must be able to create:
+
+"Randy's Weird Kodak/Fuji Mix"
+
+or:
+
+"1970s Ektachrome"
+
+or:
+
+"Bleached Desert"
+
+or:
+
+anything else I invent.
+
+There should be no assumption that Look names, LUTs, IDs, icons or recipes come from the current Infinite Arch collection.
+
+---
+
+# MAJOR FEATURE 1 — SOURCE INGESTION
+
+Create a source-ingestion system.
+
+Supported inputs should include:
+
+## DCP
+
+Read and preserve as much useful information as possible, including where available:
+
+- calibration matrices
+- forward matrices
+- tone curves
+- hue/saturation maps
+- illuminant information
+- camera calibration data
+- profile metadata
+
+Provide a normalized internal representation.
+
+## CUBE LUT
+
+Support common cube dimensions such as:
+
+17
+25
+33
+64
+etc.
+
+Read:
+
+TITLE
+DOMAIN_MIN
+DOMAIN_MAX
+LUT_1D_SIZE
+LUT_3D_SIZE
+
+Validate all data.
+
+## LRTEMPLATE
+
+Parse Lightroom legacy template settings.
+
+Map usable color/tone information into the internal color graph.
+
+## XMP
+
+Parse Adobe Camera Raw / Lightroom profile or preset information.
+
+Extract useful:
+
+- curves
+- color adjustments
+- calibration
+- HSL
+- split toning/color grading
+- profile references
+- WB intent
+- local/global color data where feasible
+
+## HALD
+
+Support Hald CLUT ingestion.
+
+Convert to the internal LUT representation.
+
+## IMAGE REFERENCES
+
+Allow:
+
+SOURCE IMAGE
+
+and:
+
+TARGET IMAGE
+
+or just:
+
+STYLE REFERENCE IMAGE
+
+Use the reference for visual/color analysis.
+
+---
+
+# MAJOR FEATURE 2 — INTERNAL COLOR GRAPH
+
+Do NOT directly convert every source to Leica independently.
+
+Normalize them first into an internal color model.
+
+Call this:
+
+IA COLOR GRAPH
+
+Possible nodes:
+
+INPUT
+↓
+CAMERA NORMALIZATION
+↓
+WHITE BALANCE INTENT
+↓
+MATRIX
+↓
+TONE CURVE
+↓
+HUE/SATURATION TRANSFORM
+↓
+3D LUT
+↓
+SHADOW COLOR
+↓
+MIDTONE COLOR
+↓
+HIGHLIGHT COLOR
+↓
+CHROMA RESPONSE
+↓
+MONOCHROME CONVERSION
+↓
+FILTER RESPONSE
+↓
+GRAIN INTENT
+↓
+OUTPUT
+
+Not every source will contain every node.
+
+Not every Leica target will support every node.
+
+The compiler should translate the best available representation into the Leica-compatible structure.
+
+---
+
+# MAJOR FEATURE 3 — SOURCE BLENDING
+
+This is extremely important.
+
+Allow me to combine multiple color sources.
+
+Example:
+
+70% Portra 160 DCP
++
+20% Ektachrome LUT
++
+10% custom warm-highlight curve
+
+or:
+
+base DCP
++
+film LUT
++
+manual color correction
+
+or:
+
+DCP
++
+LRTemplate
+
+Provide a visual node/stack interface.
+
+Example:
+
+LOOK STACK
+
+1. Leica Standard base
+2. Portra 160 DCP
+3. Ektachrome LUT @ 22%
+4. Warm Highlight adjustment
+5. Cyan Shadow adjustment
+6. Contrast curve
+7. Output normalization
+
+Each component should have:
+
+enabled/disabled
+
+strength
+
+blend mode where appropriate
+
+order
+
+---
+
+# MAJOR FEATURE 4 — MANUAL LOOK DESIGN
+
+Provide controls so I can modify the generated result.
+
+Examples:
+
+- exposure bias
+- black point
+- white point
+- contrast
+- toe
+- shoulder
+- saturation
+- vibrance-like behavior
+- hue rotation
+- individual hue ranges
+- warm/cool shadows
+- warm/cool highlights
+- green/magenta bias
+- color density
+- monochrome conversion
+- simulated yellow/orange/red filter response
+
+This is not intended to be a full Lightroom replacement.
+
+It is a Leica Look creation environment.
+
+---
+
+# MAJOR FEATURE 5 — LEICA COMPILER
+
+The output of the color engine must compile into the known Leica Look structure.
+
+Use the authoritative v1.2 code and prior reverse-engineering as implementation evidence.
+
+Known important Leica fields include:
+
+D861
+DC44
+DC86
+D860
+D864
+D866
+
+Conceptually:
+
+D861 = custom Look ID
+
+DC44 = Look name
+
+DC86 = icon
+
+D860 = LUT/color transform data
+
+D864 = known supporting Leica property/type
+
+D866 = Leica base style
+
+Do NOT assume these six properties are the entire file structure.
+
+Preserve:
+
+- container structure
+- field types
+- lengths
+- ordering where necessary
+- binary encoding
+- LUT format
+- icon format
+- required headers
+- manifests
+- checksums
+- any additional structures proven necessary by v1.2
+
+The existing v1.2 working compiler/parser is ground truth.
+
+---
+
+# MAJOR FEATURE 6 — CUSTOM LOOK ID MANAGEMENT
+
+Allow user-assigned custom IDs.
+
+Provide automatic safe IDs too.
+
+Example:
+
+Suggested ID:
+
+1107
+
+Check:
+
+- not Leica-reserved
+- not already used in current project
+- valid numeric range
+- valid for known working injector format
+
+The system should maintain an ID registry.
+
+---
+
+# MAJOR FEATURE 7 — ICON GENERATOR
+
+Allow:
+
+- reuse existing icon
+- upload custom icon
+- generate icon automatically
+- extract/derive icon from Look characteristics
+
+Show icon preview.
+
+Validate icon structure before compiling.
+
+---
+
+# MAJOR FEATURE 8 — COMPILE → PARSE → VERIFY
+
+Every generated Leica Look must pass a round-trip test.
+
+PROCESS:
+
+desired Look definition
+
+↓
+
+compile Leica payload
+
+↓
+
+parse generated payload
+
+↓
+
+compare parsed values against intended values
+
+Verify:
+
+- ID
+- name
+- icon
+- D860
+- D864
+- D866
+- LUT size
+- expected binary structures
+- checksum/hash where applicable
+
+Only mark:
+
+READY
+
+when validation succeeds.
+
+---
+
+# MAJOR FEATURE 9 — GENERATE THE PYTHON FOTOS INJECTOR
+
+THIS IS A CORE PRODUCT REQUIREMENT.
+
+I do NOT just want a Leica Look file.
+
+I want the application to generate a downloadable Python injector package for the Look or Look pack.
+
+The injector should use the ALREADY PROVEN Leica FOTOS-assisted PTP/IP workflow from the existing Codex/research implementation.
+
+Do not reinvent this protocol.
+
+Use the proven Python implementation as the basis.
+
+The generated injector package should contain something like:
+
+look_name/
+    README.md
+    injector.py
+    manifest.json
+    look_payload/
+        ...
+    checksums.txt
+
+For multiple Looks:
+
+look_pack/
+    README.md
+    injector.py
+    manifest.json
+    looks/
+        look1
+        look2
+        look3
+    checksums.txt
+
+---
+
+# HOW THE PYTHON INJECTOR SHOULD WORK
+
+The injector should implement the known working architecture:
+
+1. Leica FOTOS establishes the authorized camera relationship/session.
+
+2. User leaves the camera/FOTOS state in the known working condition.
+
+3. Python injector connects to the Leica camera using the proven PTP/IP implementation.
+
+4. Reuse/inherit the valid existing FOTOS-authenticated state as demonstrated by existing working code.
+
+5. Perform the known session initialization behavior.
+
+6. Read camera information if required.
+
+7. Read current Look state/table using the known Leica operation.
+
+8. Validate that the camera/session is in the expected state.
+
+9. Upload the generated Look payload using the known write operation.
+
+10. Read the Look table again.
+
+11. Verify:
+
+ID
+
+name
+
+base
+
+and other known fields where possible.
+
+12. Report success/failure clearly.
+
+Do NOT make the user edit binary structures manually.
+
+---
+
+# KNOWN WORKING LEICA PROTOCOL REFERENCE
+
+The historical/research code established working behaviors including:
+
+PTP/IP
+
+camera historically reachable at:
+
+192.168.54.1:15740
+
+known successful operations include:
+
+DeviceInfo:
+
+0x1001
+
+Leica Look table read:
+
+0x9033
+
+Leica Look upload/write:
+
+0x9035
+
+successful response:
+
+0x2001
+
+known surviving-session behavior:
+
+0x201E may indicate SessionAlreadyOpen and can be part of the known FOTOS handoff behavior.
+
+Use the existing proven Codex/Python code.
+
+Do not rebuild this from an imagined specification.
+
+---
+
+# VERY IMPORTANT DISTINCTION
+
+THE WEB SERVER DOES NOT CONNECT TO THE CAMERA.
+
+The Python injector is DOWNLOADED TO THE USER'S LOCAL COMPUTER/DEVICE.
+
+Therefore:
+
+REPLIT:
+
+builds the Look
+
+builds the injector
+
+builds the manifest
+
+builds the documentation
+
+builds the sample image
+
+builds the cheat sheet
+
+packages everything
+
+↓
+
+USER DOWNLOADS ZIP
+
+↓
+
+USER RUNS PYTHON INJECTOR LOCALLY
+
+↓
+
+LOCAL PYTHON CONNECTS TO LEICA/FOTOS/CAMERA
+
+This removes the need for a persistent Camera Bridge while still preserving installation capability.
+
+This is the architecture I want.
+
+---
+
+# NO CLOUD CAMERA BRIDGE
+
+Remove the previous active Camera Bridge concept.
+
+I do NOT want:
+
+Replit
+→ bridge service
+→ camera
+
+Instead:
+
+Replit produces a self-contained local installer.
+
+Architecture:
+
+REPLIT LOOK FACTORY
+
+↓
+
+DOWNLOAD
+
+↓
+
+LOCAL PYTHON INJECTOR
+
+↓
+
+LEICA FOTOS AUTHORIZED SESSION
+
+↓
+
+CAMERA
+
+This is much simpler.
+
+---
+
+# MAJOR FEATURE 10 — GENERATED INSTALL DOCUMENTATION
+
+For every generated Look or Look pack, automatically produce:
+
+README.md
+
+It should contain:
+
+# Look Name
+
+Description
+
+Visual intent
+
+Source material
+
+Source provenance
+
+Leica base
+
+Look ID
+
+Important Leica fields
+
+Expected appearance
+
+Generation date
+
+Compiler version
+
+SHA-256 hashes
+
+## Installation
+
+Exact sequence for using Leica FOTOS and the injector.
+
+Use plain language.
+
+Example structure:
+
+1. Turn on camera.
+2. Connect camera/FOTOS as required by the proven workflow.
+3. Establish normal FOTOS connection.
+4. Place the injector package on local computer/device.
+5. Run:
+
+python3 injector.py
+
+6. Injector verifies connection/session.
+7. Injector reads current Look table.
+8. Injector installs Look.
+9. Injector re-reads Look table.
+10. Injector reports VERIFIED.
+
+The generated documentation should reflect the actual injector code.
+
+Do not generate generic instructions that disagree with the program.
+
+---
+
+# MAJOR FEATURE 11 — AI VISUAL SAMPLE
+
+I want AI to generate a REPRESENTATIVE SAMPLE IMAGE for every Look.
+
+This does not need to pretend to be a mathematically exact camera render.
+
+It should be explicitly labeled:
+
+AI STYLE SAMPLE
+
+The sample should show what the Look is intended to feel like.
+
+Generate a useful photography scene with:
+
+- skin tone
+- blue sky
+- greenery
+- red/orange object
+- shadow detail
+- bright highlight
+- neutral gray/white
+- natural textures
+
+This makes color tendencies easy to see.
+
+Prefer one standardized test scene so Looks can be visually compared.
+
+For example:
+
+a person at a roadside cafe or outdoor market
+
+with:
+
+skin
+
+sky
+
+green plants
+
+red sign
+
+yellow/orange object
+
+white shirt
+
+dark shadow
+
+metal
+
+wood
+
+This creates consistent visual references.
+
+---
+
+# MAJOR FEATURE 12 — REAL SOFTWARE PREVIEW
+
+AI STYLE SAMPLE and actual LUT preview are different.
+
+Support BOTH.
+
+## SOFTWARE PREVIEW
+
+Apply the actual generated transform/LUT to:
+
+- uploaded JPEG
+- TIFF
+- DNG/RAW preview where possible
+
+Label:
+
+ACTUAL SOFTWARE PREVIEW
+
+## AI STYLE SAMPLE
+
+Generated illustrative interpretation.
+
+Label:
+
+AI STYLE SAMPLE
+
+Never confuse the two.
+
+---
+
+# MAJOR FEATURE 13 — CHEAT SHEET
+
+For every Look automatically create a one-page cheat sheet.
+
+Example:
+
+# PORTRA DESERT 01
+
+Look ID:
+1124
+
+Leica Base:
+Standard
+
+STYLE
+
+Warm documentary film color with restrained saturation and gentle highlights.
+
+BEST FOR
+
+✓ people
+✓ travel
+✓ afternoon light
+✓ desert
+✓ street
+✓ overcast portraits
+
+LESS IDEAL FOR
+
+✗ extreme neon
+✗ astrophotography
+✗ scenes needing neutral product color
+
+COLOR
+
+Skin:
+Warm / natural
+
+Greens:
+Muted olive
+
+Blues:
+Soft cyan-blue
+
+Reds:
+Dense but controlled
+
+Shadows:
+Slightly cool
+
+Highlights:
+Warm
+
+CONTRAST
+
+Medium-low
+
+SATURATION
+
+Medium
+
+SOURCE
+
+60% Kodak Portra 160 DCP
+30% Kodak Portra 400 CUBE
+10% custom highlight curve
+
+LEICA PAYLOAD
+
+D861: 1124
+DC44: Portra Desert 01
+D866: Standard
+D860: VALID
+DC86: VALID
+D864: VALID
+
+INSTALL
+
+python3 injector.py
+
+Include QR code / URL to full documentation later if useful.
+
+---
+
+# CHEAT SHEET EXPORTS
+
+Provide:
+
+HTML
+
+Markdown
+
+PNG
+
+PDF eventually
+
+The downloadable package should initially contain:
+
+CHEAT_SHEET.md
+
+CHEAT_SHEET.html
+
+and optionally rendered PNG.
+
+---
+
+# MAJOR FEATURE 14 — LOOK PACKAGE DOWNLOAD
+
+The main output button should be:
+
+BUILD LOOK PACKAGE
+
+Example resulting ZIP:
+
+Portra_Desert_01_Leica_Look.zip
+
+Contents:
+
+README.md
+
+CHEAT_SHEET.md
+
+CHEAT_SHEET.html
+
+AI_STYLE_SAMPLE.jpg
+
+SOFTWARE_PREVIEW.jpg
+
+manifest.json
+
+checksums.txt
+
+injector.py
+
+look/
+    generated Leica Look files
+
+sources/
+    provenance.json
+
+Do NOT necessarily redistribute copyrighted commercial source profiles if licensing does not permit it.
+
+Instead include:
+
+source names
+hashes
+provenance
+derived output
+
+where appropriate.
+
+---
+
+# MAJOR FEATURE 15 — PACK CREATION
+
+Allow several custom Looks to be bundled.
+
+Example:
+
+Randy Japan Pack
+
+Looks:
+
+Tokyo Night
+Portra Alley
+Fuji Neon
+Temple Chrome
+Rain Memory
+
+Generate:
+
+Randy_Japan_Pack.zip
+
+with:
+
+injector.py
+
+pack manifest
+
+all generated Look payloads
+
+individual cheat sheets
+
+AI sample contact sheet
+
+installation README
+
+checksums
+
+The injector should install the selected pack using the existing working Leica method.
+
+---
+
+# MAJOR FEATURE 16 — CONTACT SHEET
+
+For Look packs generate a visual contact sheet.
+
+Example:
+
+------------------------------------------------
+Tokyo Night       Portra Alley      Fuji Neon
+[IMAGE]           [IMAGE]           [IMAGE]
+
+Temple Chrome     Rain Memory
+[IMAGE]           [IMAGE]
+------------------------------------------------
+
+Each image is the standardized AI Style Sample or standardized software test image.
+
+Add Look name underneath.
+
+---
+
+# MAJOR FEATURE 17 — AI LOOK ASSISTANT
+
+Add an AI assistant inside the Look Builder.
+
+Examples of user instructions:
+
+"Make this Portra DCP a little less yellow and give it deeper cyan shadows."
+
+"Blend this Ektachrome template with 20% Velvia but protect skin."
+
+"Make something like 1970s National Geographic."
+
+"Create a Leica Look for Iceland overcast weather."
+
+"Make greens less digital."
+
+"Build me a subtle Kodachrome-inspired Look."
+
+The assistant should translate the request into modifications of the IA Color Graph.
+
+Do not have the AI directly hallucinate binary payloads.
+
+AI edits:
+
+COLOR GRAPH
+
+then deterministic compiler creates:
+
+LEICA PAYLOAD.
+
+---
+
+# CORE SYSTEM ARCHITECTURE
+
+The application therefore becomes:
+
+## 1. SOURCE LIBRARY
+
+DCP
+CUBE
+LRTemplate
+XMP
+Hald
+Images
+Existing Leica Looks
+
+## 2. LOOK BUILDER
+
+Color graph
+
+Blending
+
+Manual adjustments
+
+AI-assisted edits
+
+## 3. LEICA COMPILER
+
+Color Graph
+
+↓
+
+Leica-compatible representation
+
+↓
+
+D861
+DC44
+DC86
+D860
+D864
+D866
+
+plus required container structure.
+
+## 4. VALIDATOR
+
+Compile
+
+Parse
+
+Compare
+
+Validate
+
+## 5. PREVIEW ENGINE
+
+Actual software preview
+
+AI Style Sample
+
+## 6. DOCUMENTATION GENERATOR
+
+README
+
+Cheat sheet
+
+Manifest
+
+Provenance
+
+## 7. INSTALLER GENERATOR
+
+Python FOTOS injector
+
+## 8. PACKAGE BUILDER
+
+Downloadable ZIP
+
+---
+
+# UI
+
+Main navigation should become:
+
+LAB
+
+BUILD
+
+SOURCES
+
+LEICA
+
+PREVIEW
+
+PACKS
+
+LIBRARY
+
+RESEARCH
+
+SETTINGS
+
+---
+
+# BUILD PAGE
+
+Example:
+
+NEW LOOK
+
+Name:
+[________________]
+
+Custom ID:
+[AUTO 1124]
+
+Leica Base:
+[Standard ▼]
+
+ICON
+[Generate]
+[Upload]
+
+SOURCES
+
+[ + Add DCP ]
+[ + Add CUBE ]
+[ + Add LRTemplate ]
+[ + Add XMP ]
+[ + Add Image ]
+
+STACK
+
+1  Portra 160.dcp         65%
+2  Ektachrome.cube        20%
+3  Warm Highlight Node    15%
+
+[ + Add Adjustment ]
+
+AI ASSISTANT
+
+"Make the shadows slightly cooler but keep skin warm."
+
+[APPLY]
+
+------------------------------------------------
+
+PREVIEW
+
+Original | Actual Transform | AI Style Sample
+
+------------------------------------------------
+
+LEICA VALIDATION
+
+D861      VALID
+DC44      VALID
+DC86      VALID
+D860      VALID
+D864      VALID
+D866      VALID
+
+ROUND TRIP:
+
+PASS
+
+------------------------------------------------
+
+[ BUILD LOOK PACKAGE ]
+
+---
+
+# BUILD LOOK PACKAGE ACTION
+
+When clicked:
+
+1. freeze Look definition
+2. assign/version ID
+3. compile Leica payload
+4. parse payload
+5. validate
+6. generate software preview
+7. generate AI sample
+8. generate cheat sheet
+9. generate README
+10. generate manifest
+11. generate checksums
+12. copy/generate Python FOTOS injector
+13. create ZIP
+14. present download
+
+---
+
+# DOCUMENT THE REVERSE ENGINEERING
+
+Create a permanent documentation section:
+
+docs/leica/
+
+At minimum:
+
+LEICA_LOOK_FORMAT.md
+
+LEICA_D_FIELDS.md
+
+FOTOS_HANDOFF.md
+
+PTPIP_TRANSPORT.md
+
+INJECTOR_ARCHITECTURE.md
+
+COMPILER_ARCHITECTURE.md
+
+VALIDATION.md
+
+SOURCE_FORMATS.md
+
+KNOWN_LIMITATIONS.md
+
+V12_REFERENCE.md
+
+Document what is:
+
+CONFIRMED
+
+OBSERVED
+
+INFERRED
+
+UNKNOWN
+
+Do not blur those categories.
+
+Example:
+
+CONFIRMED:
+operation 0x9035 successfully wrote a Look in our tests.
+
+OBSERVED:
+session ID 0x412 occurred in successful traces.
+
+Do not write:
+
+"Leica always uses session 0x412"
+
+unless evidence supports that statement.
+
+---
+
+# KEEP ALL ORIGINAL RESEARCH
+
+Existing Codex work including:
+
+packet captures
+
+Python probes
+
+PTP/IP implementation
+
+Swift experiments
+
+FOTOS traces
+
+Look dumps
+
+generator scripts
+
+v1.2
+
+must remain available under:
+
+research/
+
+reference/
+
+fixtures/
+
+Do not delete them because the production architecture changed.
+
+They are the evidence base for the compiler and injector.
+
+---
+
+# PRIORITY ORDER
+
+## PHASE 1
+
+SOURCE INGESTION
+
+CUBE
+DCP
+LRTemplate
+XMP
+
+## PHASE 2
+
+GENERAL LOOK BUILDER
+
+No dependence on existing Infinite Arch names.
+
+## PHASE 3
+
+LEICA COMPILER
+
+Use v1.2 as regression reference.
+
+## PHASE 4
+
+PYTHON FOTOS INJECTOR GENERATOR
+
+Use existing proven working Python code.
+
+## PHASE 5
+
+LOOK PACKAGE
+
+README
+manifest
+checksums
+injector
+payload
+
+## PHASE 6
+
+SOFTWARE PREVIEW
+
+## PHASE 7
+
+AI STYLE SAMPLE
+
+## PHASE 8
+
+CHEAT SHEET
+
+## PHASE 9
+
+PACK BUILDER
+
+## PHASE 10
+
+AI LOOK ASSISTANT
+
+---
+
+# DEFINITION OF DONE
+
+The system is successful when I can do this:
+
+1. Open the website.
+
+2. Click NEW LOOK.
+
+3. Upload an arbitrary DCP.
+
+4. Add a CUBE LUT.
+
+5. Add an LRTemplate.
+
+6. Blend them.
+
+7. Tell AI:
+
+"Make the shadows cooler and reduce orange saturation."
+
+8. Preview the result.
+
+9. Give it a name:
+
+Iceland Chrome
+
+10. Assign custom ID.
+
+11. Compile it.
+
+12. See:
+
+D861 PASS
+DC44 PASS
+DC86 PASS
+D860 PASS
+D864 PASS
+D866 PASS
+
+13. See round-trip verification PASS.
+
+14. See a software preview.
+
+15. See an AI Style Sample.
+
+16. See the generated cheat sheet.
+
+17. Click:
+
+BUILD LOOK PACKAGE
+
+18. Download a ZIP containing:
+
+generated Leica Look
+
+Python FOTOS injector
+
+README
+
+manifest
+
+hashes
+
+AI style sample
+
+software preview
+
+cheat sheet
+
+19. Locally establish the normal Leica FOTOS authorized connection.
+
+20. Run:
+
+python3 injector.py
+
+21. Injector uses the proven PTP/IP/FOTOS handoff code.
+
+22. Look is written.
+
+23. Look table is read again.
+
+24. Injector verifies the new custom Look.
+
+THAT IS THE PRODUCT.
+
+The Infinite Arch recipes are examples.
+
+The product is the factory.
