@@ -1,0 +1,1 @@
+- [iPhone camera installation](iphone-camera-installation.md) — Leica installation is an iPhone-only FOTOS-to-Python app handoff; do not instruct users to use a computer.
