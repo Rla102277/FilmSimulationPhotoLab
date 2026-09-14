@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from server.api.leica import router as leica_router
+from server.pages import look_building_page
 
 app = FastAPI(title="Infinite Arch Photo Lab", version="0.1.0")
 app.include_router(leica_router, prefix="/api")
@@ -15,6 +16,11 @@ def health():
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     return Response(status_code=204)
+
+
+@app.get("/look-building", response_class=HTMLResponse)
+def look_building():
+    return look_building_page()
 
 
 WEB_DIST = Path(__file__).resolve().parents[1] / "apps" / "web" / "dist"
@@ -75,6 +81,10 @@ else:
       <article class="card">
         <h2>Authoritative Looks</h2>
         <p>Read the nine-Look manifest at <a href="/api/leica/v1.2/looks"><code>/api/leica/v1.2/looks</code></a>.</p>
+      </article>
+      <article class="card">
+        <h2>How a Look is built</h2>
+        <p>Read the documented workflow from visual intent to verified Leica payload on the <a href="/look-building">Look building guide</a>.</p>
       </article>
     </section>
     <div id="looks">Loading authoritative manifest…</div>
