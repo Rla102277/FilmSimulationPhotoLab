@@ -49,8 +49,33 @@ def infer_settings(text: str) -> dict:
     return settings
 
 
-def build_film_cube(intent: str, profile_text: str = "", look_id: int = 1200, name: str = "Custom Film Look") -> tuple[bytes, dict]:
-    settings = infer_settings(f"{intent} {profile_text[:20000]}")
+def normalize_settings(settings: dict) -> dict:
+    bounds = {
+        "exposure": (-0.2, 0.2),
+        "contrast": (0.65, 1.45),
+        "saturation": (0.0, 1.4),
+        "warmth": (-0.12, 0.12),
+        "fade": (0.0, 0.16),
+        "highlight_softness": (0.0, 0.45),
+    }
+    normalized = {}
+    for key, (minimum, maximum) in bounds.items():
+        value = float(settings.get(key, infer_settings("")[key]))
+        normalized[key] = max(minimum, min(maximum, value))
+    normalized["monochrome"] = bool(settings.get("monochrome", False))
+    if normalized["monochrome"]:
+        normalized["saturation"] = 0.0
+    return normalized
+
+
+def build_film_cube(
+    intent: str,
+    profile_text: str = "",
+    look_id: int = 1200,
+    name: str = "Custom Film Look",
+    settings: dict | None = None,
+) -> tuple[bytes, dict]:
+    settings = normalize_settings(settings or infer_settings(f"{intent} {profile_text[:20000]}"))
     axis = np.linspace(0.0, 1.0, 17, dtype=np.float32)
     rows = []
     for blue in axis:

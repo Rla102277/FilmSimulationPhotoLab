@@ -3,7 +3,11 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import re
+import asyncio
+import urllib.error
+import urllib.request
 import zipfile
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -12,7 +16,7 @@ from pydantic import BaseModel, Field
 
 from core.leica.authoritative import get_authoritative_look, read_look_asset
 from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cube
-from core.color.film_builder import build_film_cube
+from core.color.film_builder import build_film_cube, infer_settings
 from core.assets.inspect import inspect_source_asset
 from core.film.samples import SAMPLES, get_sample
 from core.film.icons import generic_film_icon
@@ -44,6 +48,31 @@ def _source_icon(sample_or_fixture_id: int) -> bytes:
         return generic_film_icon(get_sample(sample_or_fixture_id)["name"])
     except KeyError:
         return read_look_asset(sample_or_fixture_id, "icon")
+
+
+def _request_claude(api_key: str, prompt: dict) -> dict:
+    body = json.dumps({
+        "model": "claude-3-5-haiku-latest",
+        "max_tokens": 500,
+        "system": "You are a photographic color scientist. Return only one JSON object matching the requested schema. Do not include markdown. Use restrained, plausible film-style adjustments.",
+        "messages": [{"role": "user", "content": json.dumps(prompt)}],
+    }).encode()
+    request = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=body,
+        method="POST",
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=25) as response:
+        payload = json.loads(response.read())
+    text = payload["content"][0]["text"].strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)
+    return json.loads(text)
 
 
 def _summary(parsed: dict) -> dict:
@@ -185,15 +214,41 @@ async def smart_cube(
             profile_text = data.decode("utf-8", errors="ignore")
         else:
             profile_text = json.dumps(inspection["metadata"], sort_keys=True)
-    cube, settings = build_film_cube(intent, profile_text, look_id, name.strip())
+    method = "local-procedural-v1"
+    settings = infer_settings(f"{intent} {profile_text[:20000]}")
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if api_key:
+        prompt = {
+            "intent": intent,
+            "source_type": source_type or "description",
+            "source_metadata": profile_text[:12000],
+            "required_schema": {
+                "exposure": "number -0.2..0.2",
+                "contrast": "number 0.65..1.45",
+                "saturation": "number 0..1.4",
+                "warmth": "number -0.12..0.12",
+                "fade": "number 0..0.16",
+                "highlight_softness": "number 0..0.45",
+                "monochrome": "boolean",
+                "rationale": "short plain-language string",
+            },
+        }
+        try:
+            settings = await asyncio.to_thread(_request_claude, api_key, prompt)
+            method = "claude-assisted-v1"
+        except (urllib.error.URLError, TimeoutError, KeyError, IndexError, TypeError, ValueError, json.JSONDecodeError):
+            method = "local-procedural-v1-fallback"
+    rationale = str(settings.pop("rationale", "")).strip()[:240]
+    cube, settings = build_film_cube(intent, profile_text, look_id, name.strip(), settings=settings)
     return Response(
         cube,
         media_type="text/plain",
         headers={
             "Content-Disposition": f'attachment; filename="{_slug(name)}.CUBE"',
-            "X-Builder-Method": "local-procedural-v1",
+            "X-Builder-Method": method,
             "X-Source-Type": source_type or "description",
             "X-Film-Settings": json.dumps(settings, separators=(",", ":")),
+            "X-Builder-Rationale": rationale,
             "Cache-Control": "no-store",
         },
     )

@@ -235,7 +235,9 @@ export function App() {
       const blob = await response.blob();
       setEditorCube(new File([blob], `${editorName.replace(/[^a-z0-9]+/gi, "-")}.CUBE`, { type: "text/plain" }));
       const settings = response.headers.get("X-Film-Settings");
-      setCompileMessage(`LOCAL BUILD READY · ${settings || "bounded film settings"} · now build the package`);
+      const method = response.headers.get("X-Builder-Method") || "local-procedural-v1";
+      const rationale = response.headers.get("X-Builder-Rationale");
+      setCompileMessage(`${method.startsWith("claude") ? "CLAUDE-ASSISTED" : "LOCAL"} BUILD READY · ${settings || "bounded film settings"}${rationale ? ` · ${rationale}` : ""} · now build the package`);
     } catch (reason) {
       setCompileMessage(String(reason));
     }
