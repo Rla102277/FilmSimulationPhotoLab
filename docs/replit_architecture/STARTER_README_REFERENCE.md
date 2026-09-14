@@ -43,4 +43,6 @@ The Leica v1.2 system is the proven first target implementation. Fuji is the nex
 
 ## Critical architecture rule
 
-Replit/cloud code cannot directly reach the Leica camera at its private Wi-Fi address. Hardware communication therefore lives in the **IA Camera Bridge**, a small local process on the Mac. The web app and color intelligence live in Replit.
+The web app creates, inspects, previews, translates, validates, and downloads
+Look artifacts. It does not connect to or install onto cameras. Historical
+transport research is preserved outside active product code.

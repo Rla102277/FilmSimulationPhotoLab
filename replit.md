@@ -29,10 +29,14 @@ Build **Infinite Arch Photo Lab** as a web-first camera-independent color system
 
 Before changing any working Leica implementation, create a regression test proving the existing behavior.
 
-## Cloud/local split
+## Product boundary
 
-Replit: UI, API, DB, asset metadata, color engine, Look versioning, compilers, job queue.
-Local IA Camera Bridge: direct camera transport only.
+The product is a web-based Look factory. Keep normal browser-to-FastAPI HTTP.
+Do not add server-side camera networking, pairing, discovery, sessions, reads,
+writes, heartbeat, bridge jobs, or camera status. A download package may include
+a local Python injector derived from the proven v1.2 uploader; it is never
+executed or imported by the web application. Historical transport work belongs
+only under research/reference/legacy paths.
 
 ## Running on Replit
 
@@ -45,12 +49,13 @@ Run `python main.py` separately for the offline migration integrity report.
 
 ## Implemented application boundaries
 
-- The Leica library, inventory, CUBE parser/renderer, payload inspector, Fuji
-  recipe registry, immutable source assets, and bridge jobs are exposed through
-  same-origin `/api` routes.
+- The Leica library, inventory, CUBE parser/renderer, payload compiler/inspector,
+  Fuji recipe registry, immutable source assets, and downloads are exposed
+  through same-origin `/api` routes.
 - Application records use PostgreSQL. Original imported assets are immutable and
   deduplicated by SHA-256.
-- Bridge pairing tickets expire after five minutes. The local bridge initiates
-  outbound authenticated requests and refuses to simulate missing hardware.
+- Generated Leica payloads must compile, parse, and compare successfully before
+  download. v1.2 does not prove an official SD-card import container; do not
+  claim one.
 - Browser preview rendering supports JPEG and TIFF derivatives. It never changes
   the uploaded original or the authoritative archive.

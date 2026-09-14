@@ -13,13 +13,11 @@
 - API endpoint for authoritative manifest.
 - Leica Looks UI.
 - payload/source provenance view.
-- bridge registration and heartbeat.
-- bridge job model.
-- read-only Leica camera Look-table job.
-- parser and UI result.
-- only then write/install.
-- verify after install.
-- pack installation with explicit failure states.
+- six-property parser and field inspector.
+- controlled editor for ID, name, icon, CUBE, and base.
+- compile, parse, and compare every generated payload.
+- individual payload download.
+- deterministic pack download with manifest, hashes, CUBEs, and icons.
 
 ## Phase 2 — Photo Lab renderer
 
@@ -38,12 +36,12 @@
 - Presence as the first high-value cross-camera match.
 - comparison scoring.
 
-## Phase 4 — Fuji native processing
+## Phase 4 — target file exports
 
-- developer-only protocol lab.
-- controlled single-variable X RAW Studio capture/diff experiments.
-- native RAF processing job protocol.
-- camera-generated output retrieval.
+- Fuji human-readable recipe cards and JSON.
+- XMP/DCP conversion outputs where formats are verified.
+- export provenance and checksums.
+- no camera USB/network transport.
 
 ## Phase 5 — automated matching
 

@@ -13,12 +13,12 @@ Paste `AGENT_BOOTSTRAP_PROMPT.md` first. Then have Agent verify the Leica archiv
 Create secrets for:
 
 - APP_SECRET_KEY
-- BRIDGE_SIGNING_SECRET
 - ASSET_SIGNING_SECRET
 - DATABASE_URL (when Replit PostgreSQL is enabled)
 - ADMIN_EMAIL if authentication is added
 
-Do not put camera LAN IPs or credentials in the cloud secrets. Those belong to the local bridge configuration.
+No camera LAN addresses, pairing credentials, or transport secrets are used by
+the active product.
 
 ## Runtime
 
@@ -30,4 +30,5 @@ Treat repository files as source/reference content. Runtime uploads/renders shou
 
 ## Database
 
-Use PostgreSQL early for Look versions, implementations, bridges/jobs, and metadata. Avoid storing multi-megabyte image blobs directly in relational rows; store durable object references/checksums.
+Use PostgreSQL for Look versions, target implementations, source metadata,
+recipes, previews, and export records. There are no bridge/job/session tables.

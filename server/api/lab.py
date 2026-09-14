@@ -23,7 +23,6 @@ from core.leica.authoritative import (
 )
 from core.leica.payload import build_authoritative_payload, inspect_payload
 from server.db.database import engine
-from server.services.bridge_jobs import create_job, get_job
 
 
 router = APIRouter(tags=["photo-lab"])
@@ -36,12 +35,6 @@ class FujiRecipeInput(BaseModel):
     look_id: int | None = None
     settings: dict = Field(default_factory=dict)
     provenance: str = Field(min_length=3, max_length=1000)
-
-
-class BridgeJobInput(BaseModel):
-    job_type: str
-    bridge_id: str | None = None
-    payload: dict = Field(default_factory=dict)
 
 
 @router.get("/library")
@@ -257,18 +250,3 @@ def create_fuji_recipe(recipe: FujiRecipeInput):
     except (KeyError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-
-@router.get("/bridge/jobs/{job_id}")
-def bridge_job(job_id: str):
-    try:
-        return get_job(job_id)
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
-
-@router.post("/bridge/jobs", status_code=201)
-def queue_bridge_job(job: BridgeJobInput):
-    try:
-        return create_job(job.job_type, job.payload, job.bridge_id)
-    except (KeyError, ValueError) as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc

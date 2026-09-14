@@ -3,5 +3,5 @@
   "model": "Q3",
   "family": "Q3",
   "leica_looks": true,
-  "bridge_protocol": "ptpip"
+  "output": "compiled_leica_payload"
 }

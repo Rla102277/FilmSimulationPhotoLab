@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from core.color.cube import parse_cube
+from core.color.cube import parse_cube, parse_hald
 
 
 SUPPORTED_EXTENSIONS = {
@@ -27,7 +27,7 @@ SUPPORTED_EXTENSIONS = {
 
 def inspect_source_asset(filename: str, content: bytes) -> dict:
     extension = Path(filename).suffix.lower()
-    asset_type = SUPPORTED_EXTENSIONS.get(extension)
+    asset_type = "hald" if ".hald." in filename.lower() and extension in {".png", ".tif", ".tiff"} else SUPPORTED_EXTENSIONS.get(extension)
     if not asset_type:
         raise ValueError(f"Unsupported source asset extension: {extension or 'none'}")
     metadata: dict = {"extension": extension}
@@ -43,6 +43,8 @@ def inspect_source_asset(filename: str, content: bytes) -> dict:
         if content[:4] not in {b"II*\x00", b"MM\x00*"}:
             raise ValueError("DCP does not have a TIFF/DNG profile header")
         metadata.update({"container": "TIFF", "byte_order": "little" if content[:2] == b"II" else "big"})
+    elif asset_type == "hald":
+        metadata.update(parse_hald(content).summary())
     elif asset_type == "reference_image":
         from io import BytesIO
 

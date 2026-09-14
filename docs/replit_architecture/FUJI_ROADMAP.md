@@ -18,7 +18,11 @@ The long-term target is to use a connected Fuji camera as the native RAF develop
 
 Workflow:
 
-RAF -> Photo Lab Look -> Fuji parameter translation -> local bridge -> Fuji native development -> camera output -> Photo Lab derivative/storage.
+Photo Lab Look -> target-specific capability mapping -> validated Fuji recipe ->
+human-readable and JSON download.
+
+The active product does not connect to Fuji cameras or invoke native camera RAW
+processing. Protocol work remains research only.
 
 ## Protocol Lab method
 

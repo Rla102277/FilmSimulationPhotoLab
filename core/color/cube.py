@@ -56,11 +56,74 @@ def parse_cube(data: bytes) -> CubeLUT:
             if any(value < 0.0 or value > 1.0 for value in row):
                 raise ValueError("CUBE output values must be in the range 0..1")
             rows.append(row)
-    if size != 17:
-        raise ValueError(f"Expected a Leica 17-cube, found size {size}")
+    if size is None or not 2 <= size <= 256:
+        raise ValueError(f"Invalid or missing LUT_3D_SIZE: {size}")
     if len(rows) != size**3:
         raise ValueError(f"Expected {size**3} rows, found {len(rows)}")
     return CubeLUT(title, size, domain_min, domain_max, np.asarray(rows, dtype=np.float32))
+
+
+def resample_cube(cube: CubeLUT, target_size: int = 17) -> CubeLUT:
+    if not 2 <= target_size <= 256:
+        raise ValueError("Target CUBE size must be between 2 and 256")
+    if cube.size == target_size:
+        return cube
+    axis = np.linspace(0, cube.size - 1, target_size, dtype=np.float32)
+    output = []
+
+    def sample(red: float, green: float, blue: float) -> np.ndarray:
+        low = np.floor([red, green, blue]).astype(int)
+        high = np.minimum(low + 1, cube.size - 1)
+        fr, fg, fb = np.asarray([red, green, blue]) - low
+
+        def value(r: int, g: int, b: int) -> np.ndarray:
+            return cube.values[b * cube.size * cube.size + g * cube.size + r]
+
+        c00 = value(low[0], low[1], low[2]) * (1 - fr) + value(high[0], low[1], low[2]) * fr
+        c01 = value(low[0], low[1], high[2]) * (1 - fr) + value(high[0], low[1], high[2]) * fr
+        c10 = value(low[0], high[1], low[2]) * (1 - fr) + value(high[0], high[1], low[2]) * fr
+        c11 = value(low[0], high[1], high[2]) * (1 - fr) + value(high[0], high[1], high[2]) * fr
+        return (c00 * (1 - fg) + c10 * fg) * (1 - fb) + (c01 * (1 - fg) + c11 * fg) * fb
+
+    for blue in axis:
+        for green in axis:
+            for red in axis:
+                output.append(sample(float(red), float(green), float(blue)))
+    return CubeLUT(cube.title, target_size, cube.domain_min, cube.domain_max, np.asarray(output, dtype=np.float32))
+
+
+def serialize_leica_cube(cube: CubeLUT, look_id: int, name: str, base: int) -> bytes:
+    normalized = resample_cube(cube, 17)
+    values = normalized.values
+    if base == 1:
+        luminance = (
+            values[:, 0:1] * 0.2126
+            + values[:, 1:2] * 0.7152
+            + values[:, 2:3] * 0.0722
+        )
+        values = np.repeat(luminance, 3, axis=1)
+    mode = "Monochrome" if base == 1 else "Standard"
+    lines = [
+        f"#Unique Leica Look ID: {look_id}",
+        f"#Based Filmstyle Mode: {mode}",
+        f'TITLE "{name}"',
+        "LUT_3D_SIZE 17",
+        "DOMAIN_MIN 0.0 0.0 0.0",
+        "DOMAIN_MAX 1.0 1.0 1.0",
+    ]
+    lines.extend(" ".join(f"{float(value):.6f}" for value in row) for row in values)
+    return ("\n".join(lines) + "\n").encode("ascii")
+
+
+def parse_hald(data: bytes) -> CubeLUT:
+    image = Image.open(BytesIO(data)).convert("RGB")
+    if image.width != image.height:
+        raise ValueError("Hald CLUT must be a square image")
+    cube_size = round((image.width * image.height) ** (1 / 3))
+    if cube_size**3 != image.width * image.height:
+        raise ValueError("Image dimensions do not form a complete Hald color cube")
+    values = np.asarray(image, dtype=np.float32).reshape(-1, 3) / 255.0
+    return CubeLUT("Imported Hald CLUT", cube_size, (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), values)
 
 
 def apply_cube_to_image(image_data: bytes, cube: CubeLUT, max_dimension: int = 1600) -> bytes:

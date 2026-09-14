@@ -3,6 +3,6 @@
   "model": "Q3 43",
   "family": "Q3",
   "leica_looks": true,
-  "bridge_protocol": "ptpip",
-  "notes": "Populate firmware-specific details from verified project traces/code."
+  "output": "compiled_leica_payload",
+  "notes": "File-generation target only. The active product does not connect to a camera."
 }

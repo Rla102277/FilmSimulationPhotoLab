@@ -23,19 +23,15 @@ Original photo metadata and immutable storage reference.
 ## renders
 Derived outputs with engine, Look implementation, parameters, checksum.
 
-## bridges
-Paired local bridge identity, last_seen, capabilities, version.
-
-## bridge_jobs
-Queued hardware tasks with status state machine.
-
-Suggested statuses: QUEUED, BRIDGE_RECEIVED, CAMERA_CONNECTED, VALIDATING, RUNNING, VERIFYING, SUCCESS, FAILED, CANCELLED.
-
-## bridge_logs
-Structured logs tied to job and bridge.
-
 ## leica_payloads
 Compiled Leica artifact metadata/checksum/validation.
 
 ## fuji_recipes
 Camera-specific Fuji recipe settings and provenance.
+
+## export_artifacts
+Generated payload, pack, LUT, XMP, or recipe output with source references,
+compiler version, checksum, and validation report.
+
+There are no active Bridge, CameraConnection, CameraHeartbeat, CameraSession, or
+hardware-job models. Camera transport is not part of the product.

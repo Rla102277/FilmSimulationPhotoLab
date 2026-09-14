@@ -3,14 +3,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from server.api.leica import router as leica_router
+from server.api.leica_lab import router as leica_lab_router
 from server.api.lab import router as lab_router
-from server.api.bridge import router as bridge_router
 from server.pages import look_building_page
 
 app = FastAPI(title="Infinite Arch Photo Lab", version="0.1.0")
 app.include_router(leica_router, prefix="/api")
+app.include_router(leica_lab_router, prefix="/api")
 app.include_router(lab_router, prefix="/api")
-app.include_router(bridge_router, prefix="/api")
 
 @app.get("/api/health")
 def health():
@@ -71,7 +71,7 @@ else:
   <main>
     <div class="eyebrow">Server scaffolding</div>
     <h1>Infinite Arch<br>Photo Lab</h1>
-    <p class="lede">A web-first, camera-independent color system. This Replit service hosts the API and authoritative Leica library; direct camera transport remains in the local bridge.</p>
+    <p class="lede">A web-based Look development and compilation system. Create, inspect, preview, validate, and download target-specific color files without connecting to a camera.</p>
     <div class="status"><span class="dot"></span><span id="health">Checking service…</span></div>
     <section class="grid">
       <article class="card">

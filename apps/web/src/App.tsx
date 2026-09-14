@@ -13,7 +13,7 @@ type Look = {
 
 type LookDetail = Look & {
   cube_summary: { title: string; size: number; rows: number; value_min: number; value_max: number; order: string };
-  payload_summary: { bytes: number; sha256: string; field_count: number; fields: Array<{ property: string; name: string; value: unknown }> };
+  payload_summary: { bytes: number; sha256: string; field_count: number; fields: Array<{ property: string; datatype: string; name: string; value: unknown }> };
   provenance: { archive: string; immutable: boolean };
 };
 
@@ -22,6 +22,15 @@ type InventoryItem = {
   size: number;
   sha256: string;
   classification: string;
+};
+
+type SourceAsset = {
+  id: string;
+  filename: string;
+  asset_type: string;
+  size: number;
+  sha256: string;
+  provenance: string;
 };
 
 const api = async <T,>(path: string, options?: RequestInit): Promise<T> => {
@@ -38,13 +47,24 @@ export function App() {
   const [selected, setSelected] = useState<number>(1004);
   const [detail, setDetail] = useState<LookDetail | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [view, setView] = useState<"library" | "inventory" | "fuji" | "bridge">("library");
+  const [view, setView] = useState<"library" | "sources" | "inventory" | "fuji">("library");
   const [error, setError] = useState("");
   const [originalUrl, setOriginalUrl] = useState("");
   const [renderedUrl, setRenderedUrl] = useState("");
   const [rendering, setRendering] = useState(false);
   const [recipeMessage, setRecipeMessage] = useState("");
-  const [jobMessage, setJobMessage] = useState("");
+  const [editorName, setEditorName] = useState("");
+  const [editorId, setEditorId] = useState(1004);
+  const [editorBase, setEditorBase] = useState(0);
+  const [editorCube, setEditorCube] = useState<File | null>(null);
+  const [editorIcon, setEditorIcon] = useState<File | null>(null);
+  const [compileMessage, setCompileMessage] = useState("");
+  const [description, setDescription] = useState("");
+  const [provenance, setProvenance] = useState("Derived from authoritative v1.2 example");
+  const [inspected, setInspected] = useState<Record<string, unknown> | null>(null);
+  const [packIds, setPackIds] = useState<number[]>([]);
+  const [sourceAssets, setSourceAssets] = useState<SourceAsset[]>([]);
+  const [sourceMessage, setSourceMessage] = useState("");
 
   useEffect(() => {
     api<{ looks: Look[] }>("/api/library")
@@ -54,7 +74,15 @@ export function App() {
 
   useEffect(() => {
     if (view === "library") {
-      api<LookDetail>(`/api/looks/${selected}`).then(setDetail).catch((reason) => setError(String(reason)));
+      api<LookDetail>(`/api/looks/${selected}`).then((data) => {
+        setDetail(data);
+        setEditorName(data.name);
+        setEditorId(data.id);
+        setEditorBase(data.mono ? 1 : 0);
+        setEditorCube(null);
+        setEditorIcon(null);
+        setCompileMessage("");
+      }).catch((reason) => setError(String(reason)));
     }
   }, [selected, view]);
 
@@ -66,7 +94,31 @@ export function App() {
     }
   }, [view, inventory.length]);
 
+  useEffect(() => {
+    if (view === "sources") {
+      api<SourceAsset[]>("/api/assets").then(setSourceAssets).catch((reason) => setError(String(reason)));
+    }
+  }, [view]);
+
   const selectedLook = useMemo(() => looks.find((look) => look.id === selected), [looks, selected]);
+
+  useEffect(() => {
+    if (looks.length && packIds.length === 0) setPackIds(looks.map((look) => look.id));
+  }, [looks, packIds.length]);
+
+  function startNewLook() {
+    const used = new Set(looks.map((look) => look.id));
+    let suggested = 1100;
+    while (used.has(suggested)) suggested += 1;
+    setEditorName("Untitled Leica Look");
+    setEditorId(suggested);
+    setEditorBase(0);
+    setEditorCube(null);
+    setEditorIcon(null);
+    setDescription("");
+    setProvenance(`Started from ${selectedLook?.name || "a v1.2 regression example"}`);
+    setCompileMessage("New Look draft · add your own CUBE or use the selected example as a starting transform.");
+  }
 
   async function renderImage(file: File) {
     setRendering(true);
@@ -114,16 +166,97 @@ export function App() {
     }
   }
 
-  async function queueReadJob() {
+  function saveBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function compileAndDownload() {
+    setCompileMessage("Compiling, parsing, and verifying…");
+    const form = new FormData();
+    form.append("look_id", String(editorId));
+    form.append("name", editorName);
+    form.append("base", String(editorBase));
+    form.append("d864", "2");
+    form.append("source_look_id", String(selected));
+    if (editorCube) form.append("cube", editorCube);
+    if (editorIcon) form.append("icon", editorIcon);
     try {
-      const job = await api<{ id: string; status: string }>("/api/bridge/jobs", {
+      const response = await fetch("/api/leica/compile", { method: "POST", body: form });
+      if (!response.ok) throw new Error((await response.json()).detail);
+      saveBlob(await response.blob(), `${editorName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.leica-payload.bin`);
+      setCompileMessage(`VALID · ${response.headers.get("X-Payload-SHA256")?.slice(0, 16)}… · downloaded`);
+    } catch (reason) {
+      setCompileMessage(String(reason));
+    }
+  }
+
+  async function buildLookPackage() {
+    setCompileMessage("Building verified payload, injector, documentation, and checksums…");
+    const form = new FormData();
+    form.append("look_id", String(editorId));
+    form.append("name", editorName);
+    form.append("base", String(editorBase));
+    form.append("source_look_id", String(selected));
+    form.append("description", description);
+    form.append("provenance", provenance);
+    if (editorCube) form.append("cube", editorCube);
+    if (editorIcon) form.append("icon", editorIcon);
+    try {
+      const response = await fetch("/api/leica/package", { method: "POST", body: form });
+      if (!response.ok) throw new Error((await response.json()).detail);
+      saveBlob(await response.blob(), `${editorName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-leica-look-package.zip`);
+      setCompileMessage(`READY · round-trip PASS · package ${response.headers.get("X-Package-SHA256")?.slice(0, 16)}…`);
+    } catch (reason) {
+      setCompileMessage(String(reason));
+    }
+  }
+
+  async function inspectPayload(file: File) {
+    const form = new FormData();
+    form.append("payload", file);
+    try {
+      setInspected(await api<Record<string, unknown>>("/api/leica/inspect", { method: "POST", body: form }));
+    } catch (reason) {
+      setInspected({ validation: "INVALID", error: String(reason) });
+    }
+  }
+
+  async function downloadPack() {
+    try {
+      const response = await fetch("/api/leica/packs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_type: "LEICA_READ_LOOKS", payload: { target_camera: "LEICA_Q3_FAMILY" } }),
+        body: JSON.stringify({ look_ids: packIds }),
       });
-      setJobMessage(`Queued read-only job ${job.id.slice(0, 8)} · ${job.status}`);
+      if (!response.ok) throw new Error((await response.json()).detail);
+      saveBlob(await response.blob(), "infinite-arch-leica-look-pack.zip");
     } catch (reason) {
-      setJobMessage(String(reason));
+      setError(String(reason));
+    }
+  }
+
+  async function uploadSource(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const values = new FormData(formElement);
+    const file = values.get("asset");
+    const sourceProvenance = String(values.get("provenance") || "");
+    if (!(file instanceof File)) return;
+    const body = new FormData();
+    body.append("asset", file);
+    setSourceMessage("Inspecting and preserving immutable source…");
+    try {
+      const result = await api<{ asset_type: string; sha256: string }>(`/api/assets?provenance=${encodeURIComponent(sourceProvenance)}`, { method: "POST", body });
+      setSourceMessage(`${result.asset_type.toUpperCase()} preserved · ${result.sha256.slice(0, 16)}…`);
+      formElement.reset();
+      setSourceAssets(await api<SourceAsset[]>("/api/assets"));
+    } catch (reason) {
+      setSourceMessage(String(reason));
     }
   }
 
@@ -137,9 +270,9 @@ export function App() {
         <nav aria-label="Primary">
           {[
             ["library", "Leica library"],
+            ["sources", "Sources"],
             ["inventory", "Provenance"],
             ["fuji", "Fuji recipes"],
-            ["bridge", "Camera bridge"],
           ].map(([key, label]) => (
             <button className={view === key ? "active" : ""} onClick={() => setView(key as typeof view)} key={key}>
               {label}
@@ -159,11 +292,12 @@ export function App() {
           <>
             <header>
               <div>
-                <p className="eyebrow">Authoritative release · Leica v1.2</p>
-                <h1>The Look Library</h1>
+                <p className="eyebrow">General-purpose creation tool</p>
+                <h1>Leica Look Factory</h1>
               </div>
-              <div className="release-stamp">9 Looks<br /><span>IDs 1001–1009</span></div>
+              <button className="primary" onClick={startNewLook}>New Look</button>
             </header>
+            <p className="intro">Create an original Leica Look from arbitrary source material. The nine v1.2 Looks below are known-good examples and regression fixtures.</p>
             <section className="look-strip" aria-label="Looks">
               {looks.map((look) => (
                 <button className={selected === look.id ? "selected" : ""} onClick={() => setSelected(look.id)} key={look.id}>
@@ -176,20 +310,23 @@ export function App() {
             {detail && selectedLook && (
               <section className="detail-grid">
                 <article className="hero-panel">
-                  <p className="eyebrow">Camera implementation</p>
+                  <p className="eyebrow">Leica Look Lab</p>
                   <h2>{detail.name}</h2>
-                  <p>A verified Leica Q3-family implementation read directly from the immutable v1.2 archive.</p>
-                  <dl>
-                    <div><dt>Base</dt><dd>{detail.base_name}</dd></div>
-                    <div><dt>LUT</dt><dd>{detail.cube_summary.size}³ · {detail.cube_summary.rows.toLocaleString()} rows</dd></div>
-                    <div><dt>Order</dt><dd>{detail.cube_summary.order}</dd></div>
-                    <div><dt>Payload</dt><dd>{detail.payload_summary.bytes.toLocaleString()} bytes</dd></div>
-                  </dl>
-                  <details>
-                    <summary>Checksums and payload fields</summary>
-                    <code>{detail.cube_sha256}</code>
-                    <ul>{detail.payload_summary.fields.map((field) => <li key={field.property}>{field.property} · {field.name}</li>)}</ul>
-                  </details>
+                  <p>Edit a controlled copy of the authoritative record. The v1.2 archive remains unchanged.</p>
+                  <div className="compact-form">
+                    <label>Name<input value={editorName} onChange={(event) => setEditorName(event.target.value)} /></label>
+                    <label>Custom ID<input type="number" min="1000" value={editorId} onChange={(event) => setEditorId(Number(event.target.value))} /></label>
+                    <label>Base<select value={editorBase} onChange={(event) => setEditorBase(Number(event.target.value))}><option value={0}>Standard</option><option value={1}>Monochrome</option></select></label>
+                    <label>Primary LUT<input type="file" accept=".cube" onChange={(event) => setEditorCube(event.target.files?.[0] || null)} /></label>
+                    <label>Icon BMP<input type="file" accept=".bmp" onChange={(event) => setEditorIcon(event.target.files?.[0] || null)} /></label>
+                    <label className="wide">Visual intent<input value={description} placeholder="Warm documentary color with restrained highlights" onChange={(event) => setDescription(event.target.value)} /></label>
+                    <label className="wide">Source provenance<input value={provenance} onChange={(event) => setProvenance(event.target.value)} /></label>
+                  </div>
+                  <div className="button-row">
+                    <button className="primary" onClick={buildLookPackage}>Build Look package</button>
+                    <button className="secondary" onClick={compileAndDownload}>Payload only</button>
+                  </div>
+                  {compileMessage && <p className="message">{compileMessage}</p>}
                 </article>
                 <article className="preview-panel">
                   <div className="preview-head">
@@ -207,6 +344,40 @@ export function App() {
                 </article>
               </section>
             )}
+            {detail && (
+              <section className="lab-tools">
+                <article className="payload-card">
+                  <div><p className="eyebrow">Serialized record</p><h2>Leica payload</h2></div>
+                  <div className="field-list">
+                    {detail.payload_summary.fields.map((field) => (
+                      <div key={field.property}>
+                        <code>{field.property}</code>
+                        <span>{field.name === "type" ? "D864" : field.name}</span>
+                        <strong>{typeof field.value === "object" ? `${(field.value as { bytes: number }).bytes.toLocaleString()} bytes` : String(field.value)}</strong>
+                        <small>{field.datatype}</small>
+                        <b>VALID</b>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="validation-line">Payload VALID · {detail.payload_summary.bytes.toLocaleString()} bytes · compile → parse → verify enforced</p>
+                </article>
+                <article className="inspector-card">
+                  <p className="eyebrow">Existing payload</p>
+                  <h2>Look inspector</h2>
+                  <label className="upload-button">Inspect Leica payload<input type="file" accept=".bin,application/octet-stream" onChange={(event) => event.target.files?.[0] && inspectPayload(event.target.files[0])} /></label>
+                  {inspected && <pre>{JSON.stringify(inspected, null, 2)}</pre>}
+                </article>
+                <article className="pack-card">
+                  <p className="eyebrow">Multi-Look export</p>
+                  <h2>Pack builder</h2>
+                  <div className="pack-options">{looks.map((look) => (
+                    <label key={look.id}><input type="checkbox" checked={packIds.includes(look.id)} onChange={() => setPackIds((current) => current.includes(look.id) ? current.filter((id) => id !== look.id) : [...current, look.id])} />{look.name}</label>
+                  ))}</div>
+                  <button className="primary" disabled={!packIds.length} onClick={downloadPack}>Build and download pack</button>
+                  <p className="muted">ZIP includes verified payload binaries, CUBEs, icons, and a checksum manifest. It does not claim an undocumented SD-card import container.</p>
+                </article>
+              </section>
+            )}
           </>
         )}
 
@@ -217,6 +388,28 @@ export function App() {
             <div className="table-wrap"><table><thead><tr><th>File</th><th>Classification</th><th>Bytes</th><th>SHA-256</th></tr></thead>
               <tbody>{inventory.map((item) => <tr key={item.relative_path}><td>{item.relative_path}</td><td>{item.classification.replaceAll("_", " ")}</td><td>{item.size.toLocaleString()}</td><td><code>{item.sha256.slice(0, 16)}…</code></td></tr>)}</tbody>
             </table></div>
+          </>
+        )}
+
+        {view === "sources" && (
+          <>
+            <header><div><p className="eyebrow">General-purpose factory</p><h1>Source Library</h1></div></header>
+            <p className="intro">Import arbitrary CUBE, DCP, LRTemplate, XMP, Hald, image, DNG, or RAF material. Originals are preserved by checksum and never replaced by generated derivatives.</p>
+            <form className="source-upload" onSubmit={uploadSource}>
+              <label>Source file<input name="asset" type="file" required accept=".cube,.dcp,.lrtemplate,.xmp,.jpg,.jpeg,.png,.tif,.tiff,.dng,.raf" /></label>
+              <label>Provenance<input name="provenance" required minLength={3} placeholder="Source, author, license, and intended use" /></label>
+              <button className="primary" type="submit">Add source</button>
+            </form>
+            {sourceMessage && <p className="message">{sourceMessage}</p>}
+            <div className="source-grid">{sourceAssets.map((asset) => (
+              <article key={asset.id}>
+                <span>{asset.asset_type.replaceAll("_", " ")}</span>
+                <h3>{asset.filename}</h3>
+                <p>{asset.provenance}</p>
+                <code>{asset.sha256.slice(0, 20)}…</code>
+                <a href={`/api/assets/${asset.id}/download`}>Download original</a>
+              </article>
+            ))}</div>
           </>
         )}
 
@@ -240,19 +433,6 @@ export function App() {
           </>
         )}
 
-        {view === "bridge" && (
-          <>
-            <header><div><p className="eyebrow">Outbound local connection only</p><h1>IA Camera Bridge</h1></div></header>
-            <div className="bridge-grid">
-              <article><h2>Safe boundary</h2><p>The Replit service never connects to a camera LAN address. A paired bridge on the local Mac claims validated jobs over an outbound authenticated connection.</p></article>
-              <article><h2>Read before write</h2><p>Camera information and the current Look table must be readable before any Leica installation. An ambiguous write is never retried.</p></article>
-              <article><h2>Verify after write</h2><p>A successful write response is not enough. The bridge must re-read the camera Look table before reporting success.</p></article>
-            </div>
-            <button className="primary" onClick={queueReadJob}>Queue read-only Leica Look-table job</button>
-            {jobMessage && <p className="message">{jobMessage}</p>}
-            <p className="muted">Bridge registration and authenticated claim/heartbeat endpoints are available in the API documentation. Hardware execution requires the local companion process and a camera.</p>
-          </>
-        )}
       </main>
     </div>
   );

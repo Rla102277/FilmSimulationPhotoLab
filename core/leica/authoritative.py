@@ -85,3 +85,12 @@ def read_look_asset(look_id: int, asset: str) -> bytes:
     if hashlib.sha256(data).hexdigest() != expected_hash:
         raise RuntimeError(f"Authoritative {asset} hash mismatch for Look {look_id}")
     return data
+
+
+def read_authoritative_member(relative_path: str) -> bytes:
+    result = verify_authoritative_archive()
+    if not result["ok"]:
+        raise RuntimeError(f"Authoritative Leica archive failed integrity check: {result}")
+    member = ARCHIVE_PREFIX + relative_path.lstrip("/")
+    with zipfile.ZipFile(ARCHIVE) as zf:
+        return zf.read(member)

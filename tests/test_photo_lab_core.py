@@ -12,6 +12,9 @@ from core.leica.authoritative import (
     verify_authoritative_archive,
 )
 from core.leica.payload import build_authoritative_payload, inspect_payload
+from core.leica.compiler import compile_look_payload
+from core.leica.parser import parse_look_payload
+from core.leica.validator import verify_compiled_payload
 
 
 class PhotoLabCoreTests(unittest.TestCase):
@@ -53,6 +56,45 @@ class PhotoLabCoreTests(unittest.TestCase):
             [field["name"] for field in decoded["fields"]],
             ["look_id", "name", "icon", "cube", "type", "base"],
         )
+
+    def test_controlled_edit_compiles_parses_and_verifies(self) -> None:
+        cube = read_look_asset(1004, "cube")
+        icon = read_look_asset(1004, "icon")
+        payload, report = compile_look_payload(
+            1104,
+            "IA Presence Edit",
+            icon,
+            cube,
+            d864=2,
+            base=0,
+        )
+        parsed = parse_look_payload(payload, include_binary=True)
+        self.assertEqual(parsed["look_id"], 1104)
+        self.assertEqual(parsed["name"], "IA Presence Edit")
+        self.assertEqual(parsed["cube"], cube)
+        self.assertEqual(parsed["icon"], icon)
+        self.assertTrue(all(report["verification"].values()))
+        self.assertTrue(
+            verify_compiled_payload(
+                payload,
+                {
+                    "look_id": 1104,
+                    "name": "IA Presence Edit",
+                    "icon": icon,
+                    "cube": cube,
+                    "d864": 2,
+                    "base": 0,
+                },
+            )["valid"]
+        )
+
+    def test_compiler_rejects_unproven_property_values(self) -> None:
+        cube = read_look_asset(1004, "cube")
+        icon = read_look_asset(1004, "icon")
+        with self.assertRaisesRegex(ValueError, "D864"):
+            compile_look_payload(1104, "Invalid Type", icon, cube, d864=3, base=0)
+        with self.assertRaisesRegex(ValueError, "D866"):
+            compile_look_payload(1104, "Invalid Base", icon, cube, d864=2, base=7)
 
 
 if __name__ == "__main__":

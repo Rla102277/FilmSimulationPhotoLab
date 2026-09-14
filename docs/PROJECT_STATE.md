@@ -58,16 +58,20 @@ hard-coded nine-Look assumption; they must not be run as production installers.
 They remain under `source/experimental_legacy_banks/` and `codex_outputs/` for
 forensic comparison only.
 
-## Replit target
+## Historical transport findings
+
+The findings above explain how the six-property format was discovered. They are
+preserved as research and are not active product behavior.
+
+## Replit product
 
 The long-term product is **Infinite Arch Photo Lab**:
 
-- Replit: web UI, Look/version library, asset provenance, checksums, compiler,
-  previews, test fixtures, bridge job queue, Fuji recipe translations.
-- Local IA Camera Bridge: camera discovery, Leica PTP/IP, Fuji transport, upload,
-  reread, verification and logs.
+- React/FastAPI web application
+- Look/version library and immutable asset provenance
+- Leica six-property parser, compiler, inspector, preview, validation, and downloads
+- Fuji capability-aware recipe translation and export
+- CUBE/DCP/LRTemplate/XMP source work and cross-camera matching
 
-The cloud service cannot directly reach `192.168.54.1`. The bridge must initiate
-outbound authenticated communication and camera services must never be exposed
-directly to the public Internet.
+There is no active bridge, camera connection, camera read/write, or install path.
 
