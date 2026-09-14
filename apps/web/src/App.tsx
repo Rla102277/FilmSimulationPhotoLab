@@ -1,469 +1,124 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 
-type Look = {
-  id: number;
-  key: string;
-  name: string;
-  base_name: string;
-  mono: boolean;
-  cube_sha256: string;
-  cube_bytes: number;
-  icon_sha256: string;
-};
-
-type LookDetail = Look & {
-  cube_summary: { title: string; size: number; rows: number; value_min: number; value_max: number; order: string };
-  payload_summary: { bytes: number; sha256: string; field_count: number; fields: Array<{ property: string; datatype: string; name: string; value: unknown }> };
-  provenance: { archive: string; immutable: boolean };
-};
-
-type InventoryItem = {
-  relative_path: string;
-  size: number;
-  sha256: string;
-  classification: string;
-};
-
-type SourceAsset = {
-  id: string;
-  filename: string;
-  asset_type: string;
-  size: number;
-  sha256: string;
-  provenance: string;
-};
+type View = "studio" | "library" | "sources" | "inventory" | "fuji";
+type Component = { id?: string; component_id?: string; type?: string; name?: string; details?: Record<string, unknown>; source?: string; source_id?: string };
+type Source = { id: string; filename?: string; name?: string; type?: string; asset_type?: string; sha256?: string; provenance?: string; components?: Component[] };
+type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
+type Graph = { name: string; version: string; look_id: number; base: string; layers: Layer[]; controls: Record<string, number>; solo?: string | null };
 
 const api = async <T,>(path: string, options?: RequestInit): Promise<T> => {
-  const response = await fetch(path, options);
-  if (!response.ok) {
-    const message = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(message.detail || response.statusText);
+  const res = await fetch(path, options);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || res.statusText);
   }
-  return response.json();
+  return res.json();
 };
+const id = () => Math.random().toString(36).slice(2, 9);
+const initialLayers: Layer[] = [
+  { id: id(), name: "Input Normalization", type: "normalization", enabled: true, strength: 100 },
+  { id: id(), name: "Output Normalize", type: "output", enabled: true, strength: 100 },
+];
+const defaultControls: Record<string, number> = { exposure: 0, contrast: 8, highlights: -12, shadows: 14, whites: 0, blacks: -4, temperature: 3, tint: 0, saturation: -6, vibrance: 12, shadowHue: 205, shadowSat: 6, shadowLum: 0, midHue: 42, midSat: 3, midLum: 0, highlightHue: 38, highlightSat: 8, highlightLum: 0, balance: 0, toe: 16, shoulder: 22, midContrast: 8, blackLift: 3, rolloff: 20, density: 12, monoMix: 0, yellowFilter: 0, orangeFilter: 0, redFilter: 0, greenFilter: 0 };
+const toApiGraph = (graph: Graph): Graph => ({ ...graph, solo: graph.solo || null });
 
 export function App() {
-  const [looks, setLooks] = useState<Look[]>([]);
-  const [selected, setSelected] = useState<number>(1204);
-  const [detail, setDetail] = useState<LookDetail | null>(null);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [view, setView] = useState<"library" | "sources" | "inventory" | "fuji">("library");
-  const [error, setError] = useState("");
+  const [view, setView] = useState<View>("studio");
+  const [graph, setGraph] = useState<Graph>({ name: "Iceland Chrome", version: "v1.2", look_id: 1142, base: "Standard", layers: initialLayers, controls: defaultControls, solo: null });
+  const [history, setHistory] = useState<Graph[]>([]);
+  const [future, setFuture] = useState<Graph[]>([]);
+  const [snapshots, setSnapshots] = useState<{ name: string; graph: Graph }[]>([]);
+  const [selectedLayer, setSelectedLayer] = useState<string>(initialLayers[0].id);
+  const [solo, setSolo] = useState<string | null>(null);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [sourceSearch, setSourceSearch] = useState("");
+  const [sourceType, setSourceType] = useState("");
+  const [openSource, setOpenSource] = useState<string | null>(null);
+  const [sourceError, setSourceError] = useState("");
+  const [image, setImage] = useState<File | null>(null);
   const [originalUrl, setOriginalUrl] = useState("");
-  const [renderedUrl, setRenderedUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewMode, setPreviewMode] = useState<"wipe" | "side">("wipe");
+  const [wipe, setWipe] = useState(50);
   const [rendering, setRendering] = useState(false);
-  const [recipeMessage, setRecipeMessage] = useState("");
-  const [editorName, setEditorName] = useState("");
-  const [editorId, setEditorId] = useState(1204);
-  const [editorBase, setEditorBase] = useState(0);
-  const [editorCube, setEditorCube] = useState<File | null>(null);
-  const [editorIcon, setEditorIcon] = useState<File | null>(null);
-  const [compileMessage, setCompileMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [provenance, setProvenance] = useState("Derived from authoritative v1.2 example");
-  const [inspected, setInspected] = useState<Record<string, unknown> | null>(null);
-  const [packIds, setPackIds] = useState<number[]>([]);
-  const [sourceAssets, setSourceAssets] = useState<SourceAsset[]>([]);
-  const [sourceMessage, setSourceMessage] = useState("");
-  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [zoom, setZoom] = useState<"fit" | "100">("fit");
+  const [message, setMessage] = useState("");
+  const [snapshotName, setSnapshotName] = useState("");
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
+  const timer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    api<{ looks: Look[] }>("/api/library")
-      .then((data) => setLooks(data.looks))
-      .catch((reason) => setError(String(reason)));
-  }, []);
-
+    if (view !== "studio" && view !== "sources") return;
+    const query = new URLSearchParams({ search: sourceSearch, type: sourceType });
+    api<Source[] | { sources: Source[] }>(`/api/studio/sources?${query}`).then((data) => setSources(Array.isArray(data) ? data : data.sources)).catch((e) => setSourceError(String(e)));
+  }, [view, sourceSearch, sourceType]);
   useEffect(() => {
-    if (view === "library") {
-      api<LookDetail>(`/api/looks/${selected}`).then((data) => {
-        setDetail(data);
-        setEditorName(data.name);
-        setEditorId(data.id);
-        setEditorBase(data.mono ? 1 : 0);
-        setEditorCube(null);
-        setEditorIcon(null);
-        setCompileMessage("");
-      }).catch((reason) => setError(String(reason)));
-    }
-  }, [selected, view]);
-
+    api<Record<string, unknown>>("/api/studio/graph/status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }).then(setStatus).catch(() => setStatus(null));
+  }, [graph]);
   useEffect(() => {
-    if (view === "inventory" && inventory.length === 0) {
-      api<{ items: InventoryItem[] }>("/api/inventory")
-        .then((data) => setInventory(data.items))
-        .catch((reason) => setError(String(reason)));
-    }
-  }, [view, inventory.length]);
+    if (!image) return;
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(async () => {
+      setRendering(true);
+      const form = new FormData(); form.append("image", image); form.append("graph", JSON.stringify(toApiGraph({ ...graph, solo })));
+      try { const res = await fetch("/api/studio/graph/preview", { method: "POST", body: form }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "Preview renderer unavailable"); } const nextUrl = URL.createObjectURL(await res.blob()); setPreviewUrl((old) => { if (old) URL.revokeObjectURL(old); return nextUrl; }); } catch (e) { setMessage(String(e)); } finally { setRendering(false); }
+    }, 280);
+    return () => window.clearTimeout(timer.current);
+  }, [graph, image]);
 
-  useEffect(() => {
-    if (view === "sources") {
-      api<SourceAsset[]>("/api/assets").then(setSourceAssets).catch((reason) => setError(String(reason)));
-    }
-  }, [view]);
-
-  const selectedLook = useMemo(() => looks.find((look) => look.id === selected), [looks, selected]);
-
-  useEffect(() => {
-    if (looks.length && packIds.length === 0) setPackIds(looks.map((look) => look.id));
-  }, [looks, packIds.length]);
-
-  function startNewLook() {
-    const used = new Set(looks.map((look) => look.id));
-    let suggested = 1100;
-    while (used.has(suggested)) suggested += 1;
-    setEditorName("Untitled Leica Look");
-    setEditorId(suggested);
-    setEditorBase(0);
-    setEditorCube(null);
-    setEditorIcon(null);
-    setDescription("");
-    setProvenance(`Started from ${selectedLook?.name || "a v1.2 regression example"}`);
-    setCompileMessage("New Look draft · add your own CUBE or use the selected example as a starting transform.");
+  const displayedLayers = useMemo(() => solo ? graph.layers.map((l) => ({ ...l, enabled: l.id === solo || l.type === "normalization" || l.type === "output" })) : graph.layers, [graph.layers, solo]);
+  function mutate(next: Graph) { setHistory((h) => [...h.slice(-29), graph]); setFuture([]); setGraph(next); }
+  function setSoloLayer(layerId: string | null) { setSolo(layerId); setGraph((current) => ({ ...current, solo: layerId })); }
+  function updateLayer(layerId: string, patch: Partial<Layer>) { mutate({ ...graph, layers: graph.layers.map((l) => l.id === layerId ? { ...l, ...patch } : l) }); }
+  function updateControl(key: string, value: number) { mutate({ ...graph, controls: { ...graph.controls, [key]: value } }); }
+  function moveLayer(layerId: string, delta: number) { const at = graph.layers.findIndex((l) => l.id === layerId); const to = at + delta; if (at < 0 || to < 0 || to >= graph.layers.length) return; const layers = [...graph.layers]; [layers[at], layers[to]] = [layers[to], layers[at]]; mutate({ ...graph, layers }); }
+  function undo() { const previous = history.at(-1); if (!previous) return; setFuture((f) => [graph, ...f]); setHistory((h) => h.slice(0, -1)); setGraph(previous); }
+  function redo() { const next = future[0]; if (!next) return; setHistory((h) => [...h, graph]); setFuture((f) => f.slice(1)); setGraph(next); }
+  function addComponent(component: Component, source?: Source) {
+    const name = component.name || component.component_id || component.type || "Source component";
+    const layer: Layer = { id: id(), name, type: (component.type || "component").toLowerCase(), source: source?.filename || source?.name, source_id: component.source_id || source?.id, component_id: component.component_id || component.id, enabled: true, strength: 100 };
+    mutate({ ...graph, layers: [...graph.layers.slice(0, -1), layer, graph.layers.at(-1)!] }); setSelectedLayer(layer.id); setMessage(`${name} added to the live graph`);
   }
-
-  async function renderImage(file: File) {
-    setRendering(true);
-    setError("");
-    if (originalUrl) URL.revokeObjectURL(originalUrl);
-    if (renderedUrl) URL.revokeObjectURL(renderedUrl);
-    setOriginalUrl(URL.createObjectURL(file));
-    const form = new FormData();
-    form.append("image", file);
-    if (editorCube) form.append("cube", editorCube);
-    try {
-      const response = await fetch(editorCube ? "/api/leica/render-cube" : `/api/looks/${selected}/render`, { method: "POST", body: form });
-      if (!response.ok) throw new Error((await response.json()).detail);
-      setRenderedUrl(URL.createObjectURL(await response.blob()));
-    } catch (reason) {
-      setError(String(reason));
-    } finally {
-      setRendering(false);
-    }
+  async function uploadSources(event: ChangeEvent<HTMLInputElement>) {
+    const files = event.target.files; if (!files?.length) return;
+    const form = new FormData(); Array.from(files).forEach((f) => form.append("files", f)); form.append("provenance", "Uploaded to Film Look Studio source library");
+    setMessage(`Ingesting ${files.length} source${files.length > 1 ? "s" : ""}…`);
+    try { await api("/api/studio/sources/bulk", { method: "POST", body: form }); setMessage("Sources catalogued; duplicates are preserved by SHA-256 rules."); setSourceSearch(sourceSearch); } catch (e) { setMessage(String(e)); }
   }
+  async function buildCube() { try { const res = await fetch("/api/studio/graph/cube", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "CUBE export failed"); } download(await res.blob(), `${graph.name}.cube`); } catch (e) { setMessage(String(e)); } }
+  async function buildPackage() { try { const form = new FormData(); form.append("graph", JSON.stringify(toApiGraph({ ...graph, solo }))); form.append("name", graph.name); form.append("look_id", String(graph.look_id)); form.append("base", graph.base); form.append("description", "Non-destructive creative graph from Film Look Studio"); const res = await fetch("/api/studio/graph/package", { method: "POST", body: form }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "Package build failed"); } download(await res.blob(), `${graph.name.replace(/\s+/g, "-").toLowerCase()}-package.zip`); setMessage("Package ready: payload, injector, documentation and checksums."); } catch (e) { setMessage(String(e)); } }
+  function download(blob: Blob, name: string) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
+  function chooseImage(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; if (originalUrl) URL.revokeObjectURL(originalUrl); setImage(file); setOriginalUrl(URL.createObjectURL(file)); }
+  async function openSourceDetails(source: Source) { setOpenSource(openSource === source.id ? null : source.id); if (!source.components) { try { const detail = await api<Source>(`/api/studio/sources/${source.id}`); setSources((all) => all.map((s) => s.id === source.id ? detail : s)); } catch (e) { setSourceError(String(e)); } } }
 
-  async function saveRecipe(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const settings = Object.fromEntries(
-      ["film_simulation", "dynamic_range", "highlight", "shadow", "color", "white_balance_mode"]
-        .map((key) => [key, String(form.get(key) || "").trim()])
-        .filter(([, value]) => value),
-    );
-    try {
-      const result = await api<{ id: string; warning: string }>("/api/fuji/recipes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.get("name"),
-          camera_profile_id: form.get("camera"),
-          look_id: selected,
-          settings,
-          provenance: form.get("provenance"),
-        }),
-      });
-      setRecipeMessage(`Saved experimental recipe ${result.id.slice(0, 8)}. ${result.warning}`);
-      event.currentTarget.reset();
-    } catch (reason) {
-      setRecipeMessage(String(reason));
-    }
-  }
-
-  function saveBlob(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  async function compileAndDownload() {
-    setCompileMessage("Compiling, parsing, and verifying…");
-    const form = new FormData();
-    form.append("look_id", String(editorId));
-    form.append("name", editorName);
-    form.append("base", String(editorBase));
-    form.append("d864", "2");
-    form.append("source_look_id", String(selected));
-    if (editorCube) form.append("cube", editorCube);
-    if (editorIcon) form.append("icon", editorIcon);
-    try {
-      const response = await fetch("/api/leica/compile", { method: "POST", body: form });
-      if (!response.ok) throw new Error((await response.json()).detail);
-      saveBlob(await response.blob(), `${editorName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.leica-payload.bin`);
-      setCompileMessage(`VALID · ${response.headers.get("X-Payload-SHA256")?.slice(0, 16)}… · downloaded`);
-    } catch (reason) {
-      setCompileMessage(String(reason));
-    }
-  }
-
-  async function buildLookPackage() {
-    setCompileMessage("Building verified payload, injector, documentation, and checksums…");
-    const form = new FormData();
-    form.append("look_id", String(editorId));
-    form.append("name", editorName);
-    form.append("base", String(editorBase));
-    form.append("source_look_id", String(selected));
-    form.append("description", description);
-    form.append("provenance", provenance);
-    if (editorCube) form.append("cube", editorCube);
-    if (editorIcon) form.append("icon", editorIcon);
-    try {
-      const response = await fetch("/api/leica/package", { method: "POST", body: form });
-      if (!response.ok) throw new Error((await response.json()).detail);
-      saveBlob(await response.blob(), `${editorName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-leica-look-package.zip`);
-      setCompileMessage(`READY · round-trip PASS · package ${response.headers.get("X-Package-SHA256")?.slice(0, 16)}…`);
-    } catch (reason) {
-      setCompileMessage(String(reason));
-    }
-  }
-
-  async function buildSmartCube() {
-    if (!description.trim()) {
-      setCompileMessage("Describe the film look you want first.");
-      return;
-    }
-    setCompileMessage("Building a free local film transform…");
-    const form = new FormData();
-    form.append("name", editorName);
-    form.append("look_id", String(editorId));
-    form.append("intent", description);
-    if (profileFile) form.append("profile", profileFile);
-    try {
-      const response = await fetch("/api/leica/smart-cube", { method: "POST", body: form });
-      if (!response.ok) throw new Error((await response.json()).detail);
-      const blob = await response.blob();
-      setEditorCube(new File([blob], `${editorName.replace(/[^a-z0-9]+/gi, "-")}.CUBE`, { type: "text/plain" }));
-      const settings = response.headers.get("X-Film-Settings");
-      const method = response.headers.get("X-Builder-Method") || "local-procedural-v1";
-      const rationale = response.headers.get("X-Builder-Rationale");
-      setCompileMessage(`${method.startsWith("claude") ? "CLAUDE-ASSISTED" : "LOCAL"} BUILD READY · ${settings || "bounded film settings"}${rationale ? ` · ${rationale}` : ""} · now build the package`);
-    } catch (reason) {
-      setCompileMessage(String(reason));
-    }
-  }
-
-  async function inspectPayload(file: File) {
-    const form = new FormData();
-    form.append("payload", file);
-    try {
-      setInspected(await api<Record<string, unknown>>("/api/leica/inspect", { method: "POST", body: form }));
-    } catch (reason) {
-      setInspected({ validation: "INVALID", error: String(reason) });
-    }
-  }
-
-  async function downloadPack() {
-    try {
-      const response = await fetch("/api/leica/packs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ look_ids: packIds }),
-      });
-      if (!response.ok) throw new Error((await response.json()).detail);
-      saveBlob(await response.blob(), "generic-leica-film-look-pack.zip");
-    } catch (reason) {
-      setError(String(reason));
-    }
-  }
-
-  async function uploadSource(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formElement = event.currentTarget;
-    const values = new FormData(formElement);
-    const file = values.get("asset");
-    const sourceProvenance = String(values.get("provenance") || "");
-    if (!(file instanceof File)) return;
-    const body = new FormData();
-    body.append("asset", file);
-    setSourceMessage("Inspecting and preserving immutable source…");
-    try {
-      const result = await api<{ asset_type: string; sha256: string }>(`/api/assets?provenance=${encodeURIComponent(sourceProvenance)}`, { method: "POST", body });
-      setSourceMessage(`${result.asset_type.toUpperCase()} preserved · ${result.sha256.slice(0, 16)}…`);
-      formElement.reset();
-      setSourceAssets(await api<SourceAsset[]>("/api/assets"));
-    } catch (reason) {
-      setSourceMessage(String(reason));
-    }
-  }
-
-  return (
-    <div className="app-shell">
-      <aside>
-        <a className="brand" href="/">
-          <span>FL</span>
-          <strong>Film Look<br />Studio</strong>
-        </a>
-        <nav aria-label="Primary">
-          {[
-            ["library", "Leica library"],
-            ["sources", "Sources"],
-            ["inventory", "Provenance"],
-            ["fuji", "Fuji recipes"],
-          ].map(([key, label]) => (
-            <button className={view === key ? "active" : ""} onClick={() => setView(key as typeof view)} key={key}>
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="aside-foot">
-          <span className="online-dot" /> Compiler verified
-          <a href="/look-building">How Looks are built</a>
-          <a href="/install-guide">Camera installation guide</a>
-          <a href="/docs">API documentation</a>
-        </div>
-      </aside>
-
-      <main>
-        {error && <div className="error" role="alert">{error}</div>}
-        {view === "library" && (
-          <>
-            <header>
-              <div>
-                <p className="eyebrow">General-purpose creation tool</p>
-                <h1>Film Look Studio</h1>
-              </div>
-              <button className="primary" onClick={startNewLook}>New Look</button>
-            </header>
-            <p className="intro">Create an original film-style Leica Look from a description, DCP, Lightroom template, XMP, or CUBE. Samples are generic starting points—not branded recipes.</p>
-            <section className="look-strip" aria-label="Looks">
-              {looks.map((look) => (
-                <button className={selected === look.id ? "selected" : ""} onClick={() => setSelected(look.id)} key={look.id}>
-                  <img src={`/api/looks/${look.id}/icon?v=generic-1`} alt="" />
-                  <span>{look.name}</span>
-                  <small>{look.id} · {look.base_name}</small>
-                </button>
-              ))}
-            </section>
-            {detail && selectedLook && (
-              <section className="detail-grid">
-                <article className="hero-panel">
-                  <p className="eyebrow">Leica Look Lab</p>
-                  <h2>{detail.name}</h2>
-                  <p>Start from this generic film sample, describe your intent, or add a profile/template. The local builder creates the LUT; the Leica compiler verifies the package.</p>
-                  <div className="compact-form">
-                    <label>Name<input value={editorName} onChange={(event) => setEditorName(event.target.value)} /></label>
-                    <label>Custom ID<input type="number" min="1000" value={editorId} onChange={(event) => setEditorId(Number(event.target.value))} /></label>
-                    <label>Base<select value={editorBase} onChange={(event) => setEditorBase(Number(event.target.value))}><option value={0}>Standard</option><option value={1}>Monochrome</option></select></label>
-                    <label>Primary LUT<input type="file" accept=".cube" onChange={(event) => setEditorCube(event.target.files?.[0] || null)} /></label>
-                    <label>Icon BMP<input type="file" accept=".bmp" onChange={(event) => setEditorIcon(event.target.files?.[0] || null)} /></label>
-                    <label className="wide">Describe the film look<input value={description} placeholder="Warm faded negative, soft highlights, muted greens, gentle portrait contrast" onChange={(event) => setDescription(event.target.value)} /></label>
-                    <label className="wide">Optional DCP / XMP / Lightroom template<input type="file" accept=".dcp,.xmp,.lrtemplate" onChange={(event) => setProfileFile(event.target.files?.[0] || null)} /></label>
-                    <label className="wide">Source provenance<input value={provenance} onChange={(event) => setProvenance(event.target.value)} /></label>
-                  </div>
-                  <div className="button-row">
-                    <button className="secondary" onClick={buildSmartCube}>Build film transform</button>
-                    <button className="primary" onClick={buildLookPackage}>Build Look package</button>
-                    <button className="secondary" onClick={compileAndDownload}>Payload only</button>
-                  </div>
-                  {compileMessage && <p className="message">{compileMessage}</p>}
-                </article>
-                <article className="preview-panel">
-                  <div className="preview-head">
-                    <div><p className="eyebrow">Actual software preview</p><h3>{editorCube ? "Generated transform" : "Selected sample transform"}</h3></div>
-                    <label className="upload-button">Choose image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => e.target.files?.[0] && renderImage(e.target.files[0])} /></label>
-                  </div>
-                  {rendering && <div className="empty-preview">Rendering {detail.name}…</div>}
-                  {!rendering && renderedUrl && (
-                    <div className="comparison">
-                      <figure><img src={originalUrl} alt="Original upload" /><figcaption>Original</figcaption></figure>
-                      <figure><img src={renderedUrl} alt={`Rendered with ${detail.name}`} /><figcaption>{detail.name}</figcaption></figure>
-                    </div>
-                  )}
-                  {!rendering && !renderedUrl && <div className="empty-preview">Upload a JPEG, PNG, or WebP for a non-destructive preview.</div>}
-                </article>
-              </section>
-            )}
-            {detail && (
-              <section className="lab-tools">
-                <article className="payload-card">
-                  <div><p className="eyebrow">Serialized record</p><h2>Leica payload</h2></div>
-                  <div className="field-list">
-                    {detail.payload_summary.fields.map((field) => (
-                      <div key={field.property}>
-                        <code>{field.property}</code>
-                        <span>{field.name === "type" ? "D864" : field.name}</span>
-                        <strong>{typeof field.value === "object" ? `${(field.value as { bytes: number }).bytes.toLocaleString()} bytes` : String(field.value)}</strong>
-                        <small>{field.datatype}</small>
-                        <b>VALID</b>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="validation-line">Payload VALID · {detail.payload_summary.bytes.toLocaleString()} bytes · compile → parse → verify enforced</p>
-                </article>
-                <article className="inspector-card">
-                  <p className="eyebrow">Existing payload</p>
-                  <h2>Look inspector</h2>
-                  <label className="upload-button">Inspect Leica payload<input type="file" accept=".bin,application/octet-stream" onChange={(event) => event.target.files?.[0] && inspectPayload(event.target.files[0])} /></label>
-                  {inspected && <pre>{JSON.stringify(inspected, null, 2)}</pre>}
-                </article>
-                <article className="pack-card">
-                  <p className="eyebrow">Multi-Look export</p>
-                  <h2>Pack builder</h2>
-                  <div className="pack-options">{looks.map((look) => (
-                    <label key={look.id}><input type="checkbox" checked={packIds.includes(look.id)} onChange={() => setPackIds((current) => current.includes(look.id) ? current.filter((id) => id !== look.id) : [...current, look.id])} />{look.name}</label>
-                  ))}</div>
-                  <button className="primary" disabled={!packIds.length} onClick={downloadPack}>Build and download pack</button>
-                  <p className="muted">ZIP includes verified payload binaries, CUBEs, icons, and a checksum manifest. It does not claim an undocumented SD-card import container.</p>
-                </article>
-              </section>
-            )}
-          </>
-        )}
-
-        {view === "inventory" && (
-          <>
-            <header><div><p className="eyebrow">Internal verification</p><h1>Provenance</h1></div></header>
-            <p className="intro">Internal regression fixtures remain immutable and are used to verify the Leica compiler. They are not public product branding.</p>
-            <div className="table-wrap"><table><thead><tr><th>File</th><th>Classification</th><th>Bytes</th><th>SHA-256</th></tr></thead>
-              <tbody>{inventory.map((item) => <tr key={item.relative_path}><td>{item.relative_path}</td><td>{item.classification.replaceAll("_", " ")}</td><td>{item.size.toLocaleString()}</td><td><code>{item.sha256.slice(0, 16)}…</code></td></tr>)}</tbody>
-            </table></div>
-          </>
-        )}
-
-        {view === "sources" && (
-          <>
-            <header><div><p className="eyebrow">General-purpose factory</p><h1>Source Library</h1></div></header>
-            <p className="intro">Import CUBE, DCP, Lightroom Template, XMP, Hald, image, DNG, or RAF material. DCP and templates can also be supplied directly to the Smart Film Builder. Originals are preserved by checksum.</p>
-            <form className="source-upload" onSubmit={uploadSource}>
-              <label>Source file<input name="asset" type="file" required accept=".cube,.dcp,.lrtemplate,.xmp,.jpg,.jpeg,.png,.tif,.tiff,.dng,.raf" /></label>
-              <label>Provenance<input name="provenance" required minLength={3} placeholder="Source, author, license, and intended use" /></label>
-              <button className="primary" type="submit">Add source</button>
-            </form>
-            {sourceMessage && <p className="message">{sourceMessage}</p>}
-            <div className="source-grid">{sourceAssets.map((asset) => (
-              <article key={asset.id}>
-                <span>{asset.asset_type.replaceAll("_", " ")}</span>
-                <h3>{asset.filename}</h3>
-                <p>{asset.provenance}</p>
-                <code>{asset.sha256.slice(0, 20)}…</code>
-                <a href={`/api/assets/${asset.id}/download`}>Download original</a>
-              </article>
-            ))}</div>
-          </>
-        )}
-
-        {view === "fuji" && (
-          <>
-            <header><div><p className="eyebrow">Phase A · capability-aware</p><h1>Fuji Recipe Lab</h1></div></header>
-            <p className="intro">Store experimental target-specific recipes without claiming unverified camera support. X-E5 and GFX 50R remain separate capability profiles.</p>
-            <form className="editor-form" onSubmit={saveRecipe}>
-              <label>Name<input name="name" required placeholder="Presence · X-E5 experiment 01" /></label>
-              <label>Camera<select name="camera"><option value="FUJI_X_E5">Fujifilm X-E5</option><option value="FUJI_GFX50R">Fujifilm GFX 50R</option></select></label>
-              <label>Film simulation<input name="film_simulation" placeholder="Record observed value only" /></label>
-              <label>Dynamic range<input name="dynamic_range" /></label>
-              <label>Highlight<input name="highlight" /></label>
-              <label>Shadow<input name="shadow" /></label>
-              <label>Color<input name="color" /></label>
-              <label>White balance mode<input name="white_balance_mode" /></label>
-              <label className="wide">Provenance<textarea name="provenance" required placeholder="Who supplied or measured these settings, on which body/firmware, and how they were verified." /></label>
-              <button className="primary" type="submit">Save experimental recipe</button>
-            </form>
-            {recipeMessage && <p className="message">{recipeMessage}</p>}
-          </>
-        )}
-
-      </main>
-    </div>
-  );
+  return <div className="app-shell">
+    <aside><a className="brand" href="/"><span>FL</span><strong>Film Look<br />Studio</strong></a><nav>{[["studio", "Look Builder"], ["library", "Leica library"], ["sources", "Source library"], ["inventory", "Provenance"], ["fuji", "Fuji recipes"]].map(([key, label]) => <button className={view === key ? "active" : ""} onClick={() => setView(key as View)} key={key}>{label}</button>)}</nav><div className="aside-foot"><span><i className="online-dot" /> Compiler verified</span><a href="/look-building">How Looks are built</a><a href="/install-guide">Camera installation guide</a><a href="/docs">API documentation</a></div></aside>
+    <main>{message && <div className="message" role="status">{message}</div>}{sourceError && <div className="error">{sourceError}</div>}
+      {view === "studio" && <><div className="studio-head"><div><p className="eyebrow">Live color assembly bench / graph {graph.version}</p><h1>{graph.name}</h1></div><div className="head-actions"><button className="secondary" onClick={undo} disabled={!history.length}>Undo</button><button className="secondary" onClick={redo} disabled={!future.length}>Redo</button><button className="secondary" onClick={() => setGraph({ ...graph, layers: initialLayers.map((l) => ({ ...l, id: id() })), controls: defaultControls })}>Reset</button><span className="status-chip">{rendering ? "Rendering preview" : "Live preview"}</span></div></div>
+        <div className="toolbar"><input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option><option>Neutral</option></select><button className="secondary" onClick={buildCube}>Export CUBE</button><button className="primary" onClick={buildPackage}>Build Look package</button></div>
+        <div className="bench">
+          <section className="bench-panel"><div className="panel-title">Source library <span>{sources.length}</span></div><div className="panel-body"><div className="source-tools"><input placeholder="Search names, metadata…" value={sourceSearch} onChange={(e) => setSourceSearch(e.target.value)} /><select value={sourceType} onChange={(e) => setSourceType(e.target.value)}><option value="">All types</option><option>DCP</option><option>CUBE</option><option>XMP</option><option>LRTemplate</option><option>Hald</option><option>Leica Look</option></select><label className="secondary">Bulk ingest sources<input type="file" multiple hidden accept=".dcp,.cube,.xmp,.lrtemplate,.jpg,.jpeg,.png" onChange={uploadSources} /></label></div><div className="source-list">{sources.map((source) => <div className={`source-row ${openSource === source.id ? "open" : ""}`} key={source.id} onClick={() => openSourceDetails(source)} draggable onDragStart={(e) => e.dataTransfer.setData("component", JSON.stringify({ name: source.filename || source.name, type: source.type || source.asset_type, source_id: source.id }))}><strong>{source.filename || source.name || source.id}</strong><div className="source-meta">{source.type || source.asset_type || "SOURCE"} · {source.components?.length || 0} components</div>{openSource === source.id && <div className="component-list">{(source.components || []).map((component, index) => <div className="component-row" key={component.component_id || component.id || index}><span>{component.name || component.component_id || component.type}</span><button className="tiny" onClick={(e) => { e.stopPropagation(); addComponent(component, source); }}>Use this</button></div>)}</div>}</div>)}</div></div></section>
+          <section className="bench-panel"><div className="preview-toolbar"><div><b>VIEWFINDER</b> <span className="source-meta"> · {previewMode === "wipe" ? "draggable wipe" : "side by side"}</span></div><div className="head-actions"><label className="tiny">Upload test image<input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={chooseImage} /></label><button className="tiny" onClick={() => setPreviewMode("wipe")}>Wipe</button><button className="tiny" onClick={() => setPreviewMode("side")}>Side by side</button><button className={`tiny ${zoom === "fit" ? "active" : ""}`} onClick={() => setZoom("fit")}>Fit</button><button className={`tiny ${zoom === "100" ? "active" : ""}`} onClick={() => setZoom("100")}>100%</button></div></div><div className="preview-stage">{originalUrl ? previewMode === "side" ? <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="preview-caption left">Original</div>{previewUrl && <div className="wipe" style={{ left: "50%", width: "50%" }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl} alt="Current look" /></div>}</> : <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="wipe" style={{ width: `${wipe}%` }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /></div><span className="preview-caption left">Original</span><span className="preview-caption right">Current look</span><input className="wipe-range" aria-label="Wipe position" type="range" min="0" max="100" value={wipe} onChange={(e) => setWipe(Number(e.target.value))} /></> : <div className="empty-preview">Upload one test photograph. Every graph edit will arrive here without a compile step.</div>}</div><div className="filmstrip"><button>MY IMAGE</button><button disabled>Portrait / skin</button><button disabled>Landscape</button><button disabled>City / street</button><button disabled>Foliage</button><button disabled>HDR chart</button></div></section>
+          <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragEnd={() => undefined} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayer(layer.id, { strength: Number(e.target.value) })} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={() => { if (snapshotName.trim()) { setSnapshots([...snapshots, { name: snapshotName, graph }]); setSnapshotName(""); } }}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status ? "ready" : "dirty"}>{status ? "READY" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className="ready">READY</b></div><div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
+        </div></>}
+      {view === "sources" && <SourceLibrary sources={sources} uploadSources={uploadSources} search={sourceSearch} setSearch={setSourceSearch} type={sourceType} setType={setSourceType} open={openSource} openSource={openSourceDetails} add={addComponent} />}
+      {view === "library" && <LegacyLibrary setView={setView} />}
+      {view === "inventory" && <SimpleView title="Provenance" text="Immutable source and compiler inventory remains available from the original workflow." endpoint="/api/inventory" />}
+      {view === "fuji" && <SimpleView title="Fuji Recipe Lab" text="Target-specific Fuji recipes remain separate from the non-destructive Leica graph." endpoint="/api/fuji/recipes" />}
+    </main></div>;
 }
+
+function ManualControls({ controls, onChange }: { controls: Record<string, number>; onChange: (key: string, value: number) => void }) {
+  const groups: [string, string[]][] = [["Basic", ["exposure", "contrast", "highlights", "shadows", "whites", "blacks"]], ["Color", ["temperature", "tint", "saturation", "vibrance"]], ["Color grading", ["shadowHue", "shadowSat", "shadowLum", "midHue", "midSat", "highlightHue", "highlightSat", "balance"]], ["Film character", ["toe", "shoulder", "midContrast", "blackLift", "rolloff", "density"]], ["Monochrome", ["monoMix", "yellowFilter", "orangeFilter", "redFilter", "greenFilter"]]];
+  return <>{groups.map(([title, keys]) => <details className="control-section" key={title} open={title === "Basic"}><summary>{title}</summary><div className="control-grid">{(keys as string[]).map((key) => <label key={key}>{key.replace(/[A-Z]/g, (m) => ` ${m}`).replace(/^./, (m) => m.toUpperCase())}<input type="range" min={key.toLowerCase().includes("hue") ? 0 : -100} max={key.toLowerCase().includes("hue") ? 360 : 100} value={controls[key] ?? 0} onChange={(e) => onChange(key, Number(e.target.value))} /><span>{controls[key] ?? 0}</span></label>)}</div></details>)}</>;
+}
+function SourceLibrary({ sources, uploadSources, search, setSearch, type, setType, open, openSource, add }: { sources: Source[]; uploadSources: (e: ChangeEvent<HTMLInputElement>) => void; search: string; setSearch: (s: string) => void; type: string; setType: (s: string) => void; open: string | null; openSource: (s: Source) => void; add: (c: Component, s?: Source) => void }) { return <><div className="studio-head"><div><p className="eyebrow">Color parts bin / immutable provenance</p><h1>Source Library</h1></div><label className="primary">Bulk ingest<input type="file" hidden multiple onChange={uploadSources} /></label></div><div className="library-shell"><div className="source-upload"><input placeholder="Search names and metadata" value={search} onChange={(e) => setSearch(e.target.value)} /><select value={type} onChange={(e) => setType(e.target.value)}><option value="">All source types</option><option>DCP</option><option>CUBE</option><option>XMP</option><option>LRTemplate</option><option>Hald</option><option>Leica Look</option></select></div><div className="source-list">{sources.map((s) => <div className={`source-row ${open === s.id ? "open" : ""}`} key={s.id} onClick={() => openSource(s)}><strong>{s.filename || s.name || s.id}</strong><div className="source-meta">{s.type || s.asset_type} · {s.provenance || "Provenance recorded"}</div>{open === s.id && <div className="component-list">{(s.components || []).map((c, i) => <div className="component-row" key={i}><span>{c.name || c.component_id || c.type}</span><button className="tiny" onClick={(e) => { e.stopPropagation(); add(c, s); }}>Use this component</button></div>)}</div>}</div>)}</div></div></>; }
+function LegacyLibrary({ setView }: { setView: (v: View) => void }) {
+  const [looks, setLooks] = useState<{ id: number; name: string; base_name?: string }[]>([]);
+  const [error, setError] = useState("");
+  useEffect(() => { api<{ looks: { id: number; name: string; base_name?: string }[] }>("/api/library").then((data) => setLooks(data.looks)).catch((e) => setError(String(e))); }, []);
+  return <><div className="studio-head"><div><p className="eyebrow">Existing workflow preserved</p><h1>Leica library</h1></div><button className="primary" onClick={() => setView("studio")}>Open Look Builder</button></div><p className="intro">Browse verified generic looks, inspect payloads, download packages, and use any look as a source component in the assembly bench.</p>{error && <div className="error">{error}</div>}<div className="source-grid">{looks.map((look) => <article key={look.id}><span>VERIFIED LOOK · {look.id}</span><h3>{look.name}</h3><p>{look.base_name || "Standard"} base · available in the original Leica workflow</p><div className="button-row"><a className="secondary" href={`/api/looks/${look.id}/icon?v=generic-1`}>Inspect icon</a><button className="tiny" onClick={() => setView("studio")}>Use in builder</button></div></article>)}</div></>;
+}
+function SimpleView({ title, text, endpoint }: { title: string; text: string; endpoint: string }) { return <><div className="studio-head"><div><p className="eyebrow">Film Look Studio / retained workflow</p><h1>{title}</h1></div></div><p className="intro">{text}</p><div className="payload-card"><p className="muted">Connected endpoint: <code>{endpoint}</code></p><p className="validation-line">Access preserved. Use the Look Builder for live graph work.</p></div></>; }
+export default App;

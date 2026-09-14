@@ -1,0 +1,1178 @@
+# NEXT PHASE — LIVE PREVIEW + FULLY TWEAKABLE LOOK BUILDER
+
+The application is now functional.
+
+Do NOT redesign the basic workflow.
+
+The next major goal is to make the Look Builder behave like a real creative color-grading environment.
+
+I need:
+
+1. LIVE IMAGE PREVIEWS
+2. FULLY TWEAKABLE LOOKS
+3. MODULAR SOURCE MIXING
+4. BATCH SOURCE INGESTION
+5. THE ABILITY TO PICK BITS AND PIECES FROM DIFFERENT DCPs, LUTs, TEMPLATES, CURVES, AND EXISTING LOOKS
+
+The system should feel closer to:
+
+Lightroom + LUT builder + film emulation lab
+
+than a simple preset exporter.
+
+---
+
+# 1. LIVE PREVIEW IS NOW A CORE REQUIREMENT
+
+When I adjust any Look parameter, the preview image should update immediately.
+
+Examples:
+
+- change LUT strength
+- change DCP contribution
+- move WB
+- adjust shadow hue
+- adjust highlight hue
+- change contrast
+- adjust saturation
+- enable/disable a layer
+- reorder layers
+- change blend amount
+- swap source LUT
+- select different tone curve
+- pick another DCP matrix
+- change Leica base
+- modify monochrome filter behavior
+
+The preview should respond interactively.
+
+Target behavior:
+
+small/simple changes should appear visually within roughly a fraction of a second to a second where practical.
+
+Do not require:
+
+SAVE
+COMPILE
+BUILD PACKAGE
+
+just to see a change.
+
+Those are finalization actions.
+
+---
+
+# 2. THE LOOK BUILDER SHOULD BE NON-DESTRUCTIVE
+
+A Look must be represented as an editable graph/stack.
+
+Example:
+
+LOOK: Iceland Chrome
+
+STACK
+
+1. Input Normalization
+2. DCP Matrix — Kodak Ektar
+3. Tone Curve — Portra 160
+4. 3D LUT — Fuji 400H @ 35%
+5. Shadow Color — Cyan @ 12%
+6. Highlight Color — Warm @ 8%
+7. Saturation — -6
+8. Output Normalize
+
+Every element should remain editable.
+
+Do NOT flatten the Look into a CUBE until export/compile time.
+
+The editable graph is the master definition.
+
+---
+
+# 3. I WILL UPLOAD A LARGE BATCH OF SOURCES
+
+I plan to upload many:
+
+- DCP files
+- CUBE LUTs
+- LRTemplate files
+- XMP files
+- Hald LUTs
+- existing Leica Looks
+- possibly reference images
+
+Build a proper SOURCE LIBRARY.
+
+Do not make me upload each source every time I build a Look.
+
+---
+
+# 4. BULK INGESTION
+
+I should be able to:
+
+UPLOAD SOURCES
+
+and select:
+
+10
+50
+100+
+
+files at once.
+
+The app should:
+
+1. identify format
+2. parse metadata
+3. calculate SHA-256
+4. avoid duplicates
+5. extract usable components
+6. categorize source
+7. create thumbnails/reference swatches where useful
+8. store provenance
+9. make each component available in the Look Builder
+
+---
+
+# 5. SOURCE LIBRARY INTERFACE
+
+Create a proper library page.
+
+Filters:
+
+TYPE
+
+- DCP
+- CUBE
+- XMP
+- LRTemplate
+- Hald
+- Leica Look
+- Image Reference
+
+BRAND / FAMILY
+
+- Kodak
+- Fuji
+- Ilford
+- Leica
+- Adobe
+- Infinite Arch
+- Custom
+- Unknown
+
+CHARACTER
+
+- warm
+- cool
+- neutral
+- saturated
+- muted
+- high contrast
+- low contrast
+- film
+- cinematic
+- monochrome
+
+CAMERA
+
+where relevant.
+
+Search should work across names and metadata.
+
+---
+
+# 6. DECOMPOSE SOURCES INTO COMPONENTS
+
+This is one of the most important requirements.
+
+Do NOT treat a DCP or template only as one indivisible block.
+
+Where technically possible, expose its useful components separately.
+
+For example, a DCP may offer:
+
+- ColorMatrix1
+- ColorMatrix2
+- ForwardMatrix1
+- ForwardMatrix2
+- CameraCalibration matrices
+- HueSatDelta tables
+- LookTable
+- ToneCurve
+- BaselineExposure
+- ProfileCalibrationSignature
+- illuminant-specific behavior
+
+I should be able to use:
+
+the matrix from one DCP
+
++
+
+the tone curve from another
+
++
+
+the LookTable from a third
+
++
+
+a CUBE LUT
+
++
+
+my own manual shadow/highlight adjustments.
+
+THAT IS THE POWER I WANT.
+
+---
+
+# 7. SOURCE COMPONENT PICKER
+
+When I click:
+
++ ADD COMPONENT
+
+I want choices such as:
+
+DCP COMPONENT
+CUBE LUT
+TONE CURVE
+MATRIX
+HUE/SAT TABLE
+LOOK TABLE
+XMP COLOR GRADING
+XMP CURVE
+LR TEMPLATE SETTINGS
+MONOCHROME CONVERSION
+MANUAL ADJUSTMENT
+EXISTING LOOK COMPONENT
+
+Then browse the Source Library.
+
+Example:
+
+ADD MATRIX
+
+Search:
+Kodak
+
+Results:
+
+Kodak Portra 160.dcp
+    ColorMatrix1
+    ColorMatrix2
+    ForwardMatrix1
+    ForwardMatrix2
+
+Kodak Ektar 100.dcp
+    ColorMatrix1
+    ForwardMatrix1
+
+I choose:
+
+Ektar ForwardMatrix1
+
+and add it to my Look stack.
+
+---
+
+# 8. COMPONENT INSPECTOR
+
+Every source component should be inspectable.
+
+Example:
+
+SOURCE
+
+Kodak Portra 400.dcp
+
+COMPONENT
+
+ToneCurve
+
+DETAILS
+
+points: 32
+input range: 0–1
+output range: 0–1
+
+[PREVIEW CURVE]
+
+[ADD TO LOOK]
+
+Similarly:
+
+DCP MATRIX
+
+show the matrix values.
+
+LUT:
+
+show size
+
+domain
+
+sample transform
+
+color cube visualization if practical.
+
+---
+
+# 9. LIVE SPLIT PREVIEW
+
+The main Look Builder should have excellent visual comparison.
+
+Support:
+
+ORIGINAL
+
+CURRENT LOOK
+
+REFERENCE
+
+and layouts:
+
+- side by side
+- vertical split
+- horizontal split
+- draggable wipe
+- blink comparison
+- 100% zoom
+- fit image
+
+Example:
+
+ORIGINAL    |    CURRENT LOOK
+            |
+            |
+      draggable divider
+
+Every tweak updates the CURRENT LOOK side.
+
+---
+
+# 10. PREVIEW IMAGE SET
+
+I want more than one test image.
+
+Allow:
+
+MY IMAGE
+
+plus standardized test scenes such as:
+
+- portrait / skin tone
+- landscape
+- city/street
+- foliage
+- high dynamic range
+- low light
+- neutral/color chart
+
+Changing preview images must NOT change the Look.
+
+It only changes what image is being used to evaluate it.
+
+---
+
+# 11. PREVIEW CACHE
+
+Build preview rendering intelligently.
+
+Do NOT recompute the entire pipeline unnecessarily.
+
+Use:
+
+- cached intermediate stages
+- low-resolution working preview
+- higher-quality render after idle
+- GPU/WebGL/WebGPU where useful
+- worker threads/processes where useful
+
+Concept:
+
+WHILE DRAGGING SLIDER
+
+render fast lower-resolution preview.
+
+WHEN USER STOPS
+
+render higher-quality preview.
+
+This should feel interactive.
+
+---
+
+# 12. LOOK STACK UI
+
+The center/right UI should behave like a professional layer stack.
+
+Example:
+
+LOOK STACK
+
+☑ Ektar Matrix
+    strength 100%
+
+☑ Portra Curve
+    strength 72%
+
+☑ Fuji 400H LUT
+    strength 24%
+
+☑ Shadow Cyan
+    amount 11%
+
+☑ Warm Highlights
+    amount 8%
+
+☑ Saturation
+    -5
+
+Each row should support:
+
+- on/off
+- reorder
+- duplicate
+- delete
+- strength
+- expand details
+- reset
+- solo
+
+SOLO means temporarily preview only that component or component plus required base.
+
+---
+
+# 13. STRENGTH CONTROL FOR EVERYTHING
+
+Where mathematically reasonable, almost every component should have a strength slider.
+
+Examples:
+
+DCP matrix strength
+LUT strength
+tone curve strength
+HueSat map strength
+LookTable strength
+manual adjustments
+
+Range:
+
+0–100%
+
+Possibly allow:
+
+0–200%
+
+for creative effects where safe.
+
+Default should remain 100%.
+
+---
+
+# 14. BEFORE/AFTER PER COMPONENT
+
+For each stack component, add:
+
+EYE toggle
+
+and:
+
+SOLO
+
+so I can understand exactly what that part is contributing.
+
+This is especially important when combining DCP components.
+
+---
+
+# 15. FULL MANUAL COLOR CONTROLS
+
+Add manual controls including:
+
+## BASIC
+
+Exposure
+Contrast
+Highlights
+Shadows
+Whites
+Blacks
+
+## COLOR
+
+Temperature
+Tint
+Saturation
+Vibrance-like control
+
+## COLOR MIXER
+
+Red
+Orange
+Yellow
+Green
+Aqua
+Blue
+Purple
+Magenta
+
+For each:
+
+Hue
+Saturation
+Luminance
+
+## COLOR GRADING
+
+Shadows:
+Hue
+Saturation
+Luminance
+
+Midtones:
+Hue
+Saturation
+Luminance
+
+Highlights:
+Hue
+Saturation
+Luminance
+
+Balance
+
+## CURVE
+
+RGB
+Red
+Green
+Blue
+
+Editable curve.
+
+## FILM CHARACTER
+
+Toe
+Shoulder
+Mid contrast
+Black lift
+Highlight rolloff
+Color density
+
+## MONOCHROME
+
+Channel mixing
+Yellow filter
+Orange filter
+Red filter
+Green filter
+
+Use these as editable Color Graph nodes.
+
+---
+
+# 16. WHITE BALANCE BEHAVIOR
+
+Allow two distinct concepts:
+
+SOURCE WB
+
+and:
+
+LOOK WB BIAS
+
+A Look should not necessarily hardcode one absolute Kelvin value.
+
+Support:
+
+neutral base
+
++
+
+creative bias.
+
+Example:
+
+WB Bias
+
+Red +1.3
+Blue -2.1
+
+or
+
+Temperature intent:
++250K
+
+Tint:
++3
+
+This will be useful later for Fuji matching too.
+
+---
+
+# 17. DCP COMPONENT BLENDING
+
+Be careful with DCP behavior.
+
+Do not blindly interpolate every field in a mathematically invalid way.
+
+For each type of component, define a proper strategy.
+
+Examples:
+
+Matrices:
+interpolate toward identity where appropriate for strength.
+
+Tone curves:
+interpolate curve output.
+
+HueSat tables:
+interpolate deltas.
+
+LookTables:
+interpolate output transform.
+
+LUTs:
+interpolate transformed RGB with original RGB.
+
+If a component cannot be safely blended:
+
+show:
+
+FIXED / NON-BLENDABLE
+
+rather than inventing math.
+
+---
+
+# 18. "STEAL THIS PART" FEATURE
+
+This is a feature I specifically want.
+
+When inspecting any existing source or Look, I should be able to click:
+
+USE THIS COMPONENT
+
+Examples:
+
+Existing Look:
+Portra Soft
+
+I inspect it.
+
+I see:
+
+Matrix
+Tone Curve
+LUT
+Shadow Grade
+Highlight Grade
+
+I click:
+
+USE THIS TONE CURVE
+
+It gets copied into the Look I'm currently building.
+
+Or:
+
+USE THIS MATRIX
+
+or:
+
+USE THIS LUT
+
+This is the visual version of selecting bits and pieces like we have been doing manually.
+
+---
+
+# 19. A/B LOOK MIXING
+
+Allow two complete Looks to be blended.
+
+Example:
+
+LOOK A
+Portra
+
+LOOK B
+Velvia
+
+Blend:
+
+78% / 22%
+
+But internally the system should preserve source structure when possible rather than immediately flattening the result.
+
+Provide:
+
+BLEND LOOKS
+
+as an easy creative tool.
+
+---
+
+# 20. AI ASSISTANT SHOULD CONTROL THE LIVE GRAPH
+
+The AI assistant should be tightly integrated.
+
+Example command:
+
+"Use the Portra tone curve, but give me the Ektar reds and slightly cooler shadows."
+
+The assistant should:
+
+1. search Source Library
+2. identify relevant components
+3. propose graph changes
+4. apply them to the editable Look stack
+5. refresh live preview
+
+The AI should NOT generate a mystery LUT without showing what it changed.
+
+After the request, display:
+
+AI CHANGES
+
++ Portra 160 ToneCurve
++ Ektar HueSat red/orange component
++ Shadow Grade: Hue 205°, Sat 6%
+- Existing Neutral Curve
+
+[UNDO]
+
+---
+
+# 21. AI SHOULD BE ABLE TO SEARCH MY SOURCE LIBRARY
+
+Once I upload my batch of DCPs/templates/LUTs, the AI should know what is available.
+
+Examples:
+
+"Which Portra source has the gentlest highlight curve?"
+
+"Show me all Fuji profiles with cool shadows."
+
+"Use the Ektar reds but Portra skin."
+
+"Find me the strongest B&W red-filter source."
+
+"Take the highlight handling from this template and put it into Presence."
+
+The assistant should answer based on parsed library components, not guesses.
+
+---
+
+# 22. FAVORITES AND TAGGING
+
+Allow:
+
+favorite source
+
+favorite component
+
+favorite Look
+
+tags
+
+ratings
+
+notes
+
+Example tags:
+
+skin
+desert
+Japan
+Iceland
+street
+landscape
+film
+B&W
+experimental
+
+---
+
+# 23. SNAPSHOTS / HISTORY
+
+I need to experiment freely.
+
+Support:
+
+UNDO
+REDO
+
+and saved snapshots:
+
+Snapshot A
+Snapshot B
+Snapshot C
+
+Example:
+
+Iceland Chrome v3
+
+Snapshot:
+"before cyan shadows"
+
+Snapshot:
+"after Portra curve"
+
+Allow instant comparison.
+
+---
+
+# 24. VERSIONING
+
+When I save:
+
+Iceland Chrome
+
+don't overwrite blindly.
+
+Support:
+
+v1.0
+v1.1
+v1.2
+
+and:
+
+DRAFT
+
+PUBLISHED
+
+EXPERIMENT
+
+The actual Leica payload only needs to be generated when building/exporting.
+
+---
+
+# 25. LIVE LEICA PAYLOAD STATUS
+
+While editing, show a compact status panel:
+
+LEICA TARGET
+
+Name:
+Iceland Chrome
+
+ID:
+AUTO 1142
+
+Base:
+Standard
+
+Compiler:
+READY
+
+D861:
+READY
+
+DC44:
+READY
+
+DC86:
+READY
+
+D860:
+DIRTY / NEEDS RECOMPILE
+
+D864:
+READY
+
+D866:
+READY
+
+Do NOT compile the entire downloadable package on every slider movement.
+
+Just show whether the current graph can compile.
+
+---
+
+# 26. FINAL HIGH-QUALITY RENDER
+
+Live preview can be optimized for speed.
+
+When I click:
+
+FINAL RENDER
+
+or:
+
+BUILD LOOK PACKAGE
+
+then use:
+
+highest-quality processing
+full-resolution transform
+proper interpolation
+full validation
+round-trip Leica compilation
+
+Keep preview and final quality modes separate.
+
+---
+
+# 27. BATCH LOOK TESTING
+
+I should be able to select:
+
+10 Looks
+
+and:
+
+5 test images
+
+then generate a comparison grid.
+
+Example:
+
+Rows = images
+
+Columns = Looks
+
+This will be extremely useful when evaluating DCP/LUT combinations.
+
+---
+
+# 28. CONTACT SHEET FROM REAL PREVIEWS
+
+Generate a contact sheet using the actual software-rendered standardized preview image.
+
+Not only AI samples.
+
+Then optionally also generate an AI sample contact sheet.
+
+Label them clearly:
+
+SOFTWARE PREVIEW CONTACT SHEET
+
+AI STYLE CONTACT SHEET
+
+---
+
+# 29. SOURCE PROVENANCE MUST FOLLOW COMPONENTS
+
+If I steal:
+
+Portra 160 ToneCurve
+
+from one source
+
+and:
+
+Ektar ColorMatrix
+
+from another,
+
+the final Look should know exactly where both came from.
+
+Example manifest:
+
+components:
+
+- type: ToneCurve
+  source: Kodak Portra 160.dcp
+  source_sha256: ...
+  component_id: ToneCurve
+
+- type: ForwardMatrix
+  source: Kodak Ektar 100.dcp
+  source_sha256: ...
+  component_id: ForwardMatrix1
+
+This provenance goes into documentation and cheat sheets.
+
+---
+
+# 30. DO NOT REDUCE SOURCES TO STATIC PRESETS
+
+This is important.
+
+A source file is not merely:
+
+"Portra preset."
+
+It is a container of usable color components.
+
+I want to be able to dissect those sources.
+
+Think:
+
+COLOR PARTS BIN.
+
+The Source Library is a parts bin.
+
+The Look Builder is the assembly bench.
+
+The live preview is the viewfinder.
+
+The Leica compiler is the manufacturing step.
+
+---
+
+# 31. IDEAL LOOK-BUILDER LAYOUT
+
+LEFT PANEL:
+
+SOURCE LIBRARY
+
+Search
+
+DCP
+LUT
+Templates
+Curves
+Matrices
+Looks
+
+Drag components into stack.
+
+CENTER:
+
+LIVE IMAGE
+
+Original / Current
+
+Split/Wipe/Zoom
+
+BOTTOM FILMSTRIP:
+
+test images
+
+RIGHT PANEL:
+
+LOOK STACK
+
+Component controls
+
+Manual adjustments
+
+AI Assistant
+
+TOP:
+
+Look name
+version
+target camera
+Save
+Build Package
+
+---
+
+# 32. DRAG AND DROP
+
+Support drag/drop:
+
+DCP component
+→ Look stack
+
+CUBE
+→ Look stack
+
+tone curve
+→ Look stack
+
+existing Look component
+→ Look stack
+
+Also allow reorder by drag/drop.
+
+---
+
+# 33. PERFORMANCE PRIORITY
+
+The editor must feel responsive.
+
+Prioritize:
+
+1. live visual feedback
+2. non-destructive graph
+3. component-level control
+4. stable output
+
+over:
+
+fancy animations
+dashboard metrics
+administrative UI
+
+This is a creative tool.
+
+---
+
+# 34. WHAT I WILL DO NEXT
+
+I will upload a large batch of:
+
+DCP
+CUBE
+LRTemplate
+XMP
+other profile assets
+
+The system must be prepared to ingest and catalog them.
+
+Do not hardcode known filenames.
+
+Do not assume a fixed source library.
+
+---
+
+# 35. DEFINITION OF DONE FOR THIS PHASE
+
+This phase is complete when I can:
+
+1. Upload a batch of DCPs/LUTs/templates.
+
+2. Search them.
+
+3. Open a DCP.
+
+4. See its available components.
+
+5. Click:
+
+USE THIS MATRIX
+
+6. Open another DCP.
+
+7. Click:
+
+USE THIS TONE CURVE
+
+8. Add a CUBE LUT.
+
+9. Set LUT strength to 30%.
+
+10. Upload my own test photograph.
+
+11. See all changes LIVE.
+
+12. Drag the LUT above/below the curve and immediately see the difference.
+
+13. Adjust cool shadows.
+
+14. Adjust warm highlights.
+
+15. Tell AI:
+
+"Keep this but make greens more like the Ektar source."
+
+16. See the graph update.
+
+17. Undo it if I dislike it.
+
+18. Save a snapshot.
+
+19. Build the Leica package.
+
+20. Receive the Python FOTOS injector, documentation, sample and cheat sheet.
+
+That is the experience I want.

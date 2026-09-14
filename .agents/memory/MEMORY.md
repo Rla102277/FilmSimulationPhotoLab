@@ -1,1 +1,2 @@
 - [iPhone camera installation](iphone-camera-installation.md) — Leica installation is an iPhone-only FOTOS-to-Python app handoff; do not instruct users to use a computer.
+- [Editable graph authority](editable-graph-authority.md) — the non-destructive component graph is the Look master; CUBEs and Leica packages are derived only for preview/export.
