@@ -1,4 +1,4 @@
-"""Camera-independent IA Color Graph definition."""
+"""Camera-independent color graph definition."""
 
 from __future__ import annotations
 

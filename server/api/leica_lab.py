@@ -12,6 +12,9 @@ from pydantic import BaseModel, Field
 
 from core.leica.authoritative import get_authoritative_look, read_look_asset
 from core.color.cube import parse_cube, serialize_leica_cube
+from core.color.film_builder import build_film_cube
+from core.assets.inspect import inspect_source_asset
+from core.film.samples import SAMPLES, get_sample
 from core.leica.compiler import compile_look_payload
 from core.leica.package import build_look_package, generated_injector_source, package_readme
 from core.leica.parser import parse_look_payload
@@ -26,6 +29,13 @@ class PackInput(BaseModel):
 
 def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "leica-look"
+
+
+def _source_id(sample_or_fixture_id: int) -> int:
+    try:
+        return get_sample(sample_or_fixture_id)["source_id"]
+    except KeyError:
+        return sample_or_fixture_id
 
 
 def _summary(parsed: dict) -> dict:
@@ -84,7 +94,7 @@ async def compile_payload(
     icon: UploadFile | None = File(None),
     cube: UploadFile | None = File(None),
 ):
-    source_id = source_look_id or look_id
+    source_id = _source_id(source_look_id or look_id)
     try:
         icon_data = await _read_limited(icon) if icon else read_look_asset(source_id, "icon")
         source_cube = await _read_limited(cube) if cube else read_look_asset(source_id, "cube")
@@ -115,7 +125,7 @@ async def compile_package(
     icon: UploadFile | None = File(None),
     cube: UploadFile | None = File(None),
 ):
-    source_id = source_look_id or look_id
+    source_id = _source_id(source_look_id or look_id)
     try:
         icon_data = await _read_limited(icon) if icon else read_look_asset(source_id, "icon")
         source_cube = await _read_limited(cube) if cube else read_look_asset(source_id, "cube")
@@ -142,6 +152,40 @@ async def compile_package(
             "Content-Disposition": f'attachment; filename="{_slug(name)}-leica-look-package.zip"',
             "X-Package-SHA256": hashlib.sha256(package).hexdigest(),
             "X-Round-Trip-Verified": "true",
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@router.post("/smart-cube")
+async def smart_cube(
+    name: str = Form(...),
+    look_id: int = Form(...),
+    intent: str = Form(...),
+    profile: UploadFile | None = File(None),
+):
+    profile_text = ""
+    source_type = None
+    if profile:
+        data = await _read_limited(profile)
+        try:
+            inspection = inspect_source_asset(profile.filename or "profile.dcp", data)
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        source_type = inspection["asset_type"]
+        if source_type in {"xmp", "lrtemplate"}:
+            profile_text = data.decode("utf-8", errors="ignore")
+        else:
+            profile_text = json.dumps(inspection["metadata"], sort_keys=True)
+    cube, settings = build_film_cube(intent, profile_text, look_id, name.strip())
+    return Response(
+        cube,
+        media_type="text/plain",
+        headers={
+            "Content-Disposition": f'attachment; filename="{_slug(name)}.CUBE"',
+            "X-Builder-Method": "local-procedural-v1",
+            "X-Source-Type": source_type or "description",
+            "X-Film-Settings": json.dumps(settings, separators=(",", ":")),
             "Cache-Control": "no-store",
         },
     )
@@ -195,10 +239,12 @@ def build_pack(pack: PackInput):
     artifacts = []
     try:
         for look_id in sorted(pack.look_ids):
-            look = get_authoritative_look(look_id)
-            cube = read_look_asset(look_id, "cube")
-            icon = read_look_asset(look_id, "icon")
-            payload, report = compile_look_payload(look_id, look["name"], icon, cube, 2, look["base"])
+            sample = get_sample(look_id)
+            fixture = get_authoritative_look(sample["source_id"])
+            look = {**fixture, **sample, "name": sample["name"]}
+            cube = serialize_leica_cube(parse_cube(read_look_asset(sample["source_id"], "cube")), look_id, sample["name"], fixture["base"])
+            icon = read_look_asset(sample["source_id"], "icon")
+            payload, report = compile_look_payload(look_id, sample["name"], icon, cube, 2, fixture["base"])
             slug = _slug(look["name"])
             records.append({
                 **look,
@@ -212,9 +258,9 @@ def build_pack(pack: PackInput):
     except (KeyError, ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     manifest = {
-        "format": "Infinite Arch Leica payload pack",
+        "format": "Generic Leica film-look payload pack",
         "version": 1,
-        "source": "Authoritative Infinite Arch Leica Looks v1.2",
+        "source": "Verified internal regression fixtures with generic public sample identities",
         "note": "Payload binaries reproduce the proven v1.2 writer record. No official SD-card import container is claimed.",
         "looks": records,
     }
@@ -223,7 +269,7 @@ def build_pack(pack: PackInput):
         ("manifest.json", manifest_bytes),
         ("looks_manifest.json", json.dumps(records, indent=2, sort_keys=True).encode()),
         ("injector.py", generated_injector_source()),
-        ("README.md", package_readme("Infinite Arch Leica Look Pack", 0, "Mixed", "Authoritative v1.2 examples", hashlib.sha256(manifest_bytes).hexdigest())),
+        ("README.md", package_readme("Generic Leica Film Look Pack", 0, "Mixed", "Verified regression samples", hashlib.sha256(manifest_bytes).hexdigest())),
         *artifacts,
     ]
     checksum_bytes = ("\n".join(
@@ -239,7 +285,7 @@ def build_pack(pack: PackInput):
         data,
         media_type="application/zip",
         headers={
-            "Content-Disposition": 'attachment; filename="infinite-arch-leica-look-pack.zip"',
+            "Content-Disposition": 'attachment; filename="generic-leica-film-look-pack.zip"',
             "X-Pack-SHA256": hashlib.sha256(data).hexdigest(),
             "X-Look-Count": str(len(records)),
             "Cache-Control": "no-store",

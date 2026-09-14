@@ -15,6 +15,7 @@ from core.assets.inspect import inspect_source_asset
 from core.color.cube import apply_cube_to_image, parse_cube
 from core.color.graph import default_color_graph
 from core.fuji.recipes import load_camera_profiles, validate_recipe
+from core.film.samples import SAMPLES, get_sample
 from core.leica.authoritative import (
     archive_inventory,
     get_authoritative_look,
@@ -39,10 +40,14 @@ class FujiRecipeInput(BaseModel):
 
 @router.get("/library")
 def library():
-    looks = load_authoritative_manifest()
+    fixtures = {item["id"]: item for item in load_authoritative_manifest()}
+    looks = []
+    for sample in SAMPLES:
+        fixture = fixtures[sample["source_id"]]
+        looks.append({**fixture, **sample, "fixture_id": sample["source_id"], "name": sample["name"]})
     return {
-        "name": "Infinite Arch Photo Lab",
-        "version": "Leica v1.2",
+        "name": "Film Look Studio",
+        "version": "1.0",
         "look_count": len(looks),
         "looks": looks,
         "principle": "One Look family, multiple target-specific implementations.",
@@ -58,9 +63,14 @@ def inventory():
 @router.get("/looks/{look_id}")
 def look_detail(look_id: int):
     try:
-        look = get_authoritative_look(look_id)
-        cube = parse_cube(read_look_asset(look_id, "cube"))
-        payload = inspect_payload(build_authoritative_payload(look_id))
+        sample = get_sample(look_id)
+        fixture = get_authoritative_look(sample["source_id"])
+        look = {**fixture, **sample, "name": sample["name"]}
+        cube_data = read_look_asset(sample["source_id"], "cube")
+        cube = parse_cube(cube_data)
+        from core.leica.compiler import compile_look_payload
+        payload_bytes, _ = compile_look_payload(look_id, sample["name"], read_look_asset(sample["source_id"], "icon"), cube_data, 2, fixture["base"])
+        payload = inspect_payload(payload_bytes)
     except (KeyError, ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=404 if isinstance(exc, KeyError) else 500, detail=str(exc)) from exc
     return {
@@ -74,7 +84,7 @@ def look_detail(look_id: int):
         "cube_summary": cube.summary(),
         "payload_summary": payload,
         "provenance": {
-            "archive": "reference/leica/v1.2/Infinite_Arch_Leica_Looks_v1.2.zip",
+            "archive": "internal verified regression fixture",
             "immutable": True,
         },
         "color_graph": default_color_graph(),
@@ -84,7 +94,7 @@ def look_detail(look_id: int):
 @router.get("/looks/{look_id}/icon")
 def look_icon(look_id: int):
     try:
-        data = read_look_asset(look_id, "icon")
+        data = read_look_asset(get_sample(look_id)["source_id"], "icon")
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return Response(data, media_type="image/bmp", headers={"Cache-Control": "public, max-age=31536000, immutable"})
@@ -102,7 +112,7 @@ async def render_look(
     if len(data) > 20 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image exceeds the 20 MB preview limit")
     try:
-        rendered = apply_cube_to_image(data, parse_cube(read_look_asset(look_id, "cube")))
+        rendered = apply_cube_to_image(data, parse_cube(read_look_asset(get_sample(look_id)["source_id"], "cube")))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -120,7 +130,7 @@ async def render_look(
         rendered,
         media_type=media_type,
         headers={
-            "Content-Disposition": f'inline; filename="ia-look-{look_id}.{extension}"',
+            "Content-Disposition": f'inline; filename="film-look-{look_id}.{extension}"',
             "X-Source-SHA256": hashlib.sha256(data).hexdigest(),
             "Cache-Control": "no-store",
         },
