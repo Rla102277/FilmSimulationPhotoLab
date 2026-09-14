@@ -2,3 +2,8 @@
 # Add web-app dependencies only after the integrity tests pass.
 fastapi>=0.115
 uvicorn[standard]>=0.30
+numpy>=2
+pillow>=10
+psycopg[binary]>=3.2
+python-multipart>=0.0.9
+sqlalchemy>=2.0

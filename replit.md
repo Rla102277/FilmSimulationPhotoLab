@@ -37,7 +37,20 @@ Local IA Camera Bridge: direct camera transport only.
 ## Running on Replit
 
 The main web workflow runs `bash scripts/run.sh`, which starts FastAPI on
-`0.0.0.0:5000`. The preview status page is at `/`, interactive API documentation
-is at `/docs`, and the health endpoint is `/api/health`.
+`0.0.0.0:5000`. It builds the React/TypeScript frontend before starting FastAPI.
+The Photo Lab is at `/`, interactive API documentation is at `/docs`, and the
+health endpoint is `/api/health`.
 
 Run `python main.py` separately for the offline migration integrity report.
+
+## Implemented application boundaries
+
+- The Leica library, inventory, CUBE parser/renderer, payload inspector, Fuji
+  recipe registry, immutable source assets, and bridge jobs are exposed through
+  same-origin `/api` routes.
+- Application records use PostgreSQL. Original imported assets are immutable and
+  deduplicated by SHA-256.
+- Bridge pairing tickets expire after five minutes. The local bridge initiates
+  outbound authenticated requests and refuses to simulate missing hardware.
+- Browser preview rendering supports JPEG and TIFF derivatives. It never changes
+  the uploaded original or the authoritative archive.

@@ -3,10 +3,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from server.api.leica import router as leica_router
+from server.api.lab import router as lab_router
+from server.api.bridge import router as bridge_router
 from server.pages import look_building_page
 
 app = FastAPI(title="Infinite Arch Photo Lab", version="0.1.0")
 app.include_router(leica_router, prefix="/api")
+app.include_router(lab_router, prefix="/api")
+app.include_router(bridge_router, prefix="/api")
 
 @app.get("/api/health")
 def health():
