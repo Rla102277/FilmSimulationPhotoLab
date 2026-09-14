@@ -1,0 +1,391 @@
+We are continuing an existing reverse-engineering/color-science project called:
+
+INFINITE ARCH PHOTO LAB
+
+Do not treat this as a new project and do not restart Leica research.
+
+The authoritative completed Leica implementation is:
+
+reference/leica/v1.2/Infinite_Arch_Leica_Looks_v1.2.zip
+
+That ZIP is immutable ground truth.
+
+Never modify, overwrite, regenerate, normalize, optimize, reformat, or delete the authoritative ZIP.
+
+Before refactoring any Leica code:
+
+1. Extract a WORKING COPY into the project.
+2. Inventory every file.
+3. Identify scripts, payloads, manifests, LUTs, fixtures, captured tables, documentation, hashes, IDs, and generated artifacts.
+4. Create regression tests around the existing known-good behavior.
+5. Preserve known-good payloads as fixtures.
+6. Only then wrap/refactor the existing implementation into application modules.
+
+The Leica custom-Look transport problem has already been solved.
+
+Known established behavior includes:
+
+- Leica Q3/Q3 43 family
+- Leica FOTOS establishes the authorized relationship
+- independent PTP/IP client inherits/reuses the surviving authorized session
+- camera endpoint historically used: 192.168.54.1:15740
+- DeviceInfo opcode 0x1001 works
+- Leica Look-table read opcode 0x9033 works
+- Leica Look upload/write opcode 0x9035 works
+- response 0x2001 means success
+- surviving session behavior may return 0x201E and must not automatically be treated as fatal
+- session 0x412 was observed in working traces
+- arbitrary custom IDs are used instead of Leica-reserved Look IDs
+- the authoritative implementation contained in v1.2 overrides all earlier experiments, reconstructed packs, assumptions, and older payloads
+
+Do not recreate Leica Looks from memory.
+
+READ THE V1.2 PACKAGE.
+
+The new goal is to turn this into one web-based system and add Fujifilm.
+
+PRODUCT NAME:
+
+Infinite Arch Photo Lab
+
+CORE IDEA:
+
+One photographic Look should have multiple camera implementations.
+
+Example:
+
+IA Presence
+    Leica Q3/Q3 43 implementation
+    Fuji X-E5 implementation
+    Fuji GFX50R implementation
+    Software/LUT implementation
+    Lightroom/DCP implementation
+
+The Infinite Arch Look is the master concept.
+
+Individual camera recipes/payloads are target-specific implementations.
+
+ARCHITECTURE:
+
+Use a monorepo containing:
+
+- React + TypeScript frontend
+- Python FastAPI backend
+- shared Python color-processing engine
+- Leica compiler/parser modules
+- Fuji recipe engine
+- PostgreSQL
+- persistent asset abstraction
+- separate local Camera Bridge
+
+The cloud application must NOT attempt to directly access a camera at a private LAN address such as 192.168.54.1.
+
+Camera communication is handled by a local companion process called:
+
+IA Camera Bridge
+
+The bridge runs on the user's Mac initially.
+
+It establishes an outbound authenticated connection to the Replit service.
+
+The browser communicates with Replit.
+
+Replit sends jobs to the bridge.
+
+The bridge communicates with Leica/Fuji hardware.
+
+THE BRIDGE SHOULD BE SMALL.
+
+Do not duplicate Photo Lab's Look/color logic inside the bridge.
+
+PHOTO LAB RESPONSIBILITIES:
+
+- Look library
+- source profile management
+- .CUBE parsing
+- DCP parsing
+- LRTemplate/XMP handling
+- preview rendering
+- Look versioning
+- Leica payload generation
+- Leica payload inspection
+- Fuji recipe storage
+- Fuji recipe translation
+- cross-camera comparison
+- perceptual matching
+- asset storage
+- bridge job creation
+- logs
+- camera profiles
+- export
+
+CAMERA BRIDGE RESPONSIBILITIES:
+
+- discover connected camera
+- Leica PTP/IP transport
+- Fuji USB/network transport
+- retrieve camera information
+- read Leica Looks
+- install Leica payload
+- verify Leica installation
+- send Fuji processing jobs
+- retrieve Fuji output
+- send results/logs to server
+
+FUJI HAS TWO PHASES.
+
+PHASE A:
+
+Fuji Recipe Engine.
+
+Support camera-specific controls such as:
+
+- Film Simulation
+- Dynamic Range
+- Highlight
+- Shadow
+- Color
+- Sharpness
+- Noise Reduction
+- Clarity
+- Grain
+- Color Chrome Effect
+- Color Chrome FX Blue
+- White Balance mode
+- WB Red shift
+- WB Blue shift
+
+Initial Fuji targets:
+
+- Fujifilm X-E5
+- Fujifilm GFX50R
+
+Do not assume the bodies have identical capabilities.
+
+PHASE B:
+
+Native Fuji camera-side RAW processing.
+
+Long-term objective:
+
+RAF
+→ selected Infinite Arch Look
+→ target-specific Fuji recipe/parameters
+→ connected Fuji camera processes RAF using its native engine
+→ processed output returned to Photo Lab
+
+This should investigate/reproduce the useful X RAW Studio camera-processing workflow.
+
+Do not claim generic cloud RAW conversion is equivalent to native Fuji rendering.
+
+DATA MODEL:
+
+Create separate concepts for:
+
+LookFamily
+
+LookVersion
+
+CameraImplementation
+
+SourceAsset
+
+CameraProfile
+
+ImageAsset
+
+Render
+
+Bridge
+
+BridgeJob
+
+BridgeLog
+
+LeicaPayload
+
+FujiRecipe
+
+A Look Family such as IA Presence may have several Camera Implementations.
+
+Keep Look-family versioning separate from camera-implementation versioning.
+
+SOURCE ASSETS:
+
+Support:
+
+- CUBE
+- DCP
+- LRTemplate
+- XMP
+- reference image
+- Leica payload
+- Fuji recipe
+- calibration target/reference pairs
+
+Every source asset must have:
+
+- SHA-256
+- filename
+- type
+- size
+- provenance
+- original immutable copy
+- creation/import time
+
+Never modify imported RAW files.
+
+COLOR ARCHITECTURE:
+
+Create an internal IA Color Graph.
+
+Conceptually:
+
+Input
+→ camera normalization
+→ WB intent
+→ tone
+→ matrix
+→ LUT
+→ shadow shaping
+→ highlight shaping
+→ chroma
+→ optional monochrome/filter behavior
+→ grain
+→ output
+
+Do not require every target platform to support every node.
+
+A compiler translates the master intent into whatever a target camera supports.
+
+PROJECT STRUCTURE:
+
+apps/
+  web/
+
+server/
+  api/
+  db/
+  services/
+  storage/
+
+core/
+  color/
+  looks/
+  cameras/
+  leica/
+  fuji/
+
+bridge/
+  common/
+  leica/
+  fuji/
+
+camera_profiles/
+
+reference/
+  leica/
+    v1.2/
+
+fixtures/
+  leica/
+
+tests/
+  leica/
+  fuji/
+  color/
+  api/
+
+scripts/
+
+docs/
+
+DO NOT PLACE AUTHORITATIVE SOURCE FILES IN GENERATED OUTPUT DIRECTORIES.
+
+FIRST MILESTONE:
+
+Do NOT begin with Fuji reverse engineering.
+
+First make the authoritative Leica v1.2 behavior reproducible.
+
+Build a page that can:
+
+- display authoritative Leica Looks from v1.2
+- show IDs
+- show provenance
+- show source files
+- inspect generated payload information
+- display checksums
+- compare known-good payload vs newly generated payload
+- connect to IA Camera Bridge
+- request current camera Look table
+- upload a Look
+- re-read and verify the result
+
+Only after regression testing is green should Leica code be refactored.
+
+SECOND MILESTONE:
+
+Add Photo Lab software preview:
+
+- upload image
+- extract metadata
+- embedded JPEG preview
+- apply CUBE
+- before/after
+- split comparison
+- export JPEG
+- export TIFF
+
+THIRD MILESTONE:
+
+Build Fuji recipe system.
+
+FOURTH MILESTONE:
+
+Build Fuji native-camera-processing research module.
+
+SECURITY:
+
+Never expose Leica/Fuji camera transport services directly to the public Internet.
+
+The local bridge creates outbound connections to Replit.
+
+Use short-lived bridge pairing tokens.
+
+Validate every payload checksum before camera upload.
+
+Do not store credentials in source files.
+
+Use Replit Secrets/environment variables.
+
+TESTING RULE:
+
+Before changing working Leica code, create a regression test demonstrating current behavior.
+
+If a refactor changes known-good output unexpectedly, stop and investigate.
+
+Do not "fix" differences by rewriting fixtures.
+
+The fixtures define the expected behavior.
+
+DEVELOPMENT STYLE:
+
+Work incrementally.
+
+Create checkpoints after major working milestones.
+
+Avoid massive rewrites.
+
+Preserve the existing successful reverse-engineered implementation.
+
+Before starting implementation, inventory the v1.2 ZIP and produce:
+
+1. file tree
+2. description of each important file
+3. authoritative vs generated classification
+4. known-good scripts
+5. proposed migration mapping into the new repository
+6. files that must remain untouched
+
+Then begin Phase 1.
