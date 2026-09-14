@@ -1,0 +1,10 @@
+{
+  "manufacturer": "Fujifilm",
+  "model": "X-E5",
+  "raw_extension": "RAF",
+  "recipe_support": true,
+  "native_processing_research": true,
+  "capabilities_verified": false,
+  "controls": {},
+  "notes": "Do not fill controls from guesses; verify against the body/firmware and project findings."
+}

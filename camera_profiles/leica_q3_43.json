@@ -1,0 +1,8 @@
+{
+  "manufacturer": "Leica",
+  "model": "Q3 43",
+  "family": "Q3",
+  "leica_looks": true,
+  "bridge_protocol": "ptpip",
+  "notes": "Populate firmware-specific details from verified project traces/code."
+}

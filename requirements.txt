@@ -1,0 +1,2 @@
+# The migration validator and authoritative uploader use Python's standard library.
+# Add web-app dependencies only after the integrity tests pass.

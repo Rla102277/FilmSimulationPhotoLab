@@ -1,0 +1,4 @@
+OPEN Package.swift IN XCODE
+Select executable scheme: InfiniteArchLeicaLookBuilder
+Q3 USB mode: PTP
+This folder is the persistent MVP project.

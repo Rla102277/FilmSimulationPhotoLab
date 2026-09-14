@@ -1,0 +1,88 @@
+tx=24 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=58 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=59 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=60 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=61 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=62 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=63 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=66 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=67 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=70 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0
+tx=74 bytes=833 fields=61 parsed=833
+  id=15 markers={'0x2000000F'} slot=0 name=Standard type=1 base=0
+  id=16 markers={'0x20000010'} slot=1 name=Monochrome type=1 base=1
+  id=26 markers={'0x20000011'} slot=2 name=Pure type=2 base=0
+  id=24 markers={'0x20000012'} slot=3 name=Silver type=2 base=0
+  id=7 markers={'0x20000014'} slot=4 name=Brass type=2 base=0
+  id=8 markers={'0x20000015'} slot=5 name=Chrome type=2 base=0
+  id=21 markers={'0x20000013'} slot=6 name=Greg Williams type=3 base=0

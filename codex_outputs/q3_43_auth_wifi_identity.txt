@@ -1,0 +1,53 @@
+ 0.992078 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | %9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | s/identifier=40AE608B-616E-4647-9D1C-FC9D1B721B32 | authTag=PlkPl53jsbY=
+ 7.036556 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+ 7.046149 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+ 7.071009 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+ 7.512585 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+ 7.526052 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+ 7.631505 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+ 7.879551 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.504009 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.528975 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.550282 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.565013 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.572118 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.592297 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.721617 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.735912 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.757720 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.765275 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.771329 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.814142 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+26.844646 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+26.848519 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | iPhone
+26.852404 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp
+26.867548 if=0 DHCP 0.0.0.0:68 -> 255.255.255.255:67 eth=1e:4e:95:7f:0c:d1->ff:ff:ff:ff:ff:ff xid=0x1e7a038e chaddr=1e:4e:95:7f:0c:d1
+26.877306 if=0 DHCP 192.168.54.1:67 -> 192.168.54.10:68 eth=50:26:ef:fd:d6:91->1e:4e:95:7f:0c:d1 xid=0x1e7a038e chaddr=1e:4e:95:7f:0c:d1
+27.447372 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+27.585423 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+27.589140 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb _ptp
+27.624644 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb arpa | iPhone
+27.632255 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+27.639833 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _remotepairing | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | iPhone
+27.645690 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb _remotepairing | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | iPhone
+27.696121 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+27.704715 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _remotepairing | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | iPhone
+27.710785 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb _remotepairing | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | iPhone
+28.473058 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+28.477183 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb _ptp
+28.481462 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp | iPhone
+28.486196 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb arpa | iPhone | _ptp
+28.570156 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE=
+28.581132 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE=
+28.586993 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+29.676392 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE=
+29.684134 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE=
+29.689460 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+30.479796 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE=
+30.489632 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone | <9ca:7c:e6:b5:5b:ab@fe80::c87c:e6ff:feb5:5bab-supportsRP-26 | _ptp | 81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE= | arpa
+31.538099 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+31.541334 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb _ptp
+32.568732 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp
+37.815928 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone |  81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE=
+37.823282 if=0 mDNS 192.168.54.10 eth=1e:4e:95:7f:0c:d1->01:00:5e:00:00:fb iPhone | _remotepairing | Y/identifier=F6E50CA8-14BB-4965-A3A2-A6F748E9FD63 | authTag=6AglxGNj | iPhone |  81e:4e:95:7f:0c:d1@fe80::1c4e:95ff:fe7f:cd1-supportsRP-26 | s/identifier=309EEB3E-B511-4362-912B-B9A6EC29F28B | authTag=yFPUC0H/XWE= | arpa
+56.799516 if=0 mDNS 169.254.231.135 eth=06:bf:d5:c9:b5:ca->01:00:5e:00:00:fb _ptp

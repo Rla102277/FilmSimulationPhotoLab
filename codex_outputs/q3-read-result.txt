@@ -1,0 +1,2 @@
+Q3 access + read-only Leica Look table check
+ERROR: Q3 access control: camera did not enter open mode. ok,Leica Q3 43-5976155,remote,encrypted

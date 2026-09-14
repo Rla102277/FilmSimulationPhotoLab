@@ -1,0 +1,5 @@
+Waiting up to 180s for FOTOS to release the Q3 PTP listener
+Now force-quit FOTOS on the iPhone; keep the Q3 connection screen open.
+waiting: Q3 network error: 192.168.54.1:15740: Connection refused
+waiting: Q3 network error: 192.168.54.1:15740: Operation timed out
+HANDOFF TIMEOUT: the Q3 never opened its PTP listener to this Mac.

@@ -1,0 +1,98 @@
+{
+  "name": "Infinite Arch Photo Lab Replit Starter",
+  "created_for": "Replit migration",
+  "authoritative_leica_version": "1.2",
+  "authoritative_archive_sha256": "1932cb619aeabe3b63bf616f77ffeac94181fa92af2a189f865068aac8f1e83f",
+  "authoritative_looks": [
+    {
+      "id": 1001,
+      "key": "invitation",
+      "name": "IA Invitation",
+      "base": 1,
+      "base_name": "Monochrome",
+      "mono": true,
+      "cube_sha256": "9452ebfd550ce32ffce02077c45900842f42d6ba95e679afc39d0b615c631172",
+      "icon_sha256": "8949bdeb210d726b5a4914a0d3b58317793635e4dd49c2b8106f67437ae28a76"
+    },
+    {
+      "id": 1002,
+      "key": "witness",
+      "name": "IA Witness",
+      "base": 1,
+      "base_name": "Monochrome",
+      "mono": true,
+      "cube_sha256": "8e26b914ab9e264185b7a27e72bb331e06d831c14d74159ff96bb1b404aaa0b8",
+      "icon_sha256": "1f1466ed892323c63afb940195dcd85886500c9b78f129006daaefaefdd88804"
+    },
+    {
+      "id": 1003,
+      "key": "zone",
+      "name": "IA Zone",
+      "base": 1,
+      "base_name": "Monochrome",
+      "mono": true,
+      "cube_sha256": "c7a24b78eaf058a39b420de71f1ac19a07ecc3e57b7dee3acc539a2170adc4d9",
+      "icon_sha256": "2994d6992aa726da7d9f220241e87aed78df112a1a69cec9e63c35e79bca9a25"
+    },
+    {
+      "id": 1004,
+      "key": "presence",
+      "name": "IA Presence",
+      "base": 0,
+      "base_name": "Standard",
+      "mono": false,
+      "cube_sha256": "06dae2aad0db2c84d4f842f6ce08a4bacacc914ea5a94c49060316f60e8c223a",
+      "icon_sha256": "1fad7f2536bf9d3c61d7e0250e475675ced971dbcc8f77843136fa50d8aacacd"
+    },
+    {
+      "id": 1005,
+      "key": "threshold",
+      "name": "IA Threshold",
+      "base": 0,
+      "base_name": "Standard",
+      "mono": false,
+      "cube_sha256": "d704bcca8b24edb7ab1305bae01419e175d38015ffedd337a2ffc966cb4a50c0",
+      "icon_sha256": "108ac5c1c988da48dd2704dde2802c8c9917205eecb632eb0d6d86bab42d7049"
+    },
+    {
+      "id": 1006,
+      "key": "americannegative",
+      "name": "IA American Negative",
+      "base": 0,
+      "base_name": "Standard",
+      "mono": false,
+      "cube_sha256": "d2c7aa4e5ae346cc8db8ed4fa2567273f33f5e65e2ab5e3e8708154cce4ecbb1",
+      "icon_sha256": "2196a0051d0ead92a1f1bd10490cafa02c8a57f670b3fc572dd0299329e44c68"
+    },
+    {
+      "id": 1007,
+      "key": "400h",
+      "name": "IA Kin",
+      "base": 0,
+      "base_name": "Standard",
+      "mono": false,
+      "cube_sha256": "d47bff06bc2130ae7c84f54a1803212830bdf9314b17ca5c94352c582f7d6bce",
+      "icon_sha256": "31caa3038027e8bc1ee88d865ca0b22b09dc15d69efa4c10c6662592ceebf35e"
+    },
+    {
+      "id": 1008,
+      "key": "natura",
+      "name": "IA Natura",
+      "base": 0,
+      "base_name": "Standard",
+      "mono": false,
+      "cube_sha256": "180e125946c2ccca9513f6b5598a62709a93a0430d6902b0d69fa128c49eeae0",
+      "icon_sha256": "de8e13d0868f7abead166d5a2e638ff50e879abc78b3aeef604a19408e690e11"
+    },
+    {
+      "id": 1009,
+      "key": "ember",
+      "name": "IA Ember",
+      "base": 0,
+      "base_name": "Standard",
+      "mono": false,
+      "cube_sha256": "78c2fb13ff052d8f022a0eff1cada13d6434b4a4cf15ac253857930508d1de5a",
+      "icon_sha256": "2176e0e945e6453db71148666eed54a2a8fe4dd1312831d142b3eacff75dc7cf"
+    }
+  ]
+}

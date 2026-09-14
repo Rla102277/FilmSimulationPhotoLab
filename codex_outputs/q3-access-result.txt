@@ -1,0 +1,3 @@
+Q3 Wi-Fi access check (no camera settings or Looks are changed)
+response=ok_under_research_no_msg,Leica Q3 43-5976155,remote,encrypted
+access=NOT OPEN
