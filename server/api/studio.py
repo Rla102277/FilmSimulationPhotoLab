@@ -6,12 +6,14 @@ import json
 import hashlib
 import copy
 import base64
+from pathlib import PurePath
 from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 
 from core.assets.library import SourceLibrary
+from core.assets.profile_catalog import catalog, find_profile, read_profile
 from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cube
 from core.color.graph import graph_status, validate_color_graph
 from core.color.graph_compiler import compile_graph_cube
@@ -275,6 +277,36 @@ def source_from_look(look_id: int):
         },
     )
     result["display_name"] = sample["name"]
+    return result
+
+
+@router.get("/profile-catalog")
+def profile_catalog(search: str | None = None, type: str | None = None):
+    needle = (search or "").strip().lower()
+    requested_type = (type or "").strip().lower()
+    items = [
+        dict(item) for item in catalog()
+        if (not needle or needle in item["display_name"].lower())
+        and (not requested_type or item["asset_type"] == requested_type)
+    ]
+    return {"count": len(items), "profiles": items}
+
+
+@router.post("/profile-catalog/{catalog_id}/import", status_code=201)
+def import_profile(catalog_id: str):
+    profile = find_profile(catalog_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found in immutable catalog")
+    content = read_profile(profile)
+    extension = PurePath(profile["member"]).suffix.upper()
+    filename = f'{profile["display_name"]}{extension}'
+    result = library.add(
+        filename,
+        content,
+        "application/octet-stream" if extension == ".DCP" else "text/plain",
+        {"origin": "uploaded immutable profile catalog", "archive_member": profile["member"]},
+    )
+    result["display_name"] = profile["display_name"]
     return result
 
 

@@ -120,6 +120,9 @@ input,select,textarea { border:1px solid #35413c; border-radius:4px; background:
 .source-row { border:1px solid #303a35; background:#1a211f; border-radius:4px; padding:10px; cursor:pointer; }
 .source-row:hover,.source-row.open { border-color:var(--acid); }
 .source-row strong { display:block; font-size:12px; }
+.catalog-profile { display:grid; grid-template-columns:1fr auto; column-gap:7px; align-items:center; }
+.catalog-profile strong,.catalog-profile .source-meta { grid-column:1; }
+.catalog-profile button { grid-column:2; grid-row:1/3; }
 .source-meta { color:var(--muted); font-size:10px; margin-top:4px; }
 .component-list { display:grid; gap:5px; margin-top:9px; padding-top:8px; border-top:1px solid var(--line); }
 .component-row { display:flex; justify-content:space-between; gap:6px; align-items:center; color:#bdc5bc; font-size:11px; }

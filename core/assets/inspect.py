@@ -33,13 +33,13 @@ DCP_TAGS = {
     50721: "ColorMatrix1", 50722: "ColorMatrix2",
     50723: "CameraCalibration1", 50724: "CameraCalibration2",
     50725: "ReductionMatrix1", 50726: "ReductionMatrix2",
-    50727: "ForwardMatrix1", 50728: "ForwardMatrix2",
     50730: "BaselineExposure", 50778: "CalibrationIlluminant1",
-    50779: "CalibrationIlluminant2", 50931: "ProfileCalibrationSignature",
-    50936: "ProfileName", 50938: "ProfileHueSatMapDims",
-    50939: "ProfileHueSatMapData1", 50940: "ProfileHueSatMapData2",
-    50941: "ProfileToneCurve", 50784: "ProfileLookTableDims",
-    50785: "ProfileLookTableData",
+    50779: "CalibrationIlluminant2", 50932: "ProfileCalibrationSignature",
+    50936: "ProfileName", 50937: "ProfileHueSatMapDims",
+    50938: "ProfileHueSatMapData1", 50939: "ProfileHueSatMapData2",
+    50940: "ProfileToneCurve", 50964: "ForwardMatrix1",
+    50965: "ForwardMatrix2", 50981: "ProfileLookTableDims",
+    50982: "ProfileLookTableData",
 }
 
 
@@ -49,7 +49,7 @@ def _tiff_tags(content: bytes) -> dict:
         raise ValueError("DCP does not have a TIFF/DNG profile header")
     endian = "<" if content[:2] == b"II" else ">"
     marker = struct.unpack_from(endian + "H", content, 2)[0]
-    if marker != 42:
+    if marker not in {42, 0x4352}:
         raise ValueError("Unsupported TIFF header in DCP")
     offset = struct.unpack_from(endian + "I", content, 4)[0]
     if offset + 2 > len(content):

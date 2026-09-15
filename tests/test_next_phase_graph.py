@@ -5,6 +5,7 @@ import unittest
 
 import numpy as np
 
+from core.assets.inspect import inspect_source_asset
 from core.assets.library import SourceLibrary
 from core.color.cube import parse_cube
 from core.color.graph_compiler import compile_graph_cube
@@ -27,6 +28,17 @@ def cube_text(transform: str = "identity") -> str:
 
 
 class NextPhaseGraphTests(unittest.TestCase):
+    def test_adobe_iirc_dcp_container_extracts_components(self) -> None:
+        import zipfile
+        from core.assets.profile_catalog import DEFAULT_ARCHIVE
+
+        with zipfile.ZipFile(DEFAULT_ARCHIVE) as bundle:
+            member = next(name for name in bundle.namelist() if name.lower().endswith(".dcp"))
+            inspection = inspect_source_asset(member, bundle.read(member))
+        component_ids = {item["id"] for item in inspection["components"]}
+        self.assertIn("ColorMatrix1", component_ids)
+        self.assertIn("ProfileToneCurve", component_ids)
+
     def test_source_sha256_dedupe_retains_components(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             library = SourceLibrary(f"{directory}/library.sqlite3")
