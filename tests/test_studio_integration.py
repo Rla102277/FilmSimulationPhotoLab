@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import unittest
 
-from server.api.studio import _look_id, _normalize_ui_graph
+from server.api.studio import _look_id, _normalize_ui_graph, source_from_look
 
 
 class StudioIntegrationTests(unittest.TestCase):
+    def test_builtin_look_becomes_camera_neutral_graph_source(self) -> None:
+        source = source_from_look(1201)
+        self.assertEqual(source["display_name"], "Silver Grain")
+        self.assertEqual(source["filename"], "silver-grain.CUBE")
+        self.assertEqual(source["components"][0]["type"], "cube_lut")
+
     def test_frontend_source_filename_is_reported_as_unresolved(self) -> None:
         graph = {
             "name": "Unresolved UI Look", "version": "v1.2", "base": "Standard",

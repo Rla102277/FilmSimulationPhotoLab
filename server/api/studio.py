@@ -16,6 +16,8 @@ from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cub
 from core.color.graph import graph_status, validate_color_graph
 from core.color.graph_compiler import compile_graph_cube
 from core.film.icons import generic_film_icon
+from core.film.samples import get_sample
+from core.leica.authoritative import read_look_asset
 from core.leica.compiler import compile_look_payload
 from core.leica.package import build_look_package
 
@@ -248,6 +250,32 @@ async def upload_sources_bulk(
         "duplicates": sum(result["duplicate"] for result in results),
         "sources": results,
     }
+
+
+@router.post("/sources/from-look/{look_id}", status_code=201)
+def source_from_look(look_id: int):
+    """Catalog a verified built-in Look under its public, camera-neutral name."""
+    try:
+        sample = get_sample(look_id)
+        content = read_look_asset(sample["source_id"], "cube")
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    filename = f'{sample["key"]}.CUBE'
+    result = library.add(
+        filename,
+        content,
+        "text/plain",
+        {
+            "origin": "verified built-in Look",
+            "public_name": sample["name"],
+            "public_id": sample["id"],
+            "immutable_fixture_id": sample["source_id"],
+        },
+    )
+    result["display_name"] = sample["name"]
+    return result
 
 
 @router.get("/sources/{source_id}")
