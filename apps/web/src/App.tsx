@@ -6,6 +6,10 @@ type Component = { id?: string; component_id?: string; type?: string; name?: str
 type Source = { id: string; filename?: string; name?: string; type?: string; asset_type?: string; sha256?: string; provenance?: string; components?: Component[] };
 type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
 type Graph = { name: string; version: string; look_id: number; base: string; layers: Layer[]; controls: Record<string, number>; solo?: string | null };
+type Snapshot = { id?: string; name: string; graph: Graph };
+type LookVersion = { id: string; label: string; graph: Graph };
+type SavedLook = { id: string; name: string; status: "draft" | "published" | "experiment"; tags: string[]; notes: string; rating: number | null; favorite: boolean; version?: string; graph?: Graph; snapshots?: Snapshot[]; versions?: LookVersion[] };
+type WorkspaceState = { graph: Graph; history: Graph[]; future: Graph[]; snapshots: Snapshot[]; lookId: string | null; lookMeta: Omit<SavedLook, "id" | "name">; revision?: number; client_id?: string; client_sequence?: number };
 
 const api = async <T,>(path: string, options?: RequestInit): Promise<T> => {
   const res = await fetch(path, options);
@@ -28,7 +32,11 @@ export function App() {
   const [graph, setGraph] = useState<Graph>({ name: "Iceland Chrome", version: "v1.2", look_id: 1142, base: "Standard", layers: initialLayers, controls: defaultControls, solo: null });
   const [history, setHistory] = useState<Graph[]>([]);
   const [future, setFuture] = useState<Graph[]>([]);
-  const [snapshots, setSnapshots] = useState<{ name: string; graph: Graph }[]>([]);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [looks, setLooks] = useState<SavedLook[]>([]);
+  const [lookId, setLookId] = useState<string | null>(null);
+  const [currentLook, setCurrentLook] = useState<SavedLook | null>(null);
+  const [lookMeta, setLookMeta] = useState<Omit<SavedLook, "id" | "name">>({ status: "draft", tags: [], notes: "", rating: null, favorite: false });
   const [selectedLayer, setSelectedLayer] = useState<string>(initialLayers[0].id);
   const [solo, setSolo] = useState<string | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
@@ -47,7 +55,48 @@ export function App() {
   const [snapshotName, setSnapshotName] = useState("");
   const [status, setStatus] = useState<Record<string, unknown> | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  const workspaceTimer = useRef<number | undefined>(undefined);
+  const workspaceRevision = useRef(0);
+  const workspaceClient = useRef(crypto.randomUUID());
+  const workspaceSequence = useRef(0);
+  const workspacePending = useRef<WorkspaceState | null>(null);
+  const workspaceSaving = useRef(false);
+  const openRequest = useRef(0);
+  const hydrated = useRef(false);
 
+  useEffect(() => {
+    Promise.all([
+      api<{ state: { graph: Graph; history?: Graph[]; future?: Graph[]; snapshots?: Snapshot[]; lookId?: string | null; lookMeta?: typeof lookMeta; revision?: number } | null }>("/api/studio/workspace"),
+      api<{ looks: SavedLook[] }>("/api/studio/looks"),
+    ]).then(([saved, library]) => {
+      setLooks(library.looks);
+      if (saved.state) {
+        setGraph(saved.state.graph); setSolo(saved.state.graph.solo || null);
+        setHistory(saved.state.history || []); setFuture(saved.state.future || []);
+        setSnapshots(saved.state.snapshots || []); setLookId(saved.state.lookId || null);
+        workspaceRevision.current = saved.state.revision || 0;
+        if (saved.state.lookMeta) setLookMeta(saved.state.lookMeta);
+      }
+    }).catch((e) => setMessage(`Could not restore workspace: ${String(e)}`)).finally(() => { hydrated.current = true; });
+  }, []);
+  useEffect(() => {
+    if (!hydrated.current) return;
+    window.clearTimeout(workspaceTimer.current);
+    workspaceTimer.current = window.setTimeout(() => {
+      queueWorkspace({ graph: { ...graph, solo }, history, future, snapshots, lookId, lookMeta });
+    }, 400);
+    return () => window.clearTimeout(workspaceTimer.current);
+  }, [graph, history, future, snapshots, lookId, lookMeta, solo]);
+  useEffect(() => {
+    const flush = () => {
+      if (!hydrated.current) return;
+      const expectedRevision = workspaceRevision.current;
+      const state = { graph: { ...graph, solo }, history, future, snapshots, lookId, lookMeta, revision: expectedRevision + 1, client_id: workspaceClient.current, client_sequence: ++workspaceSequence.current };
+      fetch("/api/studio/workspace", { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...state, expected_revision: expectedRevision }) }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, [graph, history, future, snapshots, lookId, lookMeta, solo]);
   useEffect(() => {
     if (view !== "studio" && view !== "sources") return;
     const query = new URLSearchParams({ search: sourceSearch, type: sourceType });
@@ -68,6 +117,33 @@ export function App() {
   }, [graph, image]);
 
   const displayedLayers = useMemo(() => solo ? graph.layers.map((l) => ({ ...l, enabled: l.id === solo || l.type === "normalization" || l.type === "output" })) : graph.layers, [graph.layers, solo]);
+  function queueWorkspace(state: WorkspaceState) {
+    workspacePending.current = { ...state, client_id: workspaceClient.current, client_sequence: ++workspaceSequence.current };
+    if (!workspaceSaving.current) void drainWorkspace();
+  }
+  async function drainWorkspace() {
+    workspaceSaving.current = true;
+    while (workspacePending.current) {
+      const state = workspacePending.current; workspacePending.current = null;
+      const expectedRevision = workspaceRevision.current;
+      try {
+        const res = await fetch("/api/studio/workspace", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...state, revision: expectedRevision + 1, expected_revision: expectedRevision }) });
+        const body = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          workspaceRevision.current = body.detail?.current_revision ?? expectedRevision;
+          setMessage("Workspace changed in another tab; this tab did not overwrite it.");
+          continue;
+        }
+        if (!res.ok) throw new Error(body.detail || res.statusText);
+        workspaceRevision.current = body.state?.revision ?? expectedRevision + 1;
+      } catch (e) {
+        workspacePending.current = state;
+        setMessage(`Autosave failed: ${String(e)}`);
+        break;
+      }
+    }
+    workspaceSaving.current = false;
+  }
   function mutate(next: Graph) { setHistory((h) => [...h.slice(-29), graph]); setFuture([]); setGraph(next); }
   function setSoloLayer(layerId: string | null) { setSolo(layerId); setGraph((current) => ({ ...current, solo: layerId })); }
   function updateLayer(layerId: string, patch: Partial<Layer>) { mutate({ ...graph, layers: graph.layers.map((l) => l.id === layerId ? { ...l, ...patch } : l) }); }
@@ -91,16 +167,61 @@ export function App() {
   function download(blob: Blob, name: string) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
   function chooseImage(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; if (originalUrl) URL.revokeObjectURL(originalUrl); setImage(file); setOriginalUrl(URL.createObjectURL(file)); }
   async function openSourceDetails(source: Source) { setOpenSource(openSource === source.id ? null : source.id); if (!source.components) { try { const detail = await api<Source>(`/api/studio/sources/${source.id}`); setSources((all) => all.map((s) => s.id === source.id ? detail : s)); } catch (e) { setSourceError(String(e)); } } }
+  async function saveLook() {
+    const request = openRequest.current;
+    try {
+      const saved = await api<SavedLook>("/api/studio/looks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: lookId, name: graph.name, graph: { ...graph, solo }, ...lookMeta }) });
+      if (request !== openRequest.current) return;
+      setLookId(saved.id); setCurrentLook(saved); setLooks((all) => [saved, ...all.filter((item) => item.id !== saved.id)]);
+      setMessage(`Saved ${saved.version}; earlier versions remain available.`);
+    } catch (e) { setMessage(String(e)); }
+  }
+  async function createSnapshot() {
+    if (!snapshotName.trim()) return;
+    const request = openRequest.current;
+    try {
+      let activeId = lookId;
+      if (!activeId) {
+        const saved = await api<SavedLook>("/api/studio/looks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: graph.name, graph: { ...graph, solo }, ...lookMeta }) });
+        if (request !== openRequest.current) return;
+        activeId = saved.id; setLookId(saved.id); setLooks((all) => [saved, ...all]);
+      }
+      const snapshot = await api<Snapshot>(`/api/studio/looks/${activeId}/snapshots`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: snapshotName.trim(), graph: { ...graph, solo } }) });
+      if (request !== openRequest.current) return;
+      setSnapshots((all) => [...all, snapshot]); setSnapshotName("");
+    } catch (e) { setMessage(String(e)); }
+  }
+  async function openLook(id: string) {
+    const request = ++openRequest.current;
+    try {
+      const saved = await api<SavedLook>(`/api/studio/looks/${id}`);
+      if (request !== openRequest.current) return;
+      if (!saved.graph) return;
+      setLookId(saved.id); setCurrentLook(saved); setGraph(saved.graph); setSolo(saved.graph.solo || null); setSnapshots(saved.snapshots || []);
+      setLookMeta({ status: saved.status, tags: saved.tags, notes: saved.notes, rating: saved.rating, favorite: saved.favorite });
+      setHistory([]); setFuture([]); setMessage(`Opened ${saved.name} ${saved.version || ""}`);
+    } catch (e) { if (request === openRequest.current) setMessage(String(e)); }
+  }
+  function openVersion(versionId: string) {
+    const version = currentLook?.versions?.find((item) => item.id === versionId);
+    if (version) { mutate(version.graph); setSolo(version.graph.solo || null); setMessage(`Restored ${version.label} into the editable workspace.`); }
+  }
+  function newLook() {
+    openRequest.current += 1;
+    const layers = initialLayers.map((layer) => ({ ...layer, id: id() }));
+    setLookId(null); setCurrentLook(null); setGraph({ name: "Untitled Look", version: "v1.0", look_id: 2000, base: "Standard", layers, controls: { ...defaultControls }, solo: null });
+    setLookMeta({ status: "draft", tags: [], notes: "", rating: null, favorite: false }); setSnapshots([]); setHistory([]); setFuture([]); setSolo(null); setSelectedLayer(layers[0].id);
+  }
 
   return <div className="app-shell">
     <aside><a className="brand" href="/"><span>FL</span><strong>Film Look<br />Studio</strong></a><nav>{[["studio", "Look Builder"], ["library", "Leica library"], ["sources", "Source library"], ["inventory", "Provenance"], ["fuji", "Fuji recipes"]].map(([key, label]) => <button className={view === key ? "active" : ""} onClick={() => setView(key as View)} key={key}>{label}</button>)}</nav><div className="aside-foot"><span><i className="online-dot" /> Compiler verified</span><a href="/look-building">How Looks are built</a><a href="/install-guide">Camera installation guide</a><a href="/docs">API documentation</a></div></aside>
     <main>{message && <div className="message" role="status">{message}</div>}{sourceError && <div className="error">{sourceError}</div>}
       {view === "studio" && <><div className="studio-head"><div><p className="eyebrow">Live color assembly bench / graph {graph.version}</p><h1>{graph.name}</h1></div><div className="head-actions"><button className="secondary" onClick={undo} disabled={!history.length}>Undo</button><button className="secondary" onClick={redo} disabled={!future.length}>Redo</button><button className="secondary" onClick={() => setGraph({ ...graph, layers: initialLayers.map((l) => ({ ...l, id: id() })), controls: defaultControls })}>Reset</button><span className="status-chip">{rendering ? "Rendering preview" : "Live preview"}</span></div></div>
-        <div className="toolbar"><input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option><option>Neutral</option></select><button className="secondary" onClick={buildCube}>Export CUBE</button><button className="primary" onClick={buildPackage}>Build Look package</button></div>
+        <div className="toolbar"><select value={lookId || ""} onChange={(e) => e.target.value ? openLook(e.target.value) : newLook()}><option value="">New Look</option>{looks.map((item) => <option value={item.id} key={item.id}>{item.favorite ? "★ " : ""}{item.name} · {item.version}</option>)}</select>{currentLook?.versions && currentLook.versions.length > 1 && <select aria-label="Version history" defaultValue={currentLook.versions[0].id} onChange={(e) => openVersion(e.target.value)}>{currentLook.versions.map((version) => <option value={version.id} key={version.id}>{version.label}</option>)}</select>}<input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option><option>Neutral</option></select><select value={lookMeta.status} onChange={(e) => setLookMeta({ ...lookMeta, status: e.target.value as SavedLook["status"] })}><option value="draft">Draft</option><option value="published">Published</option><option value="experiment">Experiment</option></select><button className="secondary" onClick={() => setLookMeta({ ...lookMeta, favorite: !lookMeta.favorite })}>{lookMeta.favorite ? "★ Favorite" : "☆ Favorite"}</button><button className="primary" onClick={saveLook}>Save version</button><button className="secondary" onClick={buildCube}>Export CUBE</button><button className="primary" onClick={buildPackage}>Build Look package</button></div>
         <div className="bench">
           <section className="bench-panel"><div className="panel-title">Source library <span>{sources.length}</span></div><div className="panel-body"><div className="source-tools"><input placeholder="Search names, metadata…" value={sourceSearch} onChange={(e) => setSourceSearch(e.target.value)} /><select value={sourceType} onChange={(e) => setSourceType(e.target.value)}><option value="">All types</option><option>DCP</option><option>CUBE</option><option>XMP</option><option>LRTemplate</option><option>Hald</option><option>Leica Look</option></select><label className="secondary">Bulk ingest sources<input type="file" multiple hidden accept=".dcp,.cube,.xmp,.lrtemplate,.jpg,.jpeg,.png" onChange={uploadSources} /></label></div><div className="source-list">{sources.map((source) => <div className={`source-row ${openSource === source.id ? "open" : ""}`} key={source.id} onClick={() => openSourceDetails(source)} draggable onDragStart={(e) => e.dataTransfer.setData("component", JSON.stringify({ name: source.filename || source.name, type: source.type || source.asset_type, source_id: source.id }))}><strong>{source.filename || source.name || source.id}</strong><div className="source-meta">{source.type || source.asset_type || "SOURCE"} · {source.components?.length || 0} components</div>{openSource === source.id && <div className="component-list">{(source.components || []).map((component, index) => <div className="component-row" key={component.component_id || component.id || index}><span>{component.name || component.component_id || component.type}</span><button className="tiny" onClick={(e) => { e.stopPropagation(); addComponent(component, source); }}>Use this</button></div>)}</div>}</div>)}</div></div></section>
           <section className="bench-panel"><div className="preview-toolbar"><div><b>VIEWFINDER</b> <span className="source-meta"> · {previewMode === "wipe" ? "draggable wipe" : "side by side"}</span></div><div className="head-actions"><label className="tiny">Upload test image<input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={chooseImage} /></label><button className="tiny" onClick={() => setPreviewMode("wipe")}>Wipe</button><button className="tiny" onClick={() => setPreviewMode("side")}>Side by side</button><button className={`tiny ${zoom === "fit" ? "active" : ""}`} onClick={() => setZoom("fit")}>Fit</button><button className={`tiny ${zoom === "100" ? "active" : ""}`} onClick={() => setZoom("100")}>100%</button></div></div><div className="preview-stage">{originalUrl ? previewMode === "side" ? <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="preview-caption left">Original</div>{previewUrl && <div className="wipe" style={{ left: "50%", width: "50%" }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl} alt="Current look" /></div>}</> : <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="wipe" style={{ width: `${wipe}%` }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /></div><span className="preview-caption left">Original</span><span className="preview-caption right">Current look</span><input className="wipe-range" aria-label="Wipe position" type="range" min="0" max="100" value={wipe} onChange={(e) => setWipe(Number(e.target.value))} /></> : <div className="empty-preview">Upload one test photograph. Every graph edit will arrive here without a compile step.</div>}</div><div className="filmstrip"><button>MY IMAGE</button><button disabled>Portrait / skin</button><button disabled>Landscape</button><button disabled>City / street</button><button disabled>Foliage</button><button disabled>HDR chart</button></div></section>
-          <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragEnd={() => undefined} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayer(layer.id, { strength: Number(e.target.value) })} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={() => { if (snapshotName.trim()) { setSnapshots([...snapshots, { name: snapshotName, graph }]); setSnapshotName(""); } }}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status ? "ready" : "dirty"}>{status ? "READY" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className="ready">READY</b></div><div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
+          <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragEnd={() => undefined} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayer(layer.id, { strength: Number(e.target.value) })} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><div className="look-meta"><input placeholder="Tags, comma separated" value={lookMeta.tags.join(", ")} onChange={(e) => setLookMeta({ ...lookMeta, tags: e.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} /><textarea placeholder="Notes" value={lookMeta.notes} onChange={(e) => setLookMeta({ ...lookMeta, notes: e.target.value })} /><label>Rating <select value={lookMeta.rating || ""} onChange={(e) => setLookMeta({ ...lookMeta, rating: e.target.value ? Number(e.target.value) : null })}><option value="">Unrated</option>{[1,2,3,4,5].map((rating) => <option key={rating}>{rating}</option>)}</select></label></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={createSnapshot}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.id || s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status ? "ready" : "dirty"}>{status ? "READY" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className="ready">READY</b></div><div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
         </div></>}
       {view === "sources" && <SourceLibrary sources={sources} uploadSources={uploadSources} search={sourceSearch} setSearch={setSourceSearch} type={sourceType} setType={setSourceType} open={openSource} openSource={openSourceDetails} add={addComponent} />}
       {view === "library" && <LegacyLibrary setView={setView} />}

@@ -6,10 +6,11 @@ import json
 import hashlib
 import copy
 import base64
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel, ConfigDict, Field
 
 from core.assets.library import SourceLibrary
 from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cube
@@ -18,11 +19,37 @@ from core.color.graph_compiler import compile_graph_cube
 from core.film.icons import generic_film_icon
 from core.leica.compiler import compile_look_payload
 from core.leica.package import build_look_package
+from server.db.studio_repository import WorkspaceConflict
 
 router = APIRouter(prefix="/studio", tags=["studio"])
 library = SourceLibrary()
+repository = library.repository
 MAX_SOURCE_BYTES = 50 * 1024 * 1024
 MAX_PREVIEW_BYTES = 20 * 1024 * 1024
+
+
+class LookSave(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str | None = Field(default=None, max_length=36)
+    name: str | None = Field(default=None, max_length=200)
+    graph: dict
+    status: Literal["draft", "published", "experiment"] = "draft"
+    tags: list[str] = Field(default_factory=list, max_length=30)
+    notes: str = Field(default="", max_length=20_000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+    favorite: bool = False
+
+
+class SnapshotSave(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    graph: dict
+
+
+class WorkspaceSave(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    graph: dict
+    revision: int = Field(default=0, ge=0)
+    expected_revision: int = Field(default=0, ge=0)
 
 
 def _base_value(value: Any) -> int | Any:
@@ -49,6 +76,13 @@ def _ui_strength(value: Any) -> float:
 def _manual_node(node_id: str, node_type: str, value: float) -> dict:
     return {"id": node_id, "type": node_type, "enabled": True, "strength": 1.0,
             "params": {"value": float(value) / 100.0}}
+
+
+def _control_number(controls: dict, key: str) -> float:
+    try:
+        return float(controls.get(key, 0))
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid control value: {key}") from exc
 
 
 def _normalize_ui_graph(value: dict) -> dict:
@@ -119,9 +153,9 @@ def _normalize_ui_graph(value: dict) -> dict:
         ("highlight_grade", "highlightHue", "highlightSat", "highlightLum"),
     )
     for node_type, hue_key, sat_key, lum_key in grade_specs:
-        hue = float(controls.get(hue_key, 0))
-        sat = float(controls.get(sat_key, 0))
-        lum = float(controls.get(lum_key, 0))
+        hue = _control_number(controls, hue_key)
+        sat = _control_number(controls, sat_key)
+        lum = _control_number(controls, lum_key)
         if not 0 <= hue <= 360 or not -100 <= sat <= 100 or not -100 <= lum <= 100:
             raise HTTPException(status_code=422, detail=f"Invalid {node_type} controls")
         if hue or sat or lum:
@@ -132,22 +166,23 @@ def _normalize_ui_graph(value: dict) -> dict:
     film_controls = (("toe", "film_toe"), ("shoulder", "film_shoulder"),
                      ("blackLift", "black_lift"), ("rolloff", "highlight_rolloff"))
     for control, node_type in film_controls:
-        raw = float(controls.get(control, 0))
+        raw = _control_number(controls, control)
         if not -100 <= raw <= 100:
             raise HTTPException(status_code=422, detail=f"Control {control} must be between -100 and 100")
         if raw:
             nodes.append(_manual_node(f"control-{node_type}", node_type, raw))
     for control, node_type in (("midContrast", "contrast"), ("density", "saturation")):
-        raw = float(controls.get(control, 0))
+        raw = _control_number(controls, control)
         if not -100 <= raw <= 100:
             raise HTTPException(status_code=422, detail=f"Control {control} must be between -100 and 100")
         if raw:
             nodes.append(_manual_node(f"control-{control}", node_type, raw))
-    if float(controls.get("balance", 0)):
+    balance = _control_number(controls, "balance")
+    if balance:
         nodes.append({"id": "control-balance", "type": "midtone_grade", "enabled": True,
-                      "strength": 1.0, "params": {"balance": float(controls["balance"]) / 100.0}})
+                      "strength": 1.0, "params": {"balance": balance / 100.0}})
     for control in ("monoMix", "yellowFilter", "orangeFilter", "redFilter", "greenFilter"):
-        raw = float(controls.get(control, 0))
+        raw = _control_number(controls, control)
         if raw:
             nodes.append({"id": f"control-{control}", "type": "monochrome_filter",
                           "enabled": True, "strength": 1.0,
@@ -223,6 +258,55 @@ def sources(search: str | None = None, type: str | None = None, asset_type: str 
     requested_type = aliases.get(requested_type.lower(), requested_type)
     items = library.list(search=search, asset_type=requested_type or None)
     return {"count": len(items), "sources": items}
+
+
+@router.get("/looks")
+def saved_looks():
+    items = repository.list_looks()
+    return {"count": len(items), "looks": items}
+
+
+@router.post("/looks", status_code=201)
+async def save_look(payload: LookSave):
+    data = payload.model_dump()
+    _graph(data["graph"])
+    data["tags"] = [tag.strip() for tag in data["tags"] if tag.strip()]
+    return repository.save_look(data)
+
+
+@router.get("/looks/{look_id}")
+def saved_look(look_id: str):
+    try:
+        return repository.get_look(look_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Look not found")
+
+
+@router.post("/looks/{look_id}/snapshots", status_code=201)
+async def save_snapshot(look_id: str, payload: SnapshotSave):
+    _graph(payload.graph)
+    try:
+        return repository.add_snapshot(look_id, payload.name.strip(), payload.graph)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Look not found")
+
+
+@router.get("/workspace")
+def active_workspace():
+    return repository.get_workspace() or {"state": None}
+
+
+@router.put("/workspace")
+async def save_active_workspace(state: WorkspaceSave):
+    data = state.model_dump()
+    _graph(data["graph"])
+    expected = data.pop("expected_revision")
+    try:
+        return repository.save_workspace(data, expected)
+    except WorkspaceConflict as exc:
+        raise HTTPException(status_code=409, detail={
+            "message": str(exc), "current_revision": exc.revision,
+        }) from exc
 
 
 @router.post("/sources/bulk", status_code=201)
