@@ -5,7 +5,7 @@ type View = "studio" | "library" | "sources" | "inventory" | "fuji";
 type Component = { id?: string; component_id?: string; type?: string; name?: string; details?: Record<string, unknown>; source?: string; source_id?: string };
 type Source = { id: string; filename?: string; display_name?: string; name?: string; type?: string; asset_type?: string; sha256?: string; provenance?: string; components?: Component[] };
 type CatalogProfile = { catalog_id: string; display_name: string; asset_type: "dcp" | "cube"; size: number };
-type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
+type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; role?: "base" | "creative"; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
 type Graph = { name: string; version: string; look_id: number; base: string; layers: Layer[]; controls: Record<string, number>; solo?: string | null };
 
 const api = async <T,>(path: string, options?: RequestInit): Promise<T> => {
@@ -80,7 +80,7 @@ export function App() {
   function redo() { const next = future[0]; if (!next) return; setHistory((h) => [...h, graph]); setFuture((f) => f.slice(1)); setGraph(next); }
   function addComponent(component: Component, source?: Source) {
     const name = component.name || component.component_id || component.type || "Source component";
-    const layer: Layer = { id: id(), name, type: (component.type || "component").toLowerCase(), source: source?.filename || source?.name, source_id: component.source_id || source?.id, component_id: component.component_id || component.id, enabled: true, strength: 100 };
+    const layer: Layer = { id: id(), name, type: (component.type || "component").toLowerCase(), role: "creative", source: source?.filename || source?.name, source_id: component.source_id || source?.id, component_id: component.component_id || component.id, enabled: true, strength: 100 };
     mutate({ ...graph, layers: [...graph.layers.slice(0, -1), layer, graph.layers.at(-1)!] }); setSelectedLayer(layer.id); setMessage(`${name} added to the live graph`);
   }
   async function useCatalogProfile(profile: CatalogProfile) {
@@ -101,8 +101,10 @@ export function App() {
         component_id: component.id || component.component_id,
         enabled: true,
         strength: 100,
+        role: "base" as const,
       }));
-      mutate({ ...graph, name: profile.display_name, layers: [...graph.layers.slice(0, -1), ...layers, graph.layers.at(-1)!] });
+      const retained = graph.layers.filter((layer) => layer.role !== "base");
+      mutate({ ...graph, name: profile.display_name, layers: [...retained.slice(0, -1), ...layers, retained.at(-1)!] });
       setSelectedLayer(layers[0].id);
       setSources((all) => all.some((item) => item.id === source.id) ? all : [source, ...all]);
       setMessage(`${profile.display_name} loaded as the editable base`);
@@ -126,9 +128,11 @@ export function App() {
       const source = await api<Source>(`/api/studio/sources/from-look/${look.id}`, { method: "POST" });
       const component = source.components?.[0];
       if (!component) throw new Error(`${look.name} has no usable LUT component`);
-      addComponent({ ...component, name: look.name }, source);
+      const layer: Layer = { id: id(), name: look.name, type: (component.type || "cube_lut").toLowerCase(), role: "base", source: source.filename, source_id: source.id, component_id: component.id || component.component_id, enabled: true, strength: 100 };
+      const retained = graph.layers.filter((item) => item.role !== "base");
+      mutate({ ...graph, name: look.name, layers: [...retained.slice(0, -1), layer, retained.at(-1)!] });
+      setSelectedLayer(layer.id);
       setSources((all) => all.some((item) => item.id === source.id) ? all : [source, ...all]);
-      setGraph((current) => ({ ...current, name: look.name }));
       setView("studio");
     } catch (e) {
       setMessage(String(e));

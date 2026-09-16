@@ -147,6 +147,8 @@ input,select,textarea { border:1px solid #35413c; border-radius:4px; background:
 .filmstrip button { min-width:82px; height:42px; border:1px solid var(--line); color:var(--muted); background:#1a211f; cursor:pointer; font-size:10px; }
 .stack { display:grid; gap:6px; max-height:410px; overflow:auto; }
 .stack-row { border:1px solid #334039; background:#1a211e; border-radius:4px; padding:9px; }
+.stack-row.base-layer { border-color:#806f3d; background:#211f18; }
+.layer-role { display:block; margin-bottom:6px; color:var(--acid); font-size:9px; letter-spacing:.12em; }
 .stack-row.disabled { opacity:.45; }
 .stack-main { display:flex; gap:7px; align-items:center; }
 .drag { color:#68766d; cursor:grab; }.stack-name { flex:1; font-size:12px; }

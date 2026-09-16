@@ -6,7 +6,6 @@ import hashlib
 import os
 import re
 import zipfile
-from collections import Counter, defaultdict
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 
@@ -20,8 +19,9 @@ def _archive_path() -> Path:
     return Path(os.getenv("PROFILE_LIBRARY_ARCHIVE", str(DEFAULT_ARCHIVE)))
 
 
-def _neutral_name(member: str) -> str:
-    name = PurePosixPath(member).stem
+def _film_stock_name(member: str) -> str:
+    path = PurePosixPath(member)
+    name = path.parent.name if path.stem.lower() == "look" else path.stem
     camera_prefixes = (
         r"Canon EOS 5D\s+",
         r"LEICA M \(Typ 240\)\s+",
@@ -30,7 +30,65 @@ def _neutral_name(member: str) -> str:
     for prefix in camera_prefixes:
         name = re.sub(rf"^{prefix}", "", name, flags=re.IGNORECASE)
     name = re.sub(r"\s*-\s*L$", "", name, flags=re.IGNORECASE)
-    return re.sub(r"\s+", " ", name).strip()
+    name = re.sub(r"\s+L$", "", name, flags=re.IGNORECASE)
+
+    slug_names = {
+        "400h": "Fujifilm Pro 400H",
+        "acros": "Fujifilm Neopan Acros 100",
+        "cinestill50d": "CineStill 50D",
+        "edo400": "Edo 400",
+        "fortia": "Fujifilm Fortia",
+        "hp5": "Ilford HP5 Plus",
+        "portra": "Kodak Portra",
+        "portranc": "Kodak Portra NC",
+        "velvia": "Fujifilm Velvia",
+        "vista": "Agfa Vista",
+    }
+    name = slug_names.get(name.lower(), name)
+
+    manufacturer_rules = (
+        (r"^(160S|400H)", "Fujifilm Pro "),
+        (r"^(Astia|Fortia|Neopan|Provia|Sensia|Superia|T64|Velvia)", "Fujifilm "),
+        (r"^(E100|E200|Ektachrome|Ektar|Elite|Gold|Kodachrome|Max|Plus-X|Portra|Portrait XPS|Royal|T-?MAX|TRI?-?X|Tri-X|UM)", "Kodak "),
+        (r"^(Optima|Precisa|RSX|Ultra)", "Agfa "),
+        (r"^(Delta|FP4|HP5|HPS|Pan F|XP2)", "Ilford "),
+        (r"^(PX-|Time-Zero)", "Polaroid "),
+    )
+    if not re.match(r"^(Agfa|CineStill|Fujifilm|Fuji|Ilford|Kodak|Polaroid|Rollei)\b", name, re.I):
+        for pattern, manufacturer in manufacturer_rules:
+            if re.match(pattern, name, re.I):
+                name = manufacturer + name
+                break
+    name = re.sub(r"^Fuji\b", "Fujifilm", name, flags=re.IGNORECASE)
+
+    treatments = {
+        "--": "−2 EV", "-": "−1 EV", "+": "+1 EV",
+        "++": "+2 EV", "+++": "+3 EV",
+    }
+    match = re.search(r"\s+\d+\s*(--|-|\+{1,3})$", name)
+    if match:
+        name = name[:match.start()] + f" · {treatments[match.group(1)]}"
+    else:
+        match = re.search(r"([+-])(\d+)$", name)
+        if match:
+            sign, stops = match.groups()
+            name = name[:match.start()] + f" · {sign}{stops} EV"
+        elif path.suffix.lower() == ".cube" and re.search(r"\s2$", name):
+            name = re.sub(r"\s2$", " · Standard", name)
+    name = re.sub(r"\b(?:XPRO|XP)\b", "Cross Process", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bNeg\b", "Negative", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bHC\b", "High Contrast", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bGeneric\b", "Standard", name, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", name).strip(" ·")
+
+
+def _preference(item: dict) -> tuple[int, str]:
+    member = item["member"]
+    if item["asset_type"] == "dcp":
+        rank = 0 if "LEICA M (Typ 240)" in member else 1 if "M9 Digital Camera" in member else 2
+    else:
+        rank = 0 if "/02_CUBE/Archive/" in member else 1
+    return rank, member
 
 
 @lru_cache(maxsize=1)
@@ -48,17 +106,17 @@ def catalog() -> tuple[dict, ...]:
                 "catalog_id": hashlib.sha256(info.filename.encode()).hexdigest()[:20],
                 "member": info.filename,
                 "asset_type": SUPPORTED[extension],
-                "display_name": _neutral_name(info.filename),
+                "display_name": _film_stock_name(info.filename),
                 "size": info.file_size,
             })
-    totals = Counter((item["asset_type"], item["display_name"].lower()) for item in raw)
-    seen: defaultdict[tuple[str, str], int] = defaultdict(int)
+    grouped: dict[tuple[str, str], list[dict]] = {}
     for item in raw:
-        key = (item["asset_type"], item["display_name"].lower())
-        seen[key] += 1
-        if totals[key] > 1:
-            item["display_name"] = f'{item["display_name"]} · Variant {seen[key]}'
-    return tuple(raw)
+        grouped.setdefault((item["asset_type"], item["display_name"].casefold()), []).append(item)
+    visible = []
+    for variants in grouped.values():
+        preferred = min(variants, key=_preference)
+        visible.append({**preferred, "source_variant_count": len(variants)})
+    return tuple(sorted(visible, key=lambda item: (item["asset_type"], item["display_name"].casefold())))
 
 
 def find_profile(catalog_id: str) -> dict | None:
