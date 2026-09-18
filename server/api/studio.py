@@ -9,7 +9,7 @@ import base64
 from pathlib import PurePath
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 
 from core.assets.library import SourceLibrary
@@ -22,8 +22,9 @@ from core.film.samples import get_sample
 from core.leica.authoritative import read_look_asset
 from core.leica.compiler import compile_look_payload
 from core.leica.package import build_look_package
+from server.auth import require_user
 
-router = APIRouter(prefix="/studio", tags=["studio"])
+router = APIRouter(prefix="/studio", tags=["studio"], dependencies=[Depends(require_user)])
 library = SourceLibrary()
 MAX_SOURCE_BYTES = 50 * 1024 * 1024
 MAX_PREVIEW_BYTES = 20 * 1024 * 1024
