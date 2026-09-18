@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ClerkProvider, Show, SignIn, SignUp } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { dark } from "@clerk/themes";
 import { Link, Route, Router as WouterRouter, Switch, useLocation } from "wouter";
@@ -41,9 +41,13 @@ function Landing() {
   return <main className="auth-landing"><img src={`${basePath}/logo.svg`} alt="" /><p className="eyebrow">Professional non-destructive color workflow</p><h1>Film Look Studio</h1><p>Build, verify, save, and package camera-ready film Looks in your private workspace.</p><div className="button-row"><Link className="primary" href="/sign-up">Create account</Link><Link className="secondary" href="/sign-in">Sign in</Link></div></main>;
 }
 function Home() {
-  return <><Show when="signed-in"><App /></Show><Show when="signed-out"><Landing /></Show></>;
+  const { isLoaded, isSignedIn } = useAuth();
+  if (!isLoaded || !isSignedIn) return <Landing />;
+  return <App />;
 }
 function AuthPage({ mode }: { mode: "in" | "up" }) {
+  const { isLoaded } = useAuth();
+  if (!isLoaded) return <main className="auth-page"><p className="auth-loading">Loading secure sign-in…</p></main>;
   return <main className="auth-page">{mode === "in"
     ? <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
     : <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />}</main>;
