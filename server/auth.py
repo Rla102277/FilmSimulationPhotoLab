@@ -25,8 +25,23 @@ def _frontend_api() -> str:
 
 
 @lru_cache(maxsize=1)
-def _jwks() -> PyJWKClient:
-    return PyJWKClient(f"{_frontend_api()}/.well-known/jwks.json", cache_keys=True)
+def _proxy_url(request: Request) -> str:
+    forwarded_host = request.headers.get("x-forwarded-host", "").split(",")[0].strip()
+    host = forwarded_host or request.headers.get("host", "").strip()
+    protocol = request.headers.get("x-forwarded-proto", "https").split(",")[0].strip()
+    return f"{protocol}://{host}/api/__clerk"
+
+
+@lru_cache(maxsize=8)
+def _jwks(proxy_url: str) -> PyJWKClient:
+    return PyJWKClient(
+        "https://frontend-api.clerk.dev/.well-known/jwks.json",
+        headers={
+            "Clerk-Proxy-Url": proxy_url,
+            "Clerk-Secret-Key": os.environ["CLERK_SECRET_KEY"],
+        },
+        cache_keys=True,
+    )
 
 
 def require_user(request: Request) -> str:
@@ -37,10 +52,10 @@ def require_user(request: Request) -> str:
     if not token:
         raise HTTPException(status_code=401, detail="Sign in required")
     try:
-        key = _jwks().get_signing_key_from_jwt(token)
+        key = _jwks(_proxy_url(request)).get_signing_key_from_jwt(token)
         claims = jwt.decode(
             token, key.key, algorithms=["RS256"],
-            issuer=_frontend_api(), options={"verify_aud": False},
+            options={"verify_aud": False, "verify_iss": False},
         )
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Invalid or expired session") from exc
@@ -52,11 +67,13 @@ def require_user(request: Request) -> str:
 
 @proxy_router.api_route("/api/__clerk/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 async def clerk_proxy(path: str, request: Request):
-    target = f"{_frontend_api()}/{path}"
+    target = f"https://frontend-api.clerk.dev/{path}"
     headers = {
         key: value for key, value in request.headers.items()
         if key.lower() not in {"host", "content-length"}
     }
+    headers["Clerk-Proxy-Url"] = _proxy_url(request)
+    headers["Clerk-Secret-Key"] = os.environ["CLERK_SECRET_KEY"]
     async with httpx.AsyncClient(follow_redirects=False, timeout=30) as client:
         upstream = await client.request(
             request.method, target, params=request.query_params,
