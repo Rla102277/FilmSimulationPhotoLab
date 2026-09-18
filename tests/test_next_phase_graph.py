@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -101,7 +102,9 @@ class NextPhaseGraphTests(unittest.TestCase):
 
     def test_enable_strength_and_valid_17_cube(self) -> None:
         lut = {"id": "lut", "type": "lut", "cube": cube_text("invert-red"), "strength": 0.5}
-        cube_data, report = compile_graph_cube(graph(lut))
+        with patch("core.color.graph_compiler.parse_cube", wraps=parse_cube) as parser:
+            cube_data, report = compile_graph_cube(graph(lut))
+        self.assertEqual(parser.call_count, 1)
         parsed = parse_cube(cube_data)
         self.assertEqual(parsed.size, 17)
         self.assertEqual(parsed.values.shape, (17 ** 3, 3))

@@ -25,6 +25,9 @@ def _blend(original: np.ndarray, transformed: np.ndarray, strength: float) -> np
 
 
 def _cube_from_node(node: dict) -> CubeLUT:
+    cached = node.get("_parsed_cube")
+    if isinstance(cached, CubeLUT):
+        return cached
     value = node.get("cube") or node.get("cube_data") or node.get("data")
     if isinstance(value, dict):
         value = value.get("cube") or value.get("text")
@@ -180,29 +183,33 @@ def evaluate_graph(graph: dict, size: int = 17) -> tuple[CubeLUT, dict]:
     validate_color_graph(graph)
     if not 2 <= size <= 65:
         raise ValueError("Compiled graph cube size must be between 2 and 65")
-    nodes = graph["nodes"]
+    nodes = []
+    for source_node in graph["nodes"]:
+        node = dict(source_node)
+        if str(node.get("component_type") or node.get("type")) in {"cube_lut", "lut"}:
+            node["_parsed_cube"] = _cube_from_node(node)
+        nodes.append(node)
     solos = [node for node in nodes if node.get("solo") and node.get("enabled", True)]
-    values = []
     unsupported: list[dict] = []
     axis = np.linspace(0.0, 1.0, size, dtype=np.float32)
-    for blue in axis:
-        for green in axis:
-            for red in axis:
-                rgb = np.asarray([red, green, blue], dtype=np.float32)
-                for node in nodes:
-                    node_id = node.get("id", node.get("type"))
-                    node_type = node.get("type")
-                    if node_type in {"input", "output"}:
-                        continue
-                    if not node.get("enabled", True) or (solos and not node.get("solo")):
-                        continue
-                    rgb, blendable, reason = _node_transform(rgb, node)
-                    if not blendable:
-                        unsupported.append({"id": node_id, "type": node_type, "blendable": False, "reason": reason})
-                values.append(np.clip(rgb, 0.0, 1.0))
+    values = np.asarray([
+        (red, green, blue)
+        for blue in axis for green in axis for red in axis
+    ], dtype=np.float32)
+    for node in nodes:
+        node_id = node.get("id", node.get("type"))
+        node_type = node.get("type")
+        if node_type in {"input", "output"}:
+            continue
+        if not node.get("enabled", True) or (solos and not node.get("solo")):
+            continue
+        values, blendable, reason = _node_transform(values, node)
+        values = np.clip(values, 0.0, 1.0)
+        if not blendable:
+            unsupported.append({"id": node_id, "type": node_type, "blendable": False, "reason": reason})
     unique_unsupported = {item["id"]: item for item in unsupported}
     cube = CubeLUT(str(graph.get("name", "Compiled graph")), size, (0.0, 0.0, 0.0),
-                   (1.0, 1.0, 1.0), np.asarray(values, dtype=np.float32))
+                   (1.0, 1.0, 1.0), values.astype(np.float32, copy=False))
     report = graph_status(graph)
     report.update({"compiled": True, "unsupported": list(unique_unsupported.values()),
                    "ready": report.get("ready", True) and not unique_unsupported})

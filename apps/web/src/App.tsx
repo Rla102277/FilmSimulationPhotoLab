@@ -4,7 +4,7 @@ import type { ChangeEvent } from "react";
 type View = "studio" | "library" | "sources" | "inventory" | "fuji";
 type Component = { id?: string; component_id?: string; type?: string; name?: string; details?: Record<string, unknown>; source?: string; source_id?: string };
 type Source = { id: string; filename?: string; display_name?: string; name?: string; type?: string; asset_type?: string; sha256?: string; provenance?: string; components?: Component[] };
-type CatalogProfile = { catalog_id: string; display_name: string; asset_type: "dcp" | "cube"; size: number };
+type CatalogProfile = { catalog_id: string; display_name: string; brand: string; stock: string; modification: string; asset_type: "dcp" | "cube"; size: number };
 type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; role?: "base" | "creative"; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
 type Graph = { name: string; version: string; look_id: number; base: string; layers: Layer[]; controls: Record<string, number>; solo?: string | null };
 
@@ -23,6 +23,12 @@ const initialLayers: Layer[] = [
 ];
 const defaultControls: Record<string, number> = { exposure: 0, contrast: 8, highlights: -12, shadows: 14, whites: 0, blacks: -4, temperature: 3, tint: 0, saturation: -6, vibrance: 12, shadowHue: 205, shadowSat: 6, shadowLum: 0, midHue: 42, midSat: 3, midLum: 0, highlightHue: 38, highlightSat: 8, highlightLum: 0, balance: 0, toe: 16, shoulder: 22, midContrast: 8, blackLift: 3, rolloff: 20, density: 12, monoMix: 0, yellowFilter: 0, orangeFilter: 0, redFilter: 0, greenFilter: 0 };
 const toApiGraph = (graph: Graph): Graph => ({ ...graph, solo: graph.solo || null });
+const withBaseLayers = (graph: Graph, baseLayers: Layer[], name: string): Graph => {
+  const retained = graph.layers.filter((layer) => layer.role !== "base");
+  const outputIndex = retained.findIndex((layer) => layer.type === "output");
+  const insertion = outputIndex < 0 ? retained.length : outputIndex;
+  return { ...graph, name, layers: [...retained.slice(0, insertion), ...baseLayers, ...retained.slice(insertion)] };
+};
 
 export function App() {
   const [view, setView] = useState<View>("studio");
@@ -48,7 +54,15 @@ export function App() {
   const [message, setMessage] = useState("");
   const [snapshotName, setSnapshotName] = useState("");
   const [status, setStatus] = useState<Record<string, unknown> | null>(null);
-  const timer = useRef<number | undefined>(undefined);
+  const [selectedCatalogId, setSelectedCatalogId] = useState<string | null>(null);
+  const previewTimer = useRef<number | undefined>(undefined);
+  const statusTimer = useRef<number | undefined>(undefined);
+  const sliderHistoryTimer = useRef<number | undefined>(undefined);
+  const sliderStart = useRef<Graph | null>(null);
+  const previewRequest = useRef<AbortController | null>(null);
+  const statusRequest = useRef<AbortController | null>(null);
+  const profileRequestSequence = useRef(0);
+  const profileCache = useRef(new Map<string, Source>());
 
   useEffect(() => {
     if (view !== "studio" && view !== "sources") return;
@@ -57,24 +71,45 @@ export function App() {
     api<{ profiles: CatalogProfile[] }>(`/api/studio/profile-catalog?${query}`).then((data) => setProfiles(data.profiles)).catch((e) => setSourceError(String(e)));
   }, [view, sourceSearch, sourceType]);
   useEffect(() => {
-    api<Record<string, unknown>>("/api/studio/graph/status", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }).then(setStatus).catch(() => setStatus(null));
-  }, [graph]);
+    window.clearTimeout(statusTimer.current);
+    statusRequest.current?.abort();
+    statusTimer.current = window.setTimeout(() => {
+      const controller = new AbortController();
+      statusRequest.current = controller;
+      api<Record<string, unknown>>("/api/studio/graph/status", { method: "POST", signal: controller.signal, headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }).then(setStatus).catch((error) => { if (error.name !== "AbortError") setStatus(null); });
+    }, 350);
+    return () => window.clearTimeout(statusTimer.current);
+  }, [graph, solo]);
   useEffect(() => {
     if (!image) return;
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(async () => {
+    window.clearTimeout(previewTimer.current);
+    previewRequest.current?.abort();
+    previewTimer.current = window.setTimeout(async () => {
+      const controller = new AbortController();
+      previewRequest.current = controller;
       setRendering(true);
       const form = new FormData(); form.append("image", image); form.append("graph", JSON.stringify(toApiGraph({ ...graph, solo })));
-      try { const res = await fetch("/api/studio/graph/preview", { method: "POST", body: form }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "Preview renderer unavailable"); } const nextUrl = URL.createObjectURL(await res.blob()); setPreviewUrl((old) => { if (old) URL.revokeObjectURL(old); return nextUrl; }); } catch (e) { setMessage(String(e)); } finally { setRendering(false); }
-    }, 280);
-    return () => window.clearTimeout(timer.current);
-  }, [graph, image]);
+      try { const res = await fetch("/api/studio/graph/preview", { method: "POST", body: form, signal: controller.signal }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "Preview renderer unavailable"); } const nextUrl = URL.createObjectURL(await res.blob()); setPreviewUrl((old) => { if (old) URL.revokeObjectURL(old); return nextUrl; }); } catch (e) { if ((e as Error).name !== "AbortError") setMessage(String(e)); } finally { if (previewRequest.current === controller) setRendering(false); }
+    }, 120);
+    return () => window.clearTimeout(previewTimer.current);
+  }, [graph, image, solo]);
 
   const displayedLayers = useMemo(() => solo ? graph.layers.map((l) => ({ ...l, enabled: l.id === solo || l.type === "normalization" || l.type === "output" })) : graph.layers, [graph.layers, solo]);
   function mutate(next: Graph) { setHistory((h) => [...h.slice(-29), graph]); setFuture([]); setGraph(next); }
   function setSoloLayer(layerId: string | null) { setSolo(layerId); setGraph((current) => ({ ...current, solo: layerId })); }
   function updateLayer(layerId: string, patch: Partial<Layer>) { mutate({ ...graph, layers: graph.layers.map((l) => l.id === layerId ? { ...l, ...patch } : l) }); }
-  function updateControl(key: string, value: number) { mutate({ ...graph, controls: { ...graph.controls, [key]: value } }); }
+  function beginSliderChange() {
+    if (!sliderStart.current) sliderStart.current = graph;
+    window.clearTimeout(sliderHistoryTimer.current);
+    sliderHistoryTimer.current = window.setTimeout(() => {
+      const start = sliderStart.current;
+      if (start) setHistory((items) => [...items.slice(-29), start]);
+      sliderStart.current = null;
+      setFuture([]);
+    }, 300);
+  }
+  function updateControl(key: string, value: number) { beginSliderChange(); setGraph((current) => ({ ...current, controls: { ...current.controls, [key]: value } })); }
+  function updateLayerStrength(layerId: string, strength: number) { beginSliderChange(); setGraph((current) => ({ ...current, layers: current.layers.map((layer) => layer.id === layerId ? { ...layer, strength } : layer) })); }
   function moveLayer(layerId: string, delta: number) { const at = graph.layers.findIndex((l) => l.id === layerId); const to = at + delta; if (at < 0 || to < 0 || to >= graph.layers.length) return; const layers = [...graph.layers]; [layers[at], layers[to]] = [layers[to], layers[at]]; mutate({ ...graph, layers }); }
   function undo() { const previous = history.at(-1); if (!previous) return; setFuture((f) => [graph, ...f]); setHistory((h) => h.slice(0, -1)); setGraph(previous); }
   function redo() { const next = future[0]; if (!next) return; setHistory((h) => [...h, graph]); setFuture((f) => f.slice(1)); setGraph(next); }
@@ -84,11 +119,17 @@ export function App() {
     mutate({ ...graph, layers: [...graph.layers.slice(0, -1), layer, graph.layers.at(-1)!] }); setSelectedLayer(layer.id); setMessage(`${name} added to the live graph`);
   }
   async function useCatalogProfile(profile: CatalogProfile) {
+    const sequence = ++profileRequestSequence.current;
+    setSelectedCatalogId(profile.catalog_id);
+    setMessage(`Loading ${profile.display_name}…`);
     try {
-      const source = await api<Source>(`/api/studio/profile-catalog/${profile.catalog_id}/import`, { method: "POST" });
+      const source = profileCache.current.get(profile.catalog_id)
+        || await api<Source>(`/api/studio/profile-catalog/${profile.catalog_id}/import`, { method: "POST" });
+      if (sequence !== profileRequestSequence.current) return;
+      profileCache.current.set(profile.catalog_id, source);
       const components = source.components || [];
       const selected = profile.asset_type === "cube"
-        ? components.slice(0, 1)
+        ? components.filter((component) => component.type === "cube_lut").slice(0, 1)
         : components.filter((component) => ["ColorMatrix1", "ProfileToneCurve"].includes(component.id || component.component_id || ""));
       const usable = selected.length ? selected : components.filter((component) => component.type !== "table");
       if (!usable.length) throw new Error(`${profile.display_name} has no safely editable DCP components`);
@@ -103,8 +144,9 @@ export function App() {
         strength: 100,
         role: "base" as const,
       }));
-      const retained = graph.layers.filter((layer) => layer.role !== "base");
-      mutate({ ...graph, name: profile.display_name, layers: [...retained.slice(0, -1), ...layers, retained.at(-1)!] });
+      setHistory((items) => [...items.slice(-29), graph]);
+      setFuture([]);
+      setGraph((current) => withBaseLayers(current, layers, profile.display_name));
       setSelectedLayer(layers[0].id);
       setSources((all) => all.some((item) => item.id === source.id) ? all : [source, ...all]);
       setMessage(`${profile.display_name} loaded as the editable base`);
@@ -126,11 +168,12 @@ export function App() {
   async function useLibraryLook(look: { id: number; name: string }) {
     try {
       const source = await api<Source>(`/api/studio/sources/from-look/${look.id}`, { method: "POST" });
-      const component = source.components?.[0];
+      const component = source.components?.find((item) => item.type === "cube_lut");
       if (!component) throw new Error(`${look.name} has no usable LUT component`);
       const layer: Layer = { id: id(), name: look.name, type: (component.type || "cube_lut").toLowerCase(), role: "base", source: source.filename, source_id: source.id, component_id: component.id || component.component_id, enabled: true, strength: 100 };
-      const retained = graph.layers.filter((item) => item.role !== "base");
-      mutate({ ...graph, name: look.name, layers: [...retained.slice(0, -1), layer, retained.at(-1)!] });
+      setHistory((items) => [...items.slice(-29), graph]);
+      setFuture([]);
+      setGraph((current) => withBaseLayers(current, [layer], look.name));
       setSelectedLayer(layer.id);
       setSources((all) => all.some((item) => item.id === source.id) ? all : [source, ...all]);
       setView("studio");
@@ -145,7 +188,20 @@ export function App() {
       {view === "studio" && <><div className="studio-head"><div><p className="eyebrow">Live color assembly bench / graph {graph.version}</p><h1>{graph.name}</h1></div><div className="head-actions"><button className="secondary" onClick={undo} disabled={!history.length}>Undo</button><button className="secondary" onClick={redo} disabled={!future.length}>Redo</button><button className="secondary" onClick={() => setGraph({ ...graph, layers: initialLayers.map((l) => ({ ...l, id: id() })), controls: defaultControls })}>Reset</button><span className="status-chip">{rendering ? "Rendering preview" : "Live preview"}</span></div></div>
         <div className="toolbar"><input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option><option>Neutral</option></select><button className="secondary" onClick={buildCube}>Export CUBE</button><button className="primary" onClick={buildPackage}>Build Look package</button></div>
         <div className="bench">
-          <section className="bench-panel"><div className="panel-title">Source library <span>{profiles.length + sources.length}</span></div><div className="panel-body"><div className="source-tools"><input placeholder="Search names, metadata…" value={sourceSearch} onChange={(e) => setSourceSearch(e.target.value)} /><select value={sourceType} onChange={(e) => setSourceType(e.target.value)}><option value="">All types</option><option>DCP</option><option>CUBE</option><option>XMP</option><option>LRTemplate</option><option>Hald</option><option>Leica Look</option></select><label className="secondary">Bulk ingest sources<input type="file" multiple hidden accept=".dcp,.cube,.xmp,.lrtemplate,.jpg,.jpeg,.png" onChange={uploadSources} /></label></div><div className="source-list">{profiles.map((profile) => <div className="source-row catalog-profile" key={profile.catalog_id}><strong>{profile.display_name}</strong><div className="source-meta">{profile.asset_type.toUpperCase()} · immutable base profile</div><button className="tiny" onClick={() => useCatalogProfile(profile)}>Load as base</button></div>)}{sources.map((source) => <div className={`source-row ${openSource === source.id ? "open" : ""}`} key={source.id} onClick={() => openSourceDetails(source)} draggable onDragStart={(e) => e.dataTransfer.setData("component", JSON.stringify({ name: source.filename || source.name, type: source.type || source.asset_type, source_id: source.id }))}><strong>{source.display_name || source.filename || source.name || source.id}</strong><div className="source-meta">{source.type || source.asset_type || "SOURCE"} · {source.components?.length || 0} components</div>{openSource === source.id && <div className="component-list">{(source.components || []).map((component, index) => <div className="component-row" key={component.component_id || component.id || index}><span>{component.name || component.component_id || component.id || component.type}</span><button className="tiny" onClick={(e) => { e.stopPropagation(); addComponent(component, source); }}>Use this</button></div>)}</div>}</div>)}</div></div></section>
+          <section className="bench-panel">
+            <div className="panel-title">Film simulations <span>{profiles.length}</span></div>
+            <div className="panel-body">
+              <div className="source-tools">
+                <input placeholder="Search brand, film, modification…" value={sourceSearch} onChange={(e) => setSourceSearch(e.target.value)} />
+                <select value={sourceType} onChange={(e) => setSourceType(e.target.value)}><option value="">DCP + CUBE</option><option>DCP</option><option>CUBE</option></select>
+                <label className="secondary">Bulk ingest sources<input type="file" multiple hidden accept=".dcp,.cube,.xmp,.lrtemplate,.jpg,.jpeg,.png" onChange={uploadSources} /></label>
+              </div>
+              <div className="source-list">
+                <CatalogBrowser profiles={profiles} selectedId={selectedCatalogId} onSelect={useCatalogProfile} />
+                {sources.map((source) => <div className={`source-row ${openSource === source.id ? "open" : ""}`} key={source.id} onClick={() => openSourceDetails(source)} draggable onDragStart={(e) => e.dataTransfer.setData("component", JSON.stringify({ name: source.filename || source.name, type: source.type || source.asset_type, source_id: source.id }))}><strong>{source.display_name || source.filename || source.name || source.id}</strong><div className="source-meta">{source.type || source.asset_type || "SOURCE"} · {source.components?.length || 0} components</div>{openSource === source.id && <div className="component-list">{(source.components || []).map((component, index) => <div className="component-row" key={component.component_id || component.id || index}><span>{component.name || component.component_id || component.id || component.type}</span><button className="tiny" onClick={(e) => { e.stopPropagation(); addComponent(component, source); }}>Use this</button></div>)}</div>}</div>)}
+              </div>
+            </div>
+          </section>
           <section className="bench-panel"><div className="preview-toolbar"><div><b>VIEWFINDER</b> <span className="source-meta"> · {previewMode === "wipe" ? "draggable wipe" : "side by side"}</span></div><div className="head-actions"><label className="tiny">Upload test image<input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={chooseImage} /></label><button className="tiny" onClick={() => setPreviewMode("wipe")}>Wipe</button><button className="tiny" onClick={() => setPreviewMode("side")}>Side by side</button><button className={`tiny ${zoom === "fit" ? "active" : ""}`} onClick={() => setZoom("fit")}>Fit</button><button className={`tiny ${zoom === "100" ? "active" : ""}`} onClick={() => setZoom("100")}>100%</button></div></div><div className={`preview-stage ${previewMode === "side" ? "side-by-side" : ""}`}>{originalUrl ? previewMode === "side" ? <><div className="compare-pane"><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><span className="preview-caption left">Original</span></div><div className="compare-pane"><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /><span className="preview-caption right">Current look</span></div></> : <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="wipe" style={{ clipPath: `inset(0 ${100 - wipe}% 0 0)` }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /></div><span className="wipe-divider" style={{ left: `${wipe}%` }} /><span className="preview-caption left">Original</span><span className="preview-caption right">Current look</span><input className="wipe-range" aria-label="Wipe position" type="range" min="0" max="100" value={wipe} onChange={(e) => setWipe(Number(e.target.value))} /></> : <div className="empty-preview">Upload one test photograph. Every graph edit will arrive here without a compile step.</div>}</div><div className="filmstrip"><button>MY IMAGE</button><button disabled>Portrait / skin</button><button disabled>Landscape</button><button disabled>City / street</button><button disabled>Foliage</button><button disabled>HDR chart</button></div></section>
           <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragEnd={() => undefined} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayer(layer.id, { strength: Number(e.target.value) })} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={() => { if (snapshotName.trim()) { setSnapshots([...snapshots, { name: snapshotName, graph }]); setSnapshotName(""); } }}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status ? "ready" : "dirty"}>{status ? "READY" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className="ready">READY</b></div><div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
         </div></>}
@@ -154,6 +210,30 @@ export function App() {
       {view === "inventory" && <SimpleView title="Provenance" text="Immutable source and compiler inventory remains available from the original workflow." endpoint="/api/inventory" />}
       {view === "fuji" && <SimpleView title="Fuji Recipe Lab" text="Target-specific Fuji recipes remain separate from the non-destructive Leica graph." endpoint="/api/fuji/recipes" />}
     </main></div>;
+}
+
+function CatalogBrowser({ profiles, selectedId, onSelect }: { profiles: CatalogProfile[]; selectedId: string | null; onSelect: (profile: CatalogProfile) => void }) {
+  const brands = useMemo(() => {
+    const result = new Map<string, Map<string, CatalogProfile[]>>();
+    for (const profile of profiles) {
+      const stocks = result.get(profile.brand) || new Map<string, CatalogProfile[]>();
+      stocks.set(profile.stock, [...(stocks.get(profile.stock) || []), profile]);
+      result.set(profile.brand, stocks);
+    }
+    return [...result.entries()];
+  }, [profiles]);
+  return <>{brands.map(([brand, stocks]) => <section className="catalog-brand" key={brand}>
+    <h3>{brand}</h3>
+    {[...stocks.entries()].map(([stock, modifications]) => <div className="catalog-stock" key={stock}>
+      <strong>{stock}</strong>
+      <div className="catalog-modifications">{modifications.map((profile) => <button
+        className={`catalog-modification ${selectedId === profile.catalog_id ? "selected" : ""}`}
+        key={profile.catalog_id}
+        onClick={() => onSelect(profile)}
+        aria-pressed={selectedId === profile.catalog_id}
+      ><span>{profile.modification}</span><small>{profile.asset_type.toUpperCase()}</small></button>)}</div>
+    </div>)}
+  </section>)}</>;
 }
 
 function ManualControls({ controls, onChange }: { controls: Record<string, number>; onChange: (key: string, value: number) => void }) {

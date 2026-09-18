@@ -355,7 +355,10 @@ def _hydrate_graph(graph: dict) -> dict:
         source = library.get(str(source_id), include_content=True)
         if not source:
             raise HTTPException(status_code=422, detail=f"Source not found: {source_id}")
-        component = next((item for item in source["components"] if item.get("id") == component_id), None)
+        component = next((
+            item for item in source["components"]
+            if (item.get("id") or item.get("component_id")) == component_id
+        ), None)
         if not component:
             raise HTTPException(status_code=422, detail=f"Component not found: {component_id}")
         if component.get("type") == "cube_lut":

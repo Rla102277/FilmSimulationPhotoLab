@@ -13,6 +13,7 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ARCHIVE = ROOT / "attached_assets" / "0_ALL_DCP_CUBE_LIBRARY_1789502493370.zip"
 SUPPORTED = {".dcp": "dcp", ".cube": "cube"}
+BRANDS = ("Agfa", "CineStill", "Edo", "Fujifilm", "Ilford", "Kodak", "Lomography", "Polaroid", "Rollei")
 
 
 def _archive_path() -> Path:
@@ -45,6 +46,16 @@ def _film_stock_name(member: str) -> str:
         "vista": "Agfa Vista",
     }
     name = slug_names.get(name.lower(), name)
+    fuji_recipes = {
+        "ACROS": "Fujifilm Neopan Acros 100",
+        "ASTIA": "Fujifilm Astia",
+        "CLASSIC-Neg.": "Fujifilm Classic Negative",
+        "PRO-Neg.Std": "Fujifilm Pro Negative · Standard",
+        "Velvia": "Fujifilm Velvia",
+    }
+    recipe = re.fullmatch(r"FLog2_to_(.+)_33grid_V\.\d+\.\d+", name, re.IGNORECASE)
+    if recipe:
+        name = next((value for key, value in fuji_recipes.items() if key.casefold() == recipe.group(1).casefold()), name)
 
     manufacturer_rules = (
         (r"^(160S|400H)", "Fujifilm Pro "),
@@ -75,11 +86,23 @@ def _film_stock_name(member: str) -> str:
             name = name[:match.start()] + f" · {sign}{stops} EV"
         elif path.suffix.lower() == ".cube" and re.search(r"\s2$", name):
             name = re.sub(r"\s2$", " · Standard", name)
-    name = re.sub(r"\b(?:XPRO|XP)\b", "Cross Process", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bNeg\b", "Negative", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bHC\b", "High Contrast", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s+\b(?:XPRO|XP)\b", " · Cross Process", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s+\bNeg\b", " · Negative", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s+\bHC\b", " · High Contrast", name, flags=re.IGNORECASE)
     name = re.sub(r"\bGeneric\b", "Standard", name, flags=re.IGNORECASE)
     return re.sub(r"\s+", " ", name).strip(" ·")
+
+
+def _catalog_labels(display_name: str) -> tuple[str, str, str]:
+    main, separator, modification = display_name.partition(" · ")
+    brand = next((item for item in BRANDS if main.casefold().startswith(item.casefold() + " ")), "Other")
+    stock = main[len(brand):].strip() if brand != "Other" else main
+    protected_stock = brand == "Fujifilm" and stock.casefold() in {"classic negative", "pro negative"}
+    suffix = None if protected_stock else re.search(r"\s+(NC|VC|UC|Cross Process|Negative|High Contrast)$", stock, re.I)
+    if suffix:
+        stock = stock[:suffix.start()].strip()
+        modification = " · ".join(filter(None, (suffix.group(1), modification)))
+    return brand, stock, modification or "Standard"
 
 
 def _preference(item: dict) -> tuple[int, str]:
@@ -102,11 +125,16 @@ def catalog() -> tuple[dict, ...]:
             extension = PurePosixPath(info.filename).suffix.lower()
             if info.is_dir() or extension not in SUPPORTED:
                 continue
+            display_name = _film_stock_name(info.filename)
+            brand, stock, modification = _catalog_labels(display_name)
             raw.append({
                 "catalog_id": hashlib.sha256(info.filename.encode()).hexdigest()[:20],
                 "member": info.filename,
                 "asset_type": SUPPORTED[extension],
-                "display_name": _film_stock_name(info.filename),
+                "display_name": display_name,
+                "brand": brand,
+                "stock": stock,
+                "modification": modification,
                 "size": info.file_size,
             })
     grouped: dict[tuple[str, str], list[dict]] = {}
@@ -116,7 +144,10 @@ def catalog() -> tuple[dict, ...]:
     for variants in grouped.values():
         preferred = min(variants, key=_preference)
         visible.append({**preferred, "source_variant_count": len(variants)})
-    return tuple(sorted(visible, key=lambda item: (item["asset_type"], item["display_name"].casefold())))
+    return tuple(sorted(visible, key=lambda item: (
+        item["brand"].casefold(), item["stock"].casefold(),
+        item["modification"].casefold(), item["asset_type"],
+    )))
 
 
 def find_profile(catalog_id: str) -> dict | None:
