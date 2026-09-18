@@ -70,8 +70,12 @@ async def clerk_proxy(path: str, request: Request):
     target = f"https://frontend-api.clerk.dev/{path}"
     headers = {
         key: value for key, value in request.headers.items()
-        if key.lower() not in {"host", "content-length"}
+        if key.lower() not in {"host", "content-length", "accept-encoding"}
     }
+    # httpx decodes common content encodings before exposing response.content.
+    # Asking Clerk for an identity response avoids relaying compressed bytes
+    # after the Content-Encoding header has been removed.
+    headers["Accept-Encoding"] = "identity"
     headers["Clerk-Proxy-Url"] = _proxy_url(request)
     headers["Clerk-Secret-Key"] = os.environ["CLERK_SECRET_KEY"]
     async with httpx.AsyncClient(follow_redirects=False, timeout=30) as client:
