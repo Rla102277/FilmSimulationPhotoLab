@@ -40,3 +40,7 @@ deploymentTarget = "autoscale"
 run = ["bash", "-c", "python -m uvicorn server.main:app --host 0.0.0.0 --port ${PORT:-5000}"]
 build = ["npm", "run", "build"]
 
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000
+
