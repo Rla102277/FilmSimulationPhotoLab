@@ -6,13 +6,19 @@ from server.api.leica import router as leica_router
 from server.api.leica_lab import router as leica_lab_router
 from server.api.lab import router as lab_router
 from server.api.studio import router as studio_router
+from server.api.workspaces import router as workspaces_router
+from server.api.ai_review import router as ai_review_router
+from server.auth import proxy_router
 from server.pages import install_guide_page, look_building_page
 
 app = FastAPI(title="Film Look Studio", version="1.0.0")
+app.include_router(proxy_router)
 app.include_router(leica_router, prefix="/api")
 app.include_router(leica_lab_router, prefix="/api")
 app.include_router(lab_router, prefix="/api")
 app.include_router(studio_router, prefix="/api")
+app.include_router(workspaces_router, prefix="/api")
+app.include_router(ai_review_router, prefix="/api")
 
 @app.get("/api/health")
 def health():

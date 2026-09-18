@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
+import { useClerk, useUser } from "@clerk/react";
 
-type View = "studio" | "library" | "sources" | "inventory" | "fuji";
+type View = "studio" | "mylooks" | "library" | "sources" | "inventory" | "fuji";
 type Component = { id?: string; component_id?: string; type?: string; name?: string; details?: Record<string, unknown>; source?: string; source_id?: string };
 type Source = { id: string; filename?: string; display_name?: string; name?: string; type?: string; asset_type?: string; sha256?: string; provenance?: string; components?: Component[] };
 type CatalogProfile = { catalog_id: string; display_name: string; brand: string; stock: string; modification: string; asset_type: "dcp" | "cube"; size: number };
 type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; role?: "base" | "creative"; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
 type Graph = { name: string; version: string; look_id: number; base: string; layers: Layer[]; controls: Record<string, number>; solo?: string | null };
+type SavedGraph = { id: string; name: string; graph: Graph; updated_at: string };
 
 const api = async <T,>(path: string, options?: RequestInit): Promise<T> => {
   const res = await fetch(path, options);
@@ -31,6 +33,8 @@ const withBaseLayers = (graph: Graph, baseLayers: Layer[], name: string): Graph 
 };
 
 export function App() {
+  const { signOut } = useClerk();
+  const { user } = useUser();
   const [view, setView] = useState<View>("studio");
   const [graph, setGraph] = useState<Graph>({ name: "Iceland Chrome", version: "v1.2", look_id: 1142, base: "Standard", layers: initialLayers, controls: defaultControls, solo: null });
   const [history, setHistory] = useState<Graph[]>([]);
@@ -54,6 +58,9 @@ export function App() {
   const [message, setMessage] = useState("");
   const [snapshotName, setSnapshotName] = useState("");
   const [status, setStatus] = useState<Record<string, unknown> | null>(null);
+  const [workspaces, setWorkspaces] = useState<SavedGraph[]>([]);
+  const [savedLooks, setSavedLooks] = useState<SavedGraph[]>([]);
+  const [selectedLooks, setSelectedLooks] = useState<string[]>([]);
   const [selectedCatalogId, setSelectedCatalogId] = useState<string | null>(null);
   const previewTimer = useRef<number | undefined>(undefined);
   const statusTimer = useRef<number | undefined>(undefined);
@@ -70,6 +77,12 @@ export function App() {
     api<Source[] | { sources: Source[] }>(`/api/studio/sources?${query}`).then((data) => setSources(Array.isArray(data) ? data : data.sources)).catch((e) => setSourceError(String(e)));
     api<{ profiles: CatalogProfile[] }>(`/api/studio/profile-catalog?${query}`).then((data) => setProfiles(data.profiles)).catch((e) => setSourceError(String(e)));
   }, [view, sourceSearch, sourceType]);
+  useEffect(() => {
+    if (view !== "mylooks") return;
+    Promise.all([api<SavedGraph[]>("/api/studio/workspaces"), api<SavedGraph[]>("/api/studio/looks")])
+      .then(([nextWorkspaces, nextLooks]) => { setWorkspaces(nextWorkspaces); setSavedLooks(nextLooks); })
+      .catch((error) => setMessage(String(error)));
+  }, [view]);
   useEffect(() => {
     window.clearTimeout(statusTimer.current);
     statusRequest.current?.abort();
@@ -162,6 +175,10 @@ export function App() {
   }
   async function buildCube() { try { const res = await fetch("/api/studio/graph/cube", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "CUBE export failed"); } download(await res.blob(), `${graph.name}.cube`); } catch (e) { setMessage(String(e)); } }
   async function buildPackage() { try { const form = new FormData(); form.append("graph", JSON.stringify(toApiGraph({ ...graph, solo }))); form.append("name", graph.name); form.append("look_id", String(graph.look_id)); form.append("base", graph.base); form.append("description", "Non-destructive creative graph from Film Look Studio"); const res = await fetch("/api/studio/graph/package", { method: "POST", body: form }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText || "Package build failed"); } download(await res.blob(), `${graph.name.replace(/\s+/g, "-").toLowerCase()}-package.zip`); setMessage("Package ready: payload, injector, documentation and checksums."); } catch (e) { setMessage(String(e)); } }
+  async function saveWorkspace() { try { await api("/api/studio/workspaces", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: graph.name, graph }) }); setMessage(`${graph.name} workspace saved privately`); } catch (e) { setMessage(String(e)); } }
+  async function saveLook() { try { await api("/api/studio/looks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: graph.name, graph }) }); setMessage(`${graph.name} added to My Looks`); } catch (e) { setMessage(String(e)); } }
+  async function reviewGraph() { try { setMessage("Running deterministic 17³ validation and AI review…"); const result = await api<{ valid: boolean; provider: string; findings: string[] }>("/api/studio/graph/review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }); setMessage(`${result.valid ? "Verified" : "Review failed"} · ${result.provider}: ${result.findings.join(" ")}`); } catch (e) { setMessage(String(e)); } }
+  async function downloadSelectedLooks() { try { const res = await fetch("/api/studio/looks/package", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ look_ids: selectedLooks }) }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(body.detail || res.statusText); } download(await res.blob(), "film-look-studio-selection.zip"); } catch (e) { setMessage(String(e)); } }
   function download(blob: Blob, name: string) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
   function chooseImage(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file) return; if (originalUrl) URL.revokeObjectURL(originalUrl); setImage(file); setOriginalUrl(URL.createObjectURL(file)); }
   async function openSourceDetails(source: Source) { setOpenSource(openSource === source.id ? null : source.id); if (!source.components) { try { const detail = await api<Source>(`/api/studio/sources/${source.id}`); setSources((all) => all.map((s) => s.id === source.id ? detail : s)); } catch (e) { setSourceError(String(e)); } } }
@@ -183,10 +200,10 @@ export function App() {
   }
 
   return <div className="app-shell">
-    <aside><a className="brand" href="/"><span>FL</span><strong>Film Look<br />Studio</strong></a><nav>{[["studio", "Look Builder"], ["library", "Leica library"], ["sources", "Source library"], ["inventory", "Provenance"], ["fuji", "Fuji recipes"]].map(([key, label]) => <button className={view === key ? "active" : ""} onClick={() => setView(key as View)} key={key}>{label}</button>)}</nav><div className="aside-foot"><span><i className="online-dot" /> Compiler verified</span><a href="/look-building">How Looks are built</a><a href="/install-guide">Camera installation guide</a><a href="/docs">API documentation</a></div></aside>
+    <aside><a className="brand" href="/"><span>FL</span><strong>Film Look<br />Studio</strong></a><nav>{[["studio", "Look Builder"], ["mylooks", "My Looks & workspaces"], ["library", "Leica library"], ["sources", "Source library"], ["inventory", "Provenance"], ["fuji", "Fuji recipes"]].map(([key, label]) => <button className={view === key ? "active" : ""} onClick={() => setView(key as View)} key={key}>{label}</button>)}</nav><div className="aside-foot"><span>{user?.firstName || user?.primaryEmailAddress?.emailAddress || "Signed in"}</span><button className="sign-out" onClick={() => signOut({ redirectUrl: "/" })}>Sign out</button><span><i className="online-dot" /> Compiler verified</span><a href="/look-building">How Looks are built</a><a href="/install-guide">Camera installation guide</a><a href="/docs">API documentation</a></div></aside>
     <main>{message && <div className="message" role="status">{message}</div>}{sourceError && <div className="error">{sourceError}</div>}
       {view === "studio" && <><div className="studio-head"><div><p className="eyebrow">Live color assembly bench / graph {graph.version}</p><h1>{graph.name}</h1></div><div className="head-actions"><button className="secondary" onClick={undo} disabled={!history.length}>Undo</button><button className="secondary" onClick={redo} disabled={!future.length}>Redo</button><button className="secondary" onClick={() => setGraph({ ...graph, layers: initialLayers.map((l) => ({ ...l, id: id() })), controls: defaultControls })}>Reset</button><span className="status-chip">{rendering ? "Rendering preview" : "Live preview"}</span></div></div>
-        <div className="toolbar"><input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option><option>Neutral</option></select><button className="secondary" onClick={buildCube}>Export CUBE</button><button className="primary" onClick={buildPackage}>Build Look package</button></div>
+        <div className="toolbar"><input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option><option>Neutral</option></select><button className="secondary" onClick={saveWorkspace}>Save workspace</button><button className="secondary" onClick={saveLook}>Save to My Looks</button><button className="secondary" onClick={reviewGraph}>Verify 17³ LUT</button><button className="secondary" onClick={buildCube}>Export CUBE</button><button className="primary" onClick={buildPackage}>Build Look package</button></div>
         <div className="bench">
           <section className="bench-panel">
             <div className="panel-title">Film simulations <span>{profiles.length}</span></div>
@@ -206,10 +223,22 @@ export function App() {
           <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragEnd={() => undefined} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayer(layer.id, { strength: Number(e.target.value) })} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={() => { if (snapshotName.trim()) { setSnapshots([...snapshots, { name: snapshotName, graph }]); setSnapshotName(""); } }}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status ? "ready" : "dirty"}>{status ? "READY" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className="ready">READY</b></div><div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
         </div></>}
       {view === "sources" && <SourceLibrary sources={sources} uploadSources={uploadSources} search={sourceSearch} setSearch={setSourceSearch} type={sourceType} setType={setSourceType} open={openSource} openSource={openSourceDetails} add={addComponent} />}
+      {view === "mylooks" && <MyLibrary workspaces={workspaces} looks={savedLooks} selected={selectedLooks} setSelected={setSelectedLooks} load={(saved) => { mutate(saved.graph); setView("studio"); }} download={downloadSelectedLooks} />}
       {view === "library" && <LegacyLibrary setView={setView} useLook={useLibraryLook} />}
       {view === "inventory" && <SimpleView title="Provenance" text="Immutable source and compiler inventory remains available from the original workflow." endpoint="/api/inventory" />}
       {view === "fuji" && <SimpleView title="Fuji Recipe Lab" text="Target-specific Fuji recipes remain separate from the non-destructive Leica graph." endpoint="/api/fuji/recipes" />}
     </main></div>;
+}
+
+function MyLibrary({ workspaces, looks, selected, setSelected, load, download }: {
+  workspaces: SavedGraph[]; looks: SavedGraph[]; selected: string[];
+  setSelected: (ids: string[]) => void; load: (saved: SavedGraph) => void; download: () => void;
+}) {
+  const toggle = (id: string) => setSelected(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
+  return <><div className="studio-head"><div><p className="eyebrow">Private account library</p><h1>My Looks & workspaces</h1></div><button className="primary" disabled={!selected.length} onClick={download}>Download {selected.length || ""} selected package{selected.length === 1 ? "" : "s"}</button></div>
+    <section className="saved-section"><h2>Workspaces</h2><p className="intro">Resume the complete editable graph, controls, and selected film base.</p><div className="saved-grid">{workspaces.length ? workspaces.map((item) => <article key={item.id}><span>WORKSPACE</span><h3>{item.name}</h3><small>{new Date(item.updated_at).toLocaleString()}</small><button className="secondary" onClick={() => load(item)}>Open workspace</button></article>) : <p className="empty-saved">No saved workspaces yet.</p>}</div></section>
+    <section className="saved-section"><h2>My Looks</h2><p className="intro">Select up to nine Looks and download every complete Leica package in one ZIP.</p><div className="saved-grid">{looks.length ? looks.map((item) => <article className={selected.includes(item.id) ? "selected" : ""} key={item.id}><label><input type="checkbox" checked={selected.includes(item.id)} disabled={!selected.includes(item.id) && selected.length >= 9} onChange={() => toggle(item.id)} /> Include in package</label><h3>{item.name}</h3><small>{new Date(item.updated_at).toLocaleString()}</small><button className="secondary" onClick={() => load(item)}>Open in builder</button></article>) : <p className="empty-saved">Save a Look from the builder to start your library.</p>}</div></section>
+  </>;
 }
 
 function CatalogBrowser({ profiles, selectedId, onSelect }: { profiles: CatalogProfile[]; selectedId: string | null; onSelect: (profile: CatalogProfile) => void }) {

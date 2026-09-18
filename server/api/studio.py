@@ -461,9 +461,8 @@ def _look_id(value: Any) -> int:
     return int(value)
 
 
-@router.post("/graph/package")
-async def graph_package(request: Request):
-    graph, icon = await _package_values(request)
+def build_graph_package_bytes(graph: dict, icon: bytes | None = None) -> bytes:
+    graph = _normalize_ui_graph(graph)
     cube, _report = _compiled(graph)
     name = str(graph.get("name") or "Compiled Graph").strip()
     try:
@@ -485,6 +484,13 @@ async def graph_package(request: Request):
         )
     except (ValueError, RuntimeError, TypeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return package
+
+
+@router.post("/graph/package")
+async def graph_package(request: Request):
+    graph, icon = await _package_values(request)
+    package = build_graph_package_bytes(graph, icon)
     return Response(package, media_type="application/zip", headers={
         "Content-Disposition": 'attachment; filename="compiled-graph-leica-package.zip"',
         "X-Round-Trip-Verified": "true",
