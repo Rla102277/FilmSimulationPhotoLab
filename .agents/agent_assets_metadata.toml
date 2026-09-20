@@ -1,0 +1,58 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "jZtpLUF7-uXNwA0pTfMtI"
+uri = "file://exports/film-look-studio-part-1-project.zip"
+type = "unspecified"
+title = "Film Look Studio — Part 1: Project"
+description = "Source code, web build, LUT/DCP libraries, documentation, working files, screenshots, and project configuration (13 MB)."
+logical_id = "0b18d12e-ef61-4922-9923-4dc7f1248798"
+content_hash = "sha256:5ec8319b8c5185687f1c92ba359e5c50b95fffaa0b0ce6c2b6d3edc1bc919989"
+size = 13004632
+mtime_ms = 1789934566962
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:972712f5-729d-44b9-bd95-592be64463a5/0b18d12e-ef61-4922-9923-4dc7f1248798/e40a09d8-ca18-4cb6-8727-732a643bf5b3"
+storage_version_token = "1789934578122626"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "phU2hiE_l1PZV_hEDYcX4"
+uri = "file://exports/film-look-studio-part-2-uploaded-assets.zip"
+type = "unspecified"
+title = "Film Look Studio — Part 2: Uploaded Assets"
+description = "All uploaded reference assets and source archives (95 MB)."
+logical_id = "e5ceab2c-4c9f-46ca-8e59-585d3d1e6a0a"
+content_hash = "sha256:b381ced3b4d4bda84a5b0ef561ffde71007d020b70b557cb78a7e2fb39329611"
+size = 99363650
+mtime_ms = 1789934567378
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:972712f5-729d-44b9-bd95-592be64463a5/e5ceab2c-4c9f-46ca-8e59-585d3d1e6a0a/669e8218-8b9b-4ef5-b276-a597b754a6c0"
+storage_version_token = "1789934579562733"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "E_r2y30F18l0059BA-tuO"
+uri = "file://exports/film-look-studio-part-3-generated-outputs.zip"
+type = "unspecified"
+title = "Film Look Studio — Part 3: Generated Outputs"
+description = "All generated Leica packages, LUT banks, CLI bundles, and output archives (40 MB)."
+logical_id = "2605b53a-cdea-4cb4-a39b-035b407ccda6"
+content_hash = "sha256:f6d742295e8c6ccd76769c0e71958cdcf1739b10967f7c7818073edff5dfa8b0"
+size = 41193508
+mtime_ms = 1789934569206
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:972712f5-729d-44b9-bd95-592be64463a5/2605b53a-cdea-4cb4-a39b-035b407ccda6/d0663f12-0fb1-49dc-8345-a52372748966"
+storage_version_token = "1789934580562280"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "tQ_zAlw5dQq1mJlnQ1j6L"
+uri = "file://exports/film-look-studio-part-4-legacy-bundle.zip"
+type = "unspecified"
+title = "Film Look Studio — Part 4: Legacy Bundle"
+description = "The existing complete legacy project bundle retained in the workspace (50 MB)."
+logical_id = "873a75a9-8f98-44be-a93e-7615a397e7ce"
+content_hash = "sha256:3b3a04b5aedbcf3e2788f6a47d969e4fd2c4798a7e27d50caa740cbd9af9882e"
+size = 52148423
+mtime_ms = 1789934569422
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:972712f5-729d-44b9-bd95-592be64463a5/873a75a9-8f98-44be-a93e-7615a397e7ce/3eff31d6-648a-4ca8-9382-3cf7f547e0ff"
+storage_version_token = "1789934582516203"
+content_type = "application/octet-stream"
