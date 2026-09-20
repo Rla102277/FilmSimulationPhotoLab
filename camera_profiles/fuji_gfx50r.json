@@ -1,0 +1,10 @@
+{
+  "manufacturer": "Fujifilm",
+  "model": "GFX 50R",
+  "raw_extension": "RAF",
+  "recipe_support": true,
+  "native_processing_research": true,
+  "capabilities_verified": false,
+  "controls": {},
+  "notes": "Legacy body capability set must be modeled separately from X-E5."
+}

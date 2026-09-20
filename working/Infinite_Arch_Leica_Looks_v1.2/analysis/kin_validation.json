@@ -1,0 +1,34 @@
+{
+  "IA_Kin": {
+    "mean_interpolation_error": 0.0020693812528288368,
+    "p99": 0.014119219064315285,
+    "black": [
+      0.004001,
+      0.004,
+      0.003999
+    ],
+    "white": [
+      0.99405,
+      0.994017,
+      0.99395
+    ]
+  },
+  "IA_Kin_Agfa": {
+    "mean_interpolation_error": 0.0022398035109088364,
+    "p99": 0.015172659309017084,
+    "black": [
+      0.004001,
+      0.004,
+      0.003999
+    ],
+    "white": [
+      0.99405,
+      0.994017,
+      0.99395
+    ]
+  },
+  "both_uploaders_valid": true,
+  "payloads_identical": true,
+  "other_eight_unchanged": true,
+  "camera_verified": false
+}

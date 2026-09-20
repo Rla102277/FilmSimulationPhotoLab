@@ -1,0 +1,9 @@
+{
+  "python_checks_passed": 33,
+  "typescript": "passed",
+  "frontend_build": "passed",
+  "authoritative_v12_integrity": "passed",
+  "live_replit_verified": false,
+  "camera_verified": false,
+  "creative_provider": "mock response validation; credentials not used"
+}

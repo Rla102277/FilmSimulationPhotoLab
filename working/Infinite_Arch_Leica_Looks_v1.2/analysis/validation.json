@@ -1,0 +1,51 @@
+{
+  "both_installers_valid": true,
+  "payloads_identical": true,
+  "other_eight_looks_unchanged": true,
+  "camera_verified": false,
+  "black": [
+    0.006,
+    0.006,
+    0.006
+  ],
+  "white": [
+    0.99,
+    0.99,
+    0.99
+  ],
+  "interpolation_mean_error": 0.0022509245728032615,
+  "interpolation_p99_error": 0.013940442229200021,
+  "interpolation_max_error": 0.027990173611836974,
+  "overlap": [
+    {
+      "name": "IA Presence",
+      "mean": 0.11021811338802473,
+      "p90": 0.1886042221434032,
+      "review": true
+    },
+    {
+      "name": "IA Threshold",
+      "mean": 0.27116542310713276,
+      "p90": 0.5258133023718622,
+      "review": false
+    },
+    {
+      "name": "IA American Negative",
+      "mean": 0.12597123408804756,
+      "p90": 0.21480709963086592,
+      "review": true
+    },
+    {
+      "name": "IA 400H",
+      "mean": 0.2620673051327577,
+      "p90": 0.4127856267154402,
+      "review": false
+    },
+    {
+      "name": "IA Ember",
+      "mean": 0.16612514462431974,
+      "p90": 0.263678124403905,
+      "review": false
+    }
+  ]
+}

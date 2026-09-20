@@ -1,0 +1,8 @@
+{
+  "manufacturer": "Leica",
+  "model": "Q3 43",
+  "family": "Q3",
+  "leica_looks": true,
+  "output": "compiled_leica_payload",
+  "notes": "File-generation target only. The active product does not connect to a camera."
+}

@@ -1,0 +1,46 @@
+# Generated Leica v1.2 Inventory
+
+| Member | Bytes | SHA-256 |
+|---|---:|---|
+| `Infinite_Arch_Leica_Looks_v1.2/looks_manifest.json` | 4142 | `f07f93960ac9e709dc4ad838831396637aba91a0c80950e7eee0294bf9cb0128` |
+| `Infinite_Arch_Leica_Looks_v1.2/CHANGELOG_v1.2.md` | 1547 | `cd658e627b1476f6775cdb7b05b43beb377d48671dbc0e735e584d415fb7fabb` |
+| `Infinite_Arch_Leica_Looks_v1.2/Natura_Comparison.jpg` | 642930 | `f3bd50e78fe1cd97e99f5787be567ff5583d35ffcb3900e45258ca8dfdd5f234` |
+| `Infinite_Arch_Leica_Looks_v1.2/uploader.py` | 13215 | `c5d9120eb5a057dcfd0becf14d3f6637b4459f094f89ee8b7d1d5fa0d359b701` |
+| `Infinite_Arch_Leica_Looks_v1.2/README.md` | 792 | `f8d60d45479c38225da5c0bd7dcc563281ac84837ebd005a93b128e7063ccdcc` |
+| `Infinite_Arch_Leica_Looks_v1.2/ia_final9_upload_pyto.py` | 1637380 | `51a056aaf54b1fcf285ff75c1957796583e3d3406df6cb6740dbfac8a7667918` |
+| `Infinite_Arch_Leica_Looks_v1.2/SOURCE_MAP.md` | 1530 | `41d59234cf8161a1d07ce24296ca4d6d2edcfd5f192a5026f2d5b9d261082638` |
+| `Infinite_Arch_Leica_Looks_v1.2/analysis/kin_validation.json` | 608 | `92294a55e3169db89cbb9ac2a1a911157539d2b7af79d3fd1f185f30175ea301` |
+| `Infinite_Arch_Leica_Looks_v1.2/analysis/dcp_comparison.json` | 2145 | `916495944b3520e1a9df3390600a1db8ed30b9267f445beccc3721b0a2be9102` |
+| `Infinite_Arch_Leica_Looks_v1.2/analysis/validation.json` | 1063 | `66700d42e1dbf20b9d0c294d604de6a17594a4eb9e9a076b48044e8acd8903ba` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/sources.json` | 3565 | `6329e5c14911ecc34be59107c5cf49ff0eab353781e80372afe91e1710162c3a` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/Kin_Contact_Sheet.jpg` | 1488727 | `55af44d667148a445b1c139fd541d357e1e45f4647c6b52a077e87d46795dce8` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/IA_Kin.CUBE` | 132858 | `d47bff06bc2130ae7c84f54a1803212830bdf9314b17ca5c94352c582f7d6bce` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/8.jpg` | 194174 | `eed8737e44c041c00c3634994e4230bb4114e397a081dabb5663ca993dd47722` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/README.md` | 1547 | `cd658e627b1476f6775cdb7b05b43beb377d48671dbc0e735e584d415fb7fabb` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/4.jpg` | 181992 | `cccd310821d2a4327211de66c2dd7334836894ca54e40c39603f681b9929a735` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/5.jpg` | 176745 | `ff3c3806b9f9b65226f2a8b0765e5c1bc145ab112215104523d35927e3522e45` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/7.jpg` | 183009 | `f7970f693a3aa24868f535689b8e5536c832ebe879d71bbdebe69fee53cfaa22` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/6.jpg` | 179673 | `3d27823b3d123d6040c2b9cccadbadb30dc8830653138990a3133abab37f9759` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/2.jpg` | 165007 | `0e16afc17c5ebc270182c8ee06698e5d12e2397cb7e2895d522a5b532a243e91` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/IA_Kin_Agfa.CUBE` | 132863 | `ac4bbfc713757316b170da785b591e406bbdaa592c6f95567d52835de84b424c` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/3.jpg` | 181512 | `9dbb6e492321deb12785ee7285649dd86039a9350e0be4642a12eef67977370f` |
+| `Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/1.jpg` | 180552 | `c31c9b07bce8065500961737a156b2c9af368ce25ed685db51774be1eb75255f` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/witness/look.CUBE` | 132840 | `8e26b914ab9e264185b7a27e72bb331e06d831c14d74159ff96bb1b404aaa0b8` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/witness/look.bmp` | 2224 | `1f1466ed892323c63afb940195dcd85886500c9b78f129006daaefaefdd88804` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/zone/look.CUBE` | 132837 | `c7a24b78eaf058a39b420de71f1ac19a07ecc3e57b7dee3acc539a2170adc4d9` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/zone/look.bmp` | 2224 | `2994d6992aa726da7d9f220241e87aed78df112a1a69cec9e63c35e79bca9a25` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/americannegative/look.CUBE` | 132889 | `d2c7aa4e5ae346cc8db8ed4fa2567273f33f5e65e2ab5e3e8708154cce4ecbb1` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/americannegative/look.bmp` | 2224 | `2196a0051d0ead92a1f1bd10490cafa02c8a57f670b3fc572dd0299329e44c68` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/presence/look.CUBE` | 132880 | `06dae2aad0db2c84d4f842f6ce08a4bacacc914ea5a94c49060316f60e8c223a` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/presence/look.bmp` | 2224 | `1fad7f2536bf9d3c61d7e0250e475675ced971dbcc8f77843136fa50d8aacacd` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/threshold/look.CUBE` | 132914 | `d704bcca8b24edb7ab1305bae01419e175d38015ffedd337a2ffc966cb4a50c0` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/threshold/look.bmp` | 2224 | `108ac5c1c988da48dd2704dde2802c8c9917205eecb632eb0d6d86bab42d7049` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/400h/look.CUBE` | 132858 | `d47bff06bc2130ae7c84f54a1803212830bdf9314b17ca5c94352c582f7d6bce` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/400h/look.bmp` | 2224 | `31caa3038027e8bc1ee88d865ca0b22b09dc15d69efa4c10c6662592ceebf35e` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/400h/README.txt` | 1547 | `cd658e627b1476f6775cdb7b05b43beb377d48671dbc0e735e584d415fb7fabb` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/ember/look.CUBE` | 132877 | `78c2fb13ff052d8f022a0eff1cada13d6434b4a4cf15ac253857930508d1de5a` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/ember/look.bmp` | 2224 | `2176e0e945e6453db71148666eed54a2a8fe4dd1312831d142b3eacff75dc7cf` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/invitation/look.CUBE` | 132843 | `9452ebfd550ce32ffce02077c45900842f42d6ba95e679afc39d0b615c631172` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/invitation/look.bmp` | 2224 | `8949bdeb210d726b5a4914a0d3b58317793635e4dd49c2b8106f67437ae28a76` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/natura/look.CUBE` | 132878 | `180e125946c2ccca9513f6b5598a62709a93a0430d6902b0d69fa128c49eeae0` |
+| `Infinite_Arch_Leica_Looks_v1.2/looks/natura/look.bmp` | 2224 | `de8e13d0868f7abead166d5a2e638ff50e879abc78b3aeef604a19408e690e11` |

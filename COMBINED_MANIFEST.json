@@ -1,0 +1,2165 @@
+{
+  "bundle": "Infinite Arch Photo Lab - Combined Codex + Replit",
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "fe62311bfdafd4a4ec8df9c9525481419222ef792ff644477d09a538943a5272",
+      "bytes": 225,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "1addd54e59fe19eb6e0a2a82ef7fb2894702adccb849278668427b4fe715535f",
+      "bytes": 74,
+      "origin": "codex_migration"
+    },
+    {
+      "path": ".replit",
+      "sha256": "6de018062ad4db6de4900f84b450c037d5706e46f3b288a49b0d350f279a8cbc",
+      "bytes": 24,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "AGENT_BOOTSTRAP_PROMPT.md",
+      "sha256": "553b4f303e388f93279af0545c97461ac1ee0c61f4a439aba471b3a90176cf75",
+      "bytes": 2511,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "BUNDLE_MANIFEST.json",
+      "sha256": "7b52567e091a9eab0eae11a6d424fce752597580cda53a68b5b5e3c603917edf",
+      "bytes": 3241,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "COMBINED_HANDOFF.md",
+      "sha256": "3e32c2e35b53ac2d91ed650a7b9b473c68e7dc4f1654456fa509ee4f8fb56de6",
+      "bytes": 1984,
+      "origin": "combined_handoff"
+    },
+    {
+      "path": "START_HERE.md",
+      "sha256": "a4f260211f87fe4f67088becc83f222833f213f521bb4b08dfb3c1f1d6fbb4a5",
+      "bytes": 2588,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "bridge/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "bridge/fuji/README.md",
+      "sha256": "adb824f354f6ee966443ca12aa0b7bbebde88e6740d6024719402c504672aa9d",
+      "bytes": 140,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "bridge/fuji/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "bridge/leica/README.md",
+      "sha256": "e929e3d53710d74cb769ba07cbb76cb44cea696323c58a095547954839963dae",
+      "bytes": 190,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "bridge/leica/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "bridge/local_config.example.json",
+      "sha256": "aa1e41863ba7a33355f59633983ab19a472e581ea877c4b73e3d1456077b4ddf",
+      "bytes": 168,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "bridge/main.py",
+      "sha256": "fb0db347e58f5cea18c5e5f3c2a70c94b093709c177b3c9ef4050ddb5b507353",
+      "bytes": 346,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "camera_profiles/fuji_gfx50r.json",
+      "sha256": "61636b16e90e0edcc6450ac703b45cc9b97d50b05b81c9e746f52c8d9371c753",
+      "bytes": 276,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "camera_profiles/fuji_xe5.json",
+      "sha256": "4b7fa2aa1717d778599c3b335a9d018210933716fddaddb9654433235737a6de",
+      "bytes": 298,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "camera_profiles/leica_q3.json",
+      "sha256": "6ae050df70219966dd7618c7bf1a2782418302a5a6c14b0af08d84b8ceb97347",
+      "bytes": 118,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "camera_profiles/leica_q3_43.json",
+      "sha256": "75e32396dc673c40bfc726faa53f82e55b82842c134d055cdcfeca6027ad28fb",
+      "bytes": 205,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "codex_outputs/INFINITE_ARCH_Q3_COMPLETE_LIBRARY.md",
+      "sha256": "744fcdc61ce827ab9c641c140a22099809fa2951a9c0628f0640b8a6d51df04b",
+      "bytes": 2532,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/InfiniteArchLeicaCLI_network_probe.zip",
+      "sha256": "d84e71d478ef95889de2500356856428282a02de939e799ee483b35c366a00cb",
+      "bytes": 209721,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/InfiniteArchLeicaCLI_network_probe_v2.zip",
+      "sha256": "7306e0a837405d1a3ed015269ac9e45e2020c2ac10158cdf13e5d9e7f919443a",
+      "bytes": 210057,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/InfiniteArchLeicaCLI_network_probe_v3.zip",
+      "sha256": "3685e90114a26e5998c3dad42a4c7e2268e7b80b14e730d0d472cdf7a5858d1f",
+      "bytes": 210796,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/InfiniteArchLeicaCLI_network_probe_v4.zip",
+      "sha256": "253e15c44b36f56366b5a856857840514f9358d00d777ad37b84ac28feb817b0",
+      "bytes": 194677,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/InfiniteArchLeicaCLI_pairing.zip",
+      "sha256": "13e067475f009d5b1f0f286a65f5f0df1860cb62b945973b0bdcd5241676c4ad",
+      "bytes": 184398,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Infinite_Arch_Q3_Complete_Library.zip",
+      "sha256": "78f38185e324e0bcf234677e533aef41f669e0572f06e3e3b33a73e9c668e871",
+      "bytes": 942414,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Infinite_Arch_Q3_Icon_Preview.png",
+      "sha256": "0f4944e20c7256dba5edeea5a85ed6d0d7a81d6ab69881ff2bdb84b2da3ce181",
+      "bytes": 8012,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/PCAP_FINDINGS.md",
+      "sha256": "f8ec87c6613543da4b6218eac5b84c573cdbb0c32b33377eb669e4341714007f",
+      "bytes": 2106,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_43_AUTH_CAPTURE_REPORT.md",
+      "sha256": "b6b1102186ea2c6342212293c96982e6f20b2aca3175a541289f8f2c5464d720",
+      "bytes": 799,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_43_AUTH_WIFI_REPORT.md",
+      "sha256": "46b8d04efef58204a12d61ff6e5d5d286224ec8805bc45ea758456a72547786b",
+      "bytes": 2795,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_43_BLEACH_RESURRECTION_TEST.md",
+      "sha256": "fc9ecb688daef8288716cb57bd3b247b92eb383e3dfca95436c6d32dcbc6c0b3",
+      "bytes": 2138,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_43_BLEACH_TEST_RESULT.md",
+      "sha256": "e47bd747ce44c7e9c72fcee370d5e6c2c1944bc1ff3b992ea67d5f1543e3a46d",
+      "bytes": 1840,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_43_CAPTURE_REPORT.md",
+      "sha256": "9e35c2a92a09723ca30f1595011c73feb25c96ec501d27f27c281be83503adb5",
+      "bytes": 1921,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_43_LCS_REGISTRY_TEST.md",
+      "sha256": "5a6518636876316f9d5e6af6a69438c0ba640a18606cc3d425c15fff0ade7186",
+      "bytes": 2082,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_IA_Acros.zip",
+      "sha256": "6e21a73427e01879285ddf440a2666475aae84739431913541bece42cfed15ab",
+      "bytes": 19329,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_IA_Edo_400.zip",
+      "sha256": "bfcd429bafc92fe9c03dc22f49c5b063a6b7a007466c45cc079a921b9a6849d7",
+      "bytes": 62701,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_IA_HP5.zip",
+      "sha256": "ff100a6bdd143c13ddac26180c0e3eaf8baf98f519d09a8268aa625a7708575c",
+      "bytes": 23231,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_IA_MAGENTA_PROOF.md",
+      "sha256": "5bf7ff266eab4692e459cda0be8270139fc3462e2924e26b0c86ee5586e00b7a",
+      "bytes": 1034,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_IA_Nostalgic.zip",
+      "sha256": "6fecef3f5c2c9a03a472eaef7f8652a74f59eb79e00480a9426df117b1ddd2ab",
+      "bytes": 60097,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_INFINITE_ARCH_CUSTOM_LUT_TEST_1.md",
+      "sha256": "cd1a33d1563e43d176ae37c166211b9ecce30353dbe1638c8c33c2f6fc0b787a",
+      "bytes": 1330,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_INFINITE_ARCH_FILM_SET_01.md",
+      "sha256": "06c7a64a284435ce2e927c5bd1edb10bfd2bc41323e7d9417fc7323d0c5cb279",
+      "bytes": 1787,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_INFINITE_ARCH_PRESENCE.md",
+      "sha256": "b81f5459b236b41a2600602878099630663cb217c49909506a58a4b888f779e2",
+      "bytes": 841,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_IPHONE_OFFICIAL_BLEACH_TEST.md",
+      "sha256": "c189923150400059762d959725d7de16a65e4762604e4837e384fb4d6b45747c",
+      "bytes": 2723,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_Infinite_Arch_Bank_A_Originals.zip",
+      "sha256": "ed7441efe71dd40d4ba5cd78c4e66e57f1ed829de46b77bbef2480fbfc385c24",
+      "bytes": 253416,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_Infinite_Arch_Bank_B_Films.zip",
+      "sha256": "e97399ecc4cec87acc1f78cdfc7ff33bf7736df6053ff64c3b292cea0d113f93",
+      "bytes": 253094,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_Infinite_Arch_Film_Set_01.zip",
+      "sha256": "3669f98d112f62e9b7521fb14431cca8f0ecf35ec135c84e1c68ac07cfb75fa3",
+      "bytes": 165562,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_NETWORK_TEST.md",
+      "sha256": "2d9900f60e692543060ac9fd53f53bfc29b4b44bdd971736f5396ba614b05c7d",
+      "bytes": 3017,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_IA_Magenta_Proof/IAMagentaProof.CUBE",
+      "sha256": "aafc6111aa7170bd763317d4456b2f8b70d2d6befb5b2a130684c41b5def2cea",
+      "bytes": 132844,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_IA_Magenta_Proof/IAMagentaProof.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_IA_Magenta_Proof/README.txt",
+      "sha256": "f920038c813c16d905e303ede296d93a111b70c800601c53c48e2a84b876676b",
+      "bytes": 1505,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_IA_Magenta_Proof/q3_iphone_ia_magenta_proof_upload.py",
+      "sha256": "4c94c912cea7d5728c43efccf4c1dbd940395c927e099ddb88e988f4b1d76548",
+      "bytes": 20918,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_IA_Magenta_Proof.zip",
+      "sha256": "7dacb36690a4f5f6c19a2faa1b3bb65c9a516bb79dc63a4c204cdf9932aeaf8e",
+      "bytes": 8580,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_Infinite_Arch_Custom_Test_1.zip",
+      "sha256": "e5367a38855ea03f3710f36ab542cbdd95566327578e47b1662ff92a2ee6bfe9",
+      "bytes": 20252,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_Infinite_Arch_Presence.zip",
+      "sha256": "9705e5438e6312d15d3e3c743ca10b865d1eac73e5771b52ea885d2d18db90e9",
+      "bytes": 62204,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/Q3_iPhone_Official_Bleach_Test.zip",
+      "sha256": "d0e29832fa4e1db38e77a9904cf15d4dc7cc2d0a56d54a93ee363168663167a3",
+      "bytes": 61630,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/README_FIRST.md",
+      "sha256": "f56d8984e98160e1dd67b106217971b6235e54efdb71a858e474da747794f651",
+      "bytes": 565,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/RECOVERED_ARTIFACTS.md",
+      "sha256": "581905d5596c543b505c020633839964fff7182f614bb61cf987a0044b5ae4a9",
+      "bytes": 1585,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/TRADING_CHAT_LOOKS_BREAKTHROUGH.md",
+      "sha256": "46e5b9af023cfe893cddfcb39c4a1a61f5e9c55f46ca20f01dffbc6431fcbbb6",
+      "bytes": 3592,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/after_bleach_test.lcs",
+      "sha256": "83ce7cf65a0bc6b04f4e4db9ec16ad6db6c136511c04777ce1e93520aacda7e3",
+      "bytes": 56753,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/anomalous_q3_settings.lcs",
+      "sha256": "a9ead7961fff92e10fd22ee35b834ac443137d2f8186f12857ae05d77ad032db",
+      "bytes": 56981,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/capture_sequence.txt",
+      "sha256": "f87402695004c88108684012c6812151a5efd93d3e280cfa33505f3a137a2b41",
+      "bytes": 68830,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/leica-q3-looks-firmware-research.md",
+      "sha256": "a34c2b62861daf32dcf920f9e06ac40681d95b61a09a51c8b338322b2bd82058",
+      "bytes": 19097,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/leica_lfu_inspector.py",
+      "sha256": "cf62507c2788a829d4014feffe42aba1dbbc0bc8e75b737ee75539b9ffd2d9d6",
+      "bytes": 4324,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-access-result.txt",
+      "sha256": "5b474d5fadcd73ef55cdfbe8833b2d5a3ddf052918ed874b7f26c0c8d01fb67e",
+      "bytes": 151,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-handoff-result.txt",
+      "sha256": "1538568a7c61812a9eec0b7099705c1978b439727fd229f9d9cbcfeaeb789918",
+      "bytes": 332,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-mac-client-id.txt",
+      "sha256": "40cfb38260286d38b62bc7eabd8cff196cad2a8fc45acab7648e4375a8a2f1ea",
+      "bytes": 37,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-network-probe",
+      "sha256": "9106873a86252ef1626bc3d6e5476663ce2e115b07942df6f1c5ceecb0dd9c7e",
+      "bytes": 254976,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-network-probe-v2",
+      "sha256": "03214c9c65a455cb718ac7556c554dddb1a4c5c8cf0e4064bf16b6962ffba32e",
+      "bytes": 255328,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-network-probe-v3",
+      "sha256": "85479d50ed465f519911436d9cbd68ccd9520fcfc78cf72459aefb4562e9eaa2",
+      "bytes": 255984,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-network-probe-v4",
+      "sha256": "e774909d1c64f28a2479da69f81cce2741e4f073f1f04daacb2b099fef768756",
+      "bytes": 407200,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-new-id-result.txt",
+      "sha256": "c7766f44fd799bab84a3e860d19cbb4916af2079d20b040e14cbb4dedf0d87ac",
+      "bytes": 148,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-piggyback-result.txt",
+      "sha256": "d4805d687c736400a06fe07572b4929e5030070f1cce8ece08197db551c8dce7",
+      "bytes": 129,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-read-result.txt",
+      "sha256": "531d5913f90bc9630eac8a99e72fd6c8ff1d11099621667c44bd1fedb0b18f1d",
+      "bytes": 143,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3-v2-read-result.txt",
+      "sha256": "d4805d687c736400a06fe07572b4929e5030070f1cce8ece08197db551c8dce7",
+      "bytes": 129,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_ptpip.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_start.pcap",
+      "sha256": "f379d84111ac75688631bdf6b348fe8fbb16405869a4b428a059227d20865d31",
+      "bytes": 8269172,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_timeline.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_wifi.pcap",
+      "sha256": "5ee5570ace0de41e5dd40b07805ec8fe934c06cb4683ecabe3679844f2adb32e",
+      "bytes": 12532692,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_wifi_identity.txt",
+      "sha256": "8c0078e1e0ff50552500ec191c44c53e6fdba336fea9f794e88269f013fbb01b",
+      "bytes": 7604,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_wifi_look_lists.txt",
+      "sha256": "474e4a4da433b71abc6e0378d4dd03728d60c9c0871f19f095973350eac181e5",
+      "bytes": 5423,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_wifi_ptpip.txt",
+      "sha256": "0bd1504933ba42659c89a24450e8f82a2259874e31748d3af8c6cb92a35f49f0",
+      "bytes": 58914,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_auth_wifi_timeline.txt",
+      "sha256": "2ebf5521f37529e067bb746fb4df560424e31c7ccbf9488d245115b472c14e08",
+      "bytes": 1991636,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_fresh_session.pcap",
+      "sha256": "b09498b64305944849d828081301f453ea33a7110c87fd91f6ea976ead918b08",
+      "bytes": 9168344,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_network_timeline.txt",
+      "sha256": "f324cca084ccf0031cf2b5adae386e8b40f85cc39a40264c796ed6a214c653bb",
+      "bytes": 120179,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_ptpip_sequence.txt",
+      "sha256": "bf844c8023d5df0a6144975bfb93a61e5e9edb3770bee4e4cd9fb1ee4fc357c6",
+      "bytes": 19362,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_test_resurrect_bleach.lcs",
+      "sha256": "1cc0c783b77aed83acf35f20ba9298e8d8f49ac5ed82e00e0ebc53db2ff6b514",
+      "bytes": 56768,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_43_test_swap_chrome_greg.lcs",
+      "sha256": "a139794f5aa677a974b429145fe0178ed3d015062fcd1b125349d88637cf393e",
+      "bytes": 56768,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_iphone_official_bleach_upload.py",
+      "sha256": "d7cfb1573f738b67a9724b1097befca18fa9cb070888ae58f23201447b33f2a0",
+      "bytes": 19003,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_iphone_read_probe.py",
+      "sha256": "a66ef82dcb5bf65ef41350f67a18c147246620763b60d36be01173a059062ad3",
+      "bytes": 7946,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_iphone_read_probe_v2.py",
+      "sha256": "21ac819c5c422e2c1b0ef7acabe3612cc5996ed5dcb08ca5441311126de254e5",
+      "bytes": 8222,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_iphone_read_probe_v3.py",
+      "sha256": "6cbf8c2a83adb977225055b83ad6cce5679822193a2ed0976734b1a4bb654e4c",
+      "bytes": 8821,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_iphone_read_probe_v4.py",
+      "sha256": "862eb40e16ace0810545177cb26ecee105c18d18ee2bfd9c2848c994f6939763",
+      "bytes": 8680,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_iphone_read_probe_v5.py",
+      "sha256": "326b9bd3cc4571003778de99284406459ddb09658d8a9423278a6b85290078e0",
+      "bytes": 11157,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_look_capture.pcap",
+      "sha256": "9218273f60ab71039eefc9cefffdca7f3d013670eb4d9bdbcdd55ae9db9e0ecb",
+      "bytes": 17731212,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/q3_look_upload_only.pcap",
+      "sha256": "559ff5d0b8e8bca49664d33e4d2bc8a8e0fce5a4bd7baa964f11ac293e4042e9",
+      "bytes": 470532,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/randy_q3_43_settings_original.lcs",
+      "sha256": "a9ead7961fff92e10fd22ee35b834ac443137d2f8186f12857ae05d77ad032db",
+      "bytes": 56981,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/rla1022_original.lcs",
+      "sha256": "7351ec05b6704aba45bfa6df64b6d4bdf3b63deb3d22ed9b8c5a9dc749da2b22",
+      "bytes": 56767,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "codex_outputs/upload_sequence.txt",
+      "sha256": "58e1922f9e924b39fe438e05675efc97e7c5099369e402fb393e3c523d7177bd",
+      "bytes": 20468,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/cameras/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/color/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/color/graph.py",
+      "sha256": "1fff9d727d38e1016c550939f56daf42de11737cf2d333d4434f74a2ed53d869",
+      "bytes": 95,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/fuji/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/fuji/recipes.py",
+      "sha256": "97c558ef8e6abead868421dbf57b3510b82635b402876da0ed0a37634c1d994c",
+      "bytes": 106,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/leica/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/leica/authoritative.py",
+      "sha256": "ec4931daaeda9d909216c89ce311168b74ecebf438c2ad79849275e8e25394bf",
+      "bytes": 1183,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "core/looks/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/PROJECT_STATE.md",
+      "sha256": "6825370d2dcdea9b2c726a26276fc53656916466f14cf88425780d194505eaec",
+      "bytes": 3266,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "docs/replit_architecture/AGENT_BOOTSTRAP_PROMPT_STARTER_REFERENCE.md",
+      "sha256": "59a270b33aca5d0b3c4eaabb2de005356a3b8312b614af3d858d21bb83346358",
+      "bytes": 8020,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/ARCHITECTURE.md",
+      "sha256": "3557b1e1bfa334017d2707e9e947c4a55de1b81cfa7aaefb148a3d8474b3d96f",
+      "bytes": 1077,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/BRIDGE_PROTOCOL.md",
+      "sha256": "e793afb3986f31c0d0f341500c9dded100053c2f69975b295c838664458ea107",
+      "bytes": 977,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/DATA_MODEL.md",
+      "sha256": "fc07c1c3db323455115ae35282023ddeccbea9394767ffc2d5eb798f269b0e24",
+      "bytes": 1286,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/FUJI_ROADMAP.md",
+      "sha256": "07fe6bf62d3d73218b525c695e10a07a6d56e29167795856136be5ebdb6cb1f5",
+      "bytes": 1377,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/GUARDRAILS.md",
+      "sha256": "2af349d364ed001e4703e330591788bdfb0001662bbab1b73dc8d0b52808f993",
+      "bytes": 763,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/IMPLEMENTATION_ORDER.md",
+      "sha256": "d96ac4c9660291a8ac0266be80cccf98da71432bfb2198e94d971ca37122b396",
+      "bytes": 1489,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/LEICA_V1_2_GROUND_TRUTH.md",
+      "sha256": "672415547c783c3b3e2ef3f352ee1dd57b0fcfed64b10fccfa7b0946f12e2565",
+      "bytes": 2508,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/REPLIT_SETUP.md",
+      "sha256": "1a72cd03fb037f7b9e8ff30491b8256d51f6a40eed6c08afe4132b8ebf7a0ac6",
+      "bytes": 1169,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/STARTER_README_REFERENCE.md",
+      "sha256": "b3ee6ec31baa14e57d227b0fd22a58eecd007d5f407a68b784b6df2a69234b68",
+      "bytes": 1856,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "docs/replit_architecture/leica-v1.2-inventory-generated.md",
+      "sha256": "66e010269d5869841c6071b7cd6dbba63426dcf3fddc5cd6aa0fce524f450cec",
+      "bytes": 5860,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "main.py",
+      "sha256": "6e489e813f029392ffdce55a1e50fdb5fe91fcefae7297be346b891c95bed57d",
+      "bytes": 607,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "d4d2a9d510c1cb45032e2793578f42a452199951007303af9aca1efca0d3682a",
+      "bytes": 627,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "reference/leica/v1.2/Infinite_Arch_Leica_Looks_v1.2.zip",
+      "sha256": "1932cb619aeabe3b63bf616f77ffeac94181fa92af2a189f865068aac8f1e83f",
+      "bytes": 4540327,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "replit.md",
+      "sha256": "b544c2e22c98e35d87fc6509130e5216cbb3efae63ed3903a4d011fea54c3eb3",
+      "bytes": 1399,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "9131e5772999efe65540bb806ce2597e8919456c398fb84db9c1ef16e6bed693",
+      "bytes": 148,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "scripts/inventory_authoritative.py",
+      "sha256": "93acb5e0aab6daa1390e497852fc53159da729ccf3dea7a8ff4b604548619203",
+      "bytes": 635,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "scripts/run.sh",
+      "sha256": "ce41d0f1aff1abf97f5c37360fbe3ea7f52f99e7f4aee0b0def88fbcf651e1f8",
+      "bytes": 128,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "scripts/verify_authoritative.py",
+      "sha256": "0370acc1c1e3710c4784704fbf86d228cba26ebf26d773ea060b220a1ac70bb9",
+      "bytes": 1004,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "seed/README.md",
+      "sha256": "df28aa5330dca8a70792e75224ca67f3a715b67e076c55dc7783789551282e71",
+      "bytes": 241,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "seed/leica_v1_2_manifest_snapshot.json",
+      "sha256": "9a3ba6a1112827b403c62a40323b15899b77c3ec1fd8f1b17781e43e814b981e",
+      "bytes": 4143,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/api/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/api/leica.py",
+      "sha256": "e3b7a922d0e0d1e59a4d23e2217fb563298876fbe918238a818d17cd34f3c772",
+      "bytes": 473,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/db/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/main.py",
+      "sha256": "139452f4ed158a9004bc540a76b468e1b9c428ec6e978d423c4049c35d0f768c",
+      "bytes": 833,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/services/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "server/storage/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "origin": "replit_starter_or_merged"
+    },
+    {
+      "path": "source/candidate_film_set/acros/README.txt",
+      "sha256": "2745a222198cd2d53a5543f88249fa56e0ec4b6871c570ad35d54f90a971e707",
+      "bytes": 471,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/acros/acros.CUBE",
+      "sha256": "197c8fa06178b3d38aebe099138a2bc19ebbd85de4d64dd605615d2b3f66fe44",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/acros/look.CUBE",
+      "sha256": "197c8fa06178b3d38aebe099138a2bc19ebbd85de4d64dd605615d2b3f66fe44",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/acros/look.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/acros/look_config.py",
+      "sha256": "77c6f3f2af43c27b3f84dd049f04c08eadb931bb1f33750d6d0611457c0acd93",
+      "bytes": 186,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/acros/upload.py",
+      "sha256": "cc967bc0142b3bb7495f5269146060b934d0baf222cd0bb10ffb00e3ffc165bd",
+      "bytes": 21091,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/edo400/README.txt",
+      "sha256": "d5e9f04cc03454d05874b783e9fb93dbe4902e941b2b542c3f59477eeafd37f5",
+      "bytes": 472,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/edo400/edo400.CUBE",
+      "sha256": "6367090a76ed3e6dba14a6f3f16ff961fbb858788cb5e8a25c139c89f3723177",
+      "bytes": 132838,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/edo400/look.CUBE",
+      "sha256": "6367090a76ed3e6dba14a6f3f16ff961fbb858788cb5e8a25c139c89f3723177",
+      "bytes": 132838,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/edo400/look.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/edo400/look_config.py",
+      "sha256": "669589bf9b6ec4e870cfd36860fd7a22320eaa9102ed422d061144211256e943",
+      "bytes": 189,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/edo400/upload.py",
+      "sha256": "cc967bc0142b3bb7495f5269146060b934d0baf222cd0bb10ffb00e3ffc165bd",
+      "bytes": 21091,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/hp5/README.txt",
+      "sha256": "600770ed701817e4d7abc4ca314d5f590d7c42b839d8d4af32772692132bb839",
+      "bytes": 503,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/hp5/hp5.CUBE",
+      "sha256": "5ab3880f5255cd83c51fd1ee804f565911ce5731a4790202f9207da256d22296",
+      "bytes": 132834,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/hp5/look.CUBE",
+      "sha256": "5ab3880f5255cd83c51fd1ee804f565911ce5731a4790202f9207da256d22296",
+      "bytes": 132834,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/hp5/look.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/hp5/look_config.py",
+      "sha256": "0ac039b22caf923df5a9acb781f90affd5c8c9dc4fc5dcb735ecf4e2a598031d",
+      "bytes": 184,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/hp5/upload.py",
+      "sha256": "cc967bc0142b3bb7495f5269146060b934d0baf222cd0bb10ffb00e3ffc165bd",
+      "bytes": 21091,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/nostalgic/README.txt",
+      "sha256": "b711558c567514323b6fb12c8884dd7d5d14c81448a47c0b14d5b085f35ce683",
+      "bytes": 434,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/nostalgic/look.CUBE",
+      "sha256": "83bd46f1bdc92a431217ea89d44d635d19c5711ea0ed66169f918069e51145d4",
+      "bytes": 132840,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/nostalgic/look.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/nostalgic/look_config.py",
+      "sha256": "16ea5f4691d8ebe48a8d33e595808e0373ab7ef48ec59311b7027644b3eef13f",
+      "bytes": 191,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/nostalgic/nostalgic.CUBE",
+      "sha256": "83bd46f1bdc92a431217ea89d44d635d19c5711ea0ed66169f918069e51145d4",
+      "bytes": 132840,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/nostalgic/upload.py",
+      "sha256": "cc967bc0142b3bb7495f5269146060b934d0baf222cd0bb10ffb00e3ffc165bd",
+      "bytes": 21091,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/candidate_film_set/upload_template.py",
+      "sha256": "cc967bc0142b3bb7495f5269146060b934d0baf222cd0bb10ffb00e3ffc165bd",
+      "bytes": 21091,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/first_custom_test/InfiniteArchTest.CUBE",
+      "sha256": "299865009ddf1973200ed56accf11a884dc3140ec37edb7e093d09a2d36e175e",
+      "bytes": 132846,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/first_custom_test/InfiniteArchTest.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/first_custom_test/InfiniteArchTest_preview.png",
+      "sha256": "7750a4a329b5bdb7f0577ebb56631c6338693ba6670fe3bfdde30ec0b7ddcf46",
+      "bytes": 4345,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/first_custom_test/README.txt",
+      "sha256": "efda69409e032dac89c2027c272fd38b9119404d52d40315a2e2133ef79fa6f2",
+      "bytes": 2014,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/first_custom_test/q3_iphone_infinite_arch_test_upload.py",
+      "sha256": "0f8a5f72dfd7441df54b6ca452acb0de4ddac23c5a998a04e6e81b5eac603294",
+      "bytes": 20907,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/magenta_proof/IAMagentaProof.CUBE",
+      "sha256": "aafc6111aa7170bd763317d4456b2f8b70d2d6befb5b2a130684c41b5def2cea",
+      "bytes": 132844,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/magenta_proof/IAMagentaProof.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/magenta_proof/README.txt",
+      "sha256": "f920038c813c16d905e303ede296d93a111b70c800601c53c48e2a84b876676b",
+      "bytes": 1505,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/magenta_proof/q3_iphone_ia_magenta_proof_upload.py",
+      "sha256": "4c94c912cea7d5728c43efccf4c1dbd940395c927e099ddb88e988f4b1d76548",
+      "bytes": 20918,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/official_bleach/Bleach.CUBE",
+      "sha256": "c2a58164e543704189ef84d8c9b28f4deaac226bde94a3134f69a72a583f50f6",
+      "bytes": 132912,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/official_bleach/Bleach.bmp",
+      "sha256": "1d8b2d6c9e66506cf02c81f7a28f77fa5a2cf9b108128a9a279e963bea4e0288",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/official_bleach/README.txt",
+      "sha256": "68dcd8122ac1bb3033c8cb9f9aec877574664d0819221368410b6cdc11433161",
+      "bytes": 1944,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/official_bleach/q3_iphone_official_bleach_upload.py",
+      "sha256": "d7cfb1573f738b67a9724b1097befca18fa9cb070888ae58f23201447b33f2a0",
+      "bytes": 19003,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/presence/Presence.CUBE",
+      "sha256": "e56b3956e4f6a3d2aa1ecfcb3e589d14a688f09a8be191e494cd0198ab18e1b3",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/presence/Presence.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/presence/README.txt",
+      "sha256": "581ad7467c5ef1e3d9792edc5a721d82744d8d0bbfb1bad2898e8294be169a0e",
+      "bytes": 1148,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/confirmed_python/presence/q3_iphone_ia_presence_upload.py",
+      "sha256": "0560889bf2a15465da60852fa7730e501e40303fbaff6851eb5f59554e8744e0",
+      "bytes": 21098,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/DO_NOT_RUN.md",
+      "sha256": "3c0bf615dd4d4e2594febe238c9999d826b979938e8d4c5cfdad23a72b8aadb0",
+      "bytes": 299,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/README.txt",
+      "sha256": "95c44018d080daeb503049a291410da5461e615c5a692d6a97eaaf5cb2fbf1c0",
+      "bytes": 980,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/acros/icon_preview.png",
+      "sha256": "447af112c4bac0d73ed7101743f70eea86ff4b443c28f9851484327578563021",
+      "bytes": 3867,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/acros/look.CUBE",
+      "sha256": "4add529133569c8bb03260851864697ac08c25882fc821ba1737082e7c3cd4ce",
+      "bytes": 132835,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/acros/look.bmp",
+      "sha256": "576c4a9c9c323cfadbdc37170b5f24c7f4785bfebed8d3f30aa5ba2b0614107b",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/acros/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/edo400/icon_preview.png",
+      "sha256": "0a7466809493fd5f65a39cc8fd80cfff209eed66878a9cd687d38a01b90be395",
+      "bytes": 3891,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/edo400/look.CUBE",
+      "sha256": "85a4779665430e921b456cf3c29f75a528a62edef4e03e533ad080ed487b8cfb",
+      "bytes": 132837,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/edo400/look.bmp",
+      "sha256": "33243012348532f555e010cdb1389b98e6a94db05ef396de7991cd5ae1842e79",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/edo400/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/hp5/icon_preview.png",
+      "sha256": "273a8a9a373d03d0f491f92398b0381b5cf84baed469b49ba8cb673564f7ba9e",
+      "bytes": 3844,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/hp5/look.CUBE",
+      "sha256": "a848ec2d0378706cbc082ba8d85b0a1ec183496f6fb7beda19320fc6876ad851",
+      "bytes": 132833,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/hp5/look.bmp",
+      "sha256": "de7ec3f92dda9cc44a0112be51a13024f3d0e3cc1b77af046fd77eac0e26b319",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/hp5/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/invitation/icon_preview.png",
+      "sha256": "e265504e3d87593edc24c065d96eb9ecefeead35d3d2605911872988ce36be5d",
+      "bytes": 3906,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/invitation/look.CUBE",
+      "sha256": "d552b07ad95a240af699f81e9c9d01409f5480bbb701b38d981a2563d14a5fe4",
+      "bytes": 132837,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/invitation/look.bmp",
+      "sha256": "31d2856caf36d26ceac59976aff619ecc395bef87aae3be925418f7bbc23a4a1",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/invitation/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/memory/icon_preview.png",
+      "sha256": "47f5ddb92511690936a8761f1f643da2232d068667e0cce86095246519d12475",
+      "bytes": 3872,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/memory/look.CUBE",
+      "sha256": "e15a6118c5efcc0c1817905074d8f4f21279a96da670ead09bc1c10a52a2d995",
+      "bytes": 132833,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/memory/look.bmp",
+      "sha256": "f3f137f1319c01752125c04906b02e3a7b17b4d657bf54c047579323ce311bf6",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/memory/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/nostalgic/icon_preview.png",
+      "sha256": "95ea8ee55b9704ffce763ad9af3a2d3c32532d2a2794832259d5083682a2ffe5",
+      "bytes": 3904,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/nostalgic/look.CUBE",
+      "sha256": "e9024cc16f3bd47aff02baaa60760fd42b804712bf026e3ef0f730db744923ea",
+      "bytes": 132839,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/nostalgic/look.bmp",
+      "sha256": "ae81982a005f307a7410f11a0fb8ca02fcd5e700662b83d71b4b94251ab3817c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/nostalgic/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/presence/icon_preview.png",
+      "sha256": "142689e80262a0241691ec7b9e83c586fd8315401c0fb1163c555fd9c585c067",
+      "bytes": 3901,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/presence/look.CUBE",
+      "sha256": "1606d5ba15469b4a4c90fb42733fed58a023611463fd143c14b4f300c1081a60",
+      "bytes": 132835,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/presence/look.bmp",
+      "sha256": "7c046a93ccde66b92eaad0fa2146e0d16436893f9928d1d57369e960de83b479",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/presence/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/stillness/icon_preview.png",
+      "sha256": "b07a593d253e6fa6364e3cd1633999e52688af6704bd0b318e6ca24b299c914a",
+      "bytes": 3902,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/stillness/look.CUBE",
+      "sha256": "e40cd2d53f5612bb09a9f4707c64054ea3e5e34c8a11f114ed5adb021b94b894",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/stillness/look.bmp",
+      "sha256": "6967bee4ef8d6d8fe2c58b95085ce2a51994befc42be3d8b05c16f6ac09fd6aa",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/stillness/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/threshold/icon_preview.png",
+      "sha256": "b70e1142efda4ae563d7e065b7ea60ebe08070962d2f555ff5e9664a8f89215f",
+      "bytes": 3907,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/threshold/look.CUBE",
+      "sha256": "ee030f2f70c3c22c3ac20b3914c221e970a29c902c80335fd657a7f4dd088a0e",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/threshold/look.bmp",
+      "sha256": "0397944ee5b818912c4c125dd4f2c83dce95709e4542e2b5afb977679a3444f3",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/threshold/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/truth/icon_preview.png",
+      "sha256": "eb7705b1544ea240d1a0146e3049f0214c56cdd6378459d990389c9e39de1802",
+      "bytes": 3862,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/truth/look.CUBE",
+      "sha256": "af41e854b71659b2ee6774c25566451c0e39fe0ebea3e72535c2e2e14f56fb4a",
+      "bytes": 132832,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/truth/look.bmp",
+      "sha256": "25cf507966189ce36196fabd919b0b82e8ecd24549e4811a8c803dfa56a16ca7",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/truth/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/witness/icon_preview.png",
+      "sha256": "a4c71ef71efe09256c8a2926968aa3a7e99971520557a64596d2098a1b046ff8",
+      "bytes": 3880,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/witness/look.CUBE",
+      "sha256": "fe938bd3a5875001df8670f2159d9c121f6e802bf5ccb5b3d2cc3afbce55da63",
+      "bytes": 132834,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/witness/look.bmp",
+      "sha256": "03075015d16ec2d6ba21dc865eb1ce7333366a8be1043801cf270137eb95a31e",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/assets/witness/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/README.txt",
+      "sha256": "f7b93c8f641eb7249dc92e34dbfcb7b82afffb23d67f88ed5d6f3a7f07d863e8",
+      "bytes": 995,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/bank_config.py",
+      "sha256": "056047e71b42d271f4f8557c52b74a89e3fae40e7e60d4de9b15e9bbecc46f38",
+      "bytes": 1456,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/invitation/icon_preview.png",
+      "sha256": "e265504e3d87593edc24c065d96eb9ecefeead35d3d2605911872988ce36be5d",
+      "bytes": 3906,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/invitation/look.CUBE",
+      "sha256": "d552b07ad95a240af699f81e9c9d01409f5480bbb701b38d981a2563d14a5fe4",
+      "bytes": 132837,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/invitation/look.bmp",
+      "sha256": "31d2856caf36d26ceac59976aff619ecc395bef87aae3be925418f7bbc23a4a1",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/invitation/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/memory/icon_preview.png",
+      "sha256": "47f5ddb92511690936a8761f1f643da2232d068667e0cce86095246519d12475",
+      "bytes": 3872,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/memory/look.CUBE",
+      "sha256": "e15a6118c5efcc0c1817905074d8f4f21279a96da670ead09bc1c10a52a2d995",
+      "bytes": 132833,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/memory/look.bmp",
+      "sha256": "f3f137f1319c01752125c04906b02e3a7b17b4d657bf54c047579323ce311bf6",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/memory/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/presence/icon_preview.png",
+      "sha256": "142689e80262a0241691ec7b9e83c586fd8315401c0fb1163c555fd9c585c067",
+      "bytes": 3901,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/presence/look.CUBE",
+      "sha256": "1606d5ba15469b4a4c90fb42733fed58a023611463fd143c14b4f300c1081a60",
+      "bytes": 132835,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/presence/look.bmp",
+      "sha256": "7c046a93ccde66b92eaad0fa2146e0d16436893f9928d1d57369e960de83b479",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/presence/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/threshold/icon_preview.png",
+      "sha256": "b70e1142efda4ae563d7e065b7ea60ebe08070962d2f555ff5e9664a8f89215f",
+      "bytes": 3907,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/threshold/look.CUBE",
+      "sha256": "ee030f2f70c3c22c3ac20b3914c221e970a29c902c80335fd657a7f4dd088a0e",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/threshold/look.bmp",
+      "sha256": "0397944ee5b818912c4c125dd4f2c83dce95709e4542e2b5afb977679a3444f3",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/threshold/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/truth/icon_preview.png",
+      "sha256": "eb7705b1544ea240d1a0146e3049f0214c56cdd6378459d990389c9e39de1802",
+      "bytes": 3862,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/truth/look.CUBE",
+      "sha256": "af41e854b71659b2ee6774c25566451c0e39fe0ebea3e72535c2e2e14f56fb4a",
+      "bytes": 132832,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/truth/look.bmp",
+      "sha256": "25cf507966189ce36196fabd919b0b82e8ecd24549e4811a8c803dfa56a16ca7",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/truth/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/witness/icon_preview.png",
+      "sha256": "a4c71ef71efe09256c8a2926968aa3a7e99971520557a64596d2098a1b046ff8",
+      "bytes": 3880,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/witness/look.CUBE",
+      "sha256": "fe938bd3a5875001df8670f2159d9c121f6e802bf5ccb5b3d2cc3afbce55da63",
+      "bytes": 132834,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/witness/look.bmp",
+      "sha256": "03075015d16ec2d6ba21dc865eb1ce7333366a8be1043801cf270137eb95a31e",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/looks/witness/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a/upload_all.py",
+      "sha256": "08948ab88fda2a5f41ecbbeb3f232cefaa2bcd2f2c017160d52e20f259807188",
+      "bytes": 23995,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_a_config.py",
+      "sha256": "056047e71b42d271f4f8557c52b74a89e3fae40e7e60d4de9b15e9bbecc46f38",
+      "bytes": 1456,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/README.txt",
+      "sha256": "e9ad2681125902a4c72882f989a8f7d9f9cad0ad1baf94ca16c5f5df42bf3a8a",
+      "bytes": 1003,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/bank_config.py",
+      "sha256": "2c92504fe1edbc9dbf74e0f534da92c6ec51522f26b9a0b47f60a7ff93901675",
+      "bytes": 1456,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/acros/icon_preview.png",
+      "sha256": "447af112c4bac0d73ed7101743f70eea86ff4b443c28f9851484327578563021",
+      "bytes": 3867,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/acros/look.CUBE",
+      "sha256": "4add529133569c8bb03260851864697ac08c25882fc821ba1737082e7c3cd4ce",
+      "bytes": 132835,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/acros/look.bmp",
+      "sha256": "576c4a9c9c323cfadbdc37170b5f24c7f4785bfebed8d3f30aa5ba2b0614107b",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/acros/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/edo400/icon_preview.png",
+      "sha256": "0a7466809493fd5f65a39cc8fd80cfff209eed66878a9cd687d38a01b90be395",
+      "bytes": 3891,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/edo400/look.CUBE",
+      "sha256": "85a4779665430e921b456cf3c29f75a528a62edef4e03e533ad080ed487b8cfb",
+      "bytes": 132837,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/edo400/look.bmp",
+      "sha256": "33243012348532f555e010cdb1389b98e6a94db05ef396de7991cd5ae1842e79",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/edo400/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/hp5/icon_preview.png",
+      "sha256": "273a8a9a373d03d0f491f92398b0381b5cf84baed469b49ba8cb673564f7ba9e",
+      "bytes": 3844,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/hp5/look.CUBE",
+      "sha256": "a848ec2d0378706cbc082ba8d85b0a1ec183496f6fb7beda19320fc6876ad851",
+      "bytes": 132833,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/hp5/look.bmp",
+      "sha256": "de7ec3f92dda9cc44a0112be51a13024f3d0e3cc1b77af046fd77eac0e26b319",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/hp5/mode.txt",
+      "sha256": "b54a5532dabbed3ff44c270f9c07b7d9c171e38c433f9a8b21738c3d21c3c438",
+      "bytes": 5,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/nostalgic/icon_preview.png",
+      "sha256": "95ea8ee55b9704ffce763ad9af3a2d3c32532d2a2794832259d5083682a2ffe5",
+      "bytes": 3904,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/nostalgic/look.CUBE",
+      "sha256": "e9024cc16f3bd47aff02baaa60760fd42b804712bf026e3ef0f730db744923ea",
+      "bytes": 132839,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/nostalgic/look.bmp",
+      "sha256": "ae81982a005f307a7410f11a0fb8ca02fcd5e700662b83d71b4b94251ab3817c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/nostalgic/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/presence/icon_preview.png",
+      "sha256": "142689e80262a0241691ec7b9e83c586fd8315401c0fb1163c555fd9c585c067",
+      "bytes": 3901,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/presence/look.CUBE",
+      "sha256": "1606d5ba15469b4a4c90fb42733fed58a023611463fd143c14b4f300c1081a60",
+      "bytes": 132835,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/presence/look.bmp",
+      "sha256": "7c046a93ccde66b92eaad0fa2146e0d16436893f9928d1d57369e960de83b479",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/presence/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/stillness/icon_preview.png",
+      "sha256": "b07a593d253e6fa6364e3cd1633999e52688af6704bd0b318e6ca24b299c914a",
+      "bytes": 3902,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/stillness/look.CUBE",
+      "sha256": "e40cd2d53f5612bb09a9f4707c64054ea3e5e34c8a11f114ed5adb021b94b894",
+      "bytes": 132836,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/stillness/look.bmp",
+      "sha256": "6967bee4ef8d6d8fe2c58b95085ce2a51994befc42be3d8b05c16f6ac09fd6aa",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/looks/stillness/mode.txt",
+      "sha256": "a89feb52a8ba15ad9ae30218b2cee5a118617ef001f48e124ab632ad338cbffe",
+      "bytes": 6,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b/upload_all.py",
+      "sha256": "08948ab88fda2a5f41ecbbeb3f232cefaa2bcd2f2c017160d52e20f259807188",
+      "bytes": 23995,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/bank_b_config.py",
+      "sha256": "2c92504fe1edbc9dbf74e0f534da92c6ec51522f26b9a0b47f60a7ff93901675",
+      "bytes": 1456,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/batch_upload.py",
+      "sha256": "08948ab88fda2a5f41ecbbeb3f232cefaa2bcd2f2c017160d52e20f259807188",
+      "bytes": 23995,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/experimental_legacy_banks/icon_contact.pgm",
+      "sha256": "3998dbe3a4e3ff96c8d06c85491a5aae8db9f949f4449309ceb2d6e976044146",
+      "bytes": 237815,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/generators/generate_ia_four_film_looks.py",
+      "sha256": "9723ff7cd5e38eefe040898b4451428717ecca6099900b6976df2cdb25f6b973",
+      "bytes": 3183,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/generators/generate_ia_full_library.py",
+      "sha256": "9b73e3417f8b4fde56073f80751ef06e517797b5446d9c581e0e742dea01cbdd",
+      "bytes": 10272,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/generators/generate_ia_magenta_proof_lut.py",
+      "sha256": "65dcf36eed171e454d59f4eb062794c505ca75dc0931e0afc8f9f7c87890d939",
+      "bytes": 829,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/generators/generate_ia_presence_lut.py",
+      "sha256": "cf8b20549636d8a1023262af7278aa9fdde0adeac70527f1de66a92840efffa6",
+      "bytes": 1928,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/generators/generate_infinite_arch_test_lut.py",
+      "sha256": "3cecd0ef7a1309e2def7d792def047cb8a7dfc20c53f2a65ff93456c07076cfb",
+      "bytes": 1304,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/pcap_tools/analyze_pcapng.py",
+      "sha256": "5afe227ebbd837e695d66b37cabe386bb37ae1e214122edde93e9be3b7b1201b",
+      "bytes": 5983,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/pcap_tools/decode_look_lists.py",
+      "sha256": "4a075baf3bff6352839821244e08fba7534b58efefe1798741e3094e99f8c65e",
+      "bytes": 3179,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/pcap_tools/extract_look_uploads.py",
+      "sha256": "7f6e1ee3d5903c88d234c276816ab56559454f9b1e9fe6c225ebba41677d5878",
+      "bytes": 3745,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/pcap_tools/extract_q3_identity.py",
+      "sha256": "afe5df300284480033151242cb02f76af4c37c08789c1b59cae6de8dd4df496c",
+      "bytes": 3192,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/pcap_tools/network_timeline.py",
+      "sha256": "c1046e7f9710849ae591ced7c12c4885654418e9b79abb7ba2bb68acf02c909f",
+      "bytes": 2542,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/CLI_README.md",
+      "sha256": "3a0c7d091a3e6175fd433bc0ec170f9854827c030c83e80b0f0c10a90ca0713c",
+      "bytes": 4063,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Docs/APK_RESEARCH.md",
+      "sha256": "12d61ba4ce0d5b0d7314792fdbde22db3c8bfad2907ac38854dd131af8a5deac",
+      "bytes": 1867,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Identity17.CUBE",
+      "sha256": "991ff3a404c2cabf8f6037b2c8264575ff4803a5eefac5c17c56ad38aa6c7ea7",
+      "bytes": 132778,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/OPEN_IN_XCODE.txt",
+      "sha256": "16140385697e172b794b97d3956bdec8214cfb9b650d804f916c639be95d0c2d",
+      "bytes": 143,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Package.swift",
+      "sha256": "cecf444864e048dc42bbb322c6d65c43448e130ef9ea4e82e599da44df1149e2",
+      "bytes": 885,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/README.md",
+      "sha256": "3bcd8206c7e8cd44dbd1b36f2d496614c9ab75977634f12edff479bf0c236fa9",
+      "bytes": 1263,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/IALUTCore/CubeIO.swift",
+      "sha256": "fe31da60c6f8132b4bba8753478698d06ae26bfc66ee75a2aae110d568450e17",
+      "bytes": 2699,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/IALUTCore/Models.swift",
+      "sha256": "5b1bf76c43792db49350486646a4ef831e061b5529d515a12fcdfe50e06770ba",
+      "bytes": 5488,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/IALUTCore/Transforms.swift",
+      "sha256": "4b1f513ceef1976db3d9a3dbba5d245dc51770454477d3b55f74d4146be7946a",
+      "bytes": 2465,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/IALUTCore/Transport.swift",
+      "sha256": "914c36b52d47ad6f85d6ef74dc139db5437244fad6085fd391497f18d828ef81",
+      "bytes": 25284,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/InfiniteArchLeicaLookBuilder/InfiniteArchLeicaLookBuilderApp.swift",
+      "sha256": "2fd5aaaad4c6f7ebf860d334d3760559717649341ca5befe729d597325c6ca56",
+      "bytes": 19189,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/InfiniteArchLeicaLookBuilder/Resources/CineTest.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/InfiniteArchLeicaLookBuilder/Resources/IAIdentityAsCine.CUBE",
+      "sha256": "36bc46b9edf3bfec03520ddd356a9672c5365d4bff750c227a12376cb5ee56ed",
+      "bytes": 177052,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/InfiniteArchLeicaLookBuilder/Resources/Silver.CUBE",
+      "sha256": "02ef6fa0c6ad09d80213674de93c87f7ff12055b5f4c967b92b0bf47d2caa14b",
+      "bytes": 132878,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/InfiniteArchLeicaLookBuilder/Resources/Silver.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/InfiniteArchLeicaLookBuilder/USBQ3Bridge.swift",
+      "sha256": "fc8e0f2c96c85966dd5d86644ea5dd0c1f28a324df43bf975ddcfb5113ee4553",
+      "bytes": 19549,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/ialut/main.swift",
+      "sha256": "14e7c8a41c24080de871839d75324a6e5753d56dadb7ac8f50dd0aeca7369d61",
+      "bytes": 831,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/q3test/Q3TestMain.swift",
+      "sha256": "9957ed9c3b39c891cd6044ebfcb054059b99f9da3cf8b8d48d35f28dd729b0cf",
+      "bytes": 6196,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/q3test/Resources/CineTest.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/q3test/Resources/IAIdentityAsCine.CUBE",
+      "sha256": "36bc46b9edf3bfec03520ddd356a9672c5365d4bff750c227a12376cb5ee56ed",
+      "bytes": 177052,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/q3test/Resources/Silver.CUBE",
+      "sha256": "02ef6fa0c6ad09d80213674de93c87f7ff12055b5f4c967b92b0bf47d2caa14b",
+      "bytes": 132878,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/q3test/Resources/Silver.bmp",
+      "sha256": "a1863dcbbd2082a50cdf3cec9b877add1282f062cac6b5105ae925715f10da1c",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Sources/q3test/USBQ3Bridge.swift",
+      "sha256": "6de8e116a6c4e763cb7732460b7b830a9eb447491db12e66c15c9945b48566e1",
+      "bytes": 30775,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Tests/IALUTCoreTests/IALUTCoreTests.swift",
+      "sha256": "39738c5547cb6eb6e8ce84e4e5f2a6687b3598ab0bbb9524ed7cb43404fb539b",
+      "bytes": 2035,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "source/swift_cli/InfiniteArchLeicaCLI/Tools/Q3NetworkProbeMain.swift",
+      "sha256": "85293d8dcf1a3c3115e89c4073b53ea552df43f344a0e1f1a73e18e883a09bd2",
+      "bytes": 3674,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "tests/test_authoritative_v12.py",
+      "sha256": "9ee84eb8dcfa14d5126fe593e0e9a265d1d2b729cb6e971c407d52f52a200630",
+      "bytes": 481,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "verify_bundle.py",
+      "sha256": "8175a98cade84526f8b11090180e43b2554baee41adc3d8a2d3b9eb678f81c97",
+      "bytes": 2732,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/CHANGELOG_v1.2.md",
+      "sha256": "cd658e627b1476f6775cdb7b05b43beb377d48671dbc0e735e584d415fb7fabb",
+      "bytes": 1547,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/1.jpg",
+      "sha256": "c31c9b07bce8065500961737a156b2c9af368ce25ed685db51774be1eb75255f",
+      "bytes": 180552,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/2.jpg",
+      "sha256": "0e16afc17c5ebc270182c8ee06698e5d12e2397cb7e2895d522a5b532a243e91",
+      "bytes": 165007,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/3.jpg",
+      "sha256": "9dbb6e492321deb12785ee7285649dd86039a9350e0be4642a12eef67977370f",
+      "bytes": 181512,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/4.jpg",
+      "sha256": "cccd310821d2a4327211de66c2dd7334836894ca54e40c39603f681b9929a735",
+      "bytes": 181992,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/5.jpg",
+      "sha256": "ff3c3806b9f9b65226f2a8b0765e5c1bc145ab112215104523d35927e3522e45",
+      "bytes": 176745,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/6.jpg",
+      "sha256": "3d27823b3d123d6040c2b9cccadbadb30dc8830653138990a3133abab37f9759",
+      "bytes": 179673,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/7.jpg",
+      "sha256": "f7970f693a3aa24868f535689b8e5536c832ebe879d71bbdebe69fee53cfaa22",
+      "bytes": 183009,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/8.jpg",
+      "sha256": "eed8737e44c041c00c3634994e4230bb4114e397a081dabb5663ca993dd47722",
+      "bytes": 194174,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/IA_Kin.CUBE",
+      "sha256": "d47bff06bc2130ae7c84f54a1803212830bdf9314b17ca5c94352c582f7d6bce",
+      "bytes": 132858,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/IA_Kin_Agfa.CUBE",
+      "sha256": "ac4bbfc713757316b170da785b591e406bbdaa592c6f95567d52835de84b424c",
+      "bytes": 132863,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/Kin_Contact_Sheet.jpg",
+      "sha256": "55af44d667148a445b1c139fd541d357e1e45f4647c6b52a077e87d46795dce8",
+      "bytes": 1488727,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/README.md",
+      "sha256": "cd658e627b1476f6775cdb7b05b43beb377d48671dbc0e735e584d415fb7fabb",
+      "bytes": 1547,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Kin_Comparisons/sources.json",
+      "sha256": "6329e5c14911ecc34be59107c5cf49ff0eab353781e80372afe91e1710162c3a",
+      "bytes": 3565,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/Natura_Comparison.jpg",
+      "sha256": "f3bd50e78fe1cd97e99f5787be567ff5583d35ffcb3900e45258ca8dfdd5f234",
+      "bytes": 642930,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/README.md",
+      "sha256": "f8d60d45479c38225da5c0bd7dcc563281ac84837ebd005a93b128e7063ccdcc",
+      "bytes": 792,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/SOURCE_MAP.md",
+      "sha256": "41d59234cf8161a1d07ce24296ca4d6d2edcfd5f192a5026f2d5b9d261082638",
+      "bytes": 1530,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/analysis/dcp_comparison.json",
+      "sha256": "916495944b3520e1a9df3390600a1db8ed30b9267f445beccc3721b0a2be9102",
+      "bytes": 2145,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/analysis/kin_validation.json",
+      "sha256": "92294a55e3169db89cbb9ac2a1a911157539d2b7af79d3fd1f185f30175ea301",
+      "bytes": 608,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/analysis/validation.json",
+      "sha256": "66700d42e1dbf20b9d0c294d604de6a17594a4eb9e9a076b48044e8acd8903ba",
+      "bytes": 1063,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/ia_final9_upload_pyto.py",
+      "sha256": "51a056aaf54b1fcf285ff75c1957796583e3d3406df6cb6740dbfac8a7667918",
+      "bytes": 1637380,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/400h/README.txt",
+      "sha256": "cd658e627b1476f6775cdb7b05b43beb377d48671dbc0e735e584d415fb7fabb",
+      "bytes": 1547,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/400h/look.CUBE",
+      "sha256": "d47bff06bc2130ae7c84f54a1803212830bdf9314b17ca5c94352c582f7d6bce",
+      "bytes": 132858,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/400h/look.bmp",
+      "sha256": "31caa3038027e8bc1ee88d865ca0b22b09dc15d69efa4c10c6662592ceebf35e",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/americannegative/look.CUBE",
+      "sha256": "d2c7aa4e5ae346cc8db8ed4fa2567273f33f5e65e2ab5e3e8708154cce4ecbb1",
+      "bytes": 132889,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/americannegative/look.bmp",
+      "sha256": "2196a0051d0ead92a1f1bd10490cafa02c8a57f670b3fc572dd0299329e44c68",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/ember/look.CUBE",
+      "sha256": "78c2fb13ff052d8f022a0eff1cada13d6434b4a4cf15ac253857930508d1de5a",
+      "bytes": 132877,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/ember/look.bmp",
+      "sha256": "2176e0e945e6453db71148666eed54a2a8fe4dd1312831d142b3eacff75dc7cf",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/invitation/look.CUBE",
+      "sha256": "9452ebfd550ce32ffce02077c45900842f42d6ba95e679afc39d0b615c631172",
+      "bytes": 132843,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/invitation/look.bmp",
+      "sha256": "8949bdeb210d726b5a4914a0d3b58317793635e4dd49c2b8106f67437ae28a76",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/natura/look.CUBE",
+      "sha256": "180e125946c2ccca9513f6b5598a62709a93a0430d6902b0d69fa128c49eeae0",
+      "bytes": 132878,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/natura/look.bmp",
+      "sha256": "de8e13d0868f7abead166d5a2e638ff50e879abc78b3aeef604a19408e690e11",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/presence/look.CUBE",
+      "sha256": "06dae2aad0db2c84d4f842f6ce08a4bacacc914ea5a94c49060316f60e8c223a",
+      "bytes": 132880,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/presence/look.bmp",
+      "sha256": "1fad7f2536bf9d3c61d7e0250e475675ced971dbcc8f77843136fa50d8aacacd",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/threshold/look.CUBE",
+      "sha256": "d704bcca8b24edb7ab1305bae01419e175d38015ffedd337a2ffc966cb4a50c0",
+      "bytes": 132914,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/threshold/look.bmp",
+      "sha256": "108ac5c1c988da48dd2704dde2802c8c9917205eecb632eb0d6d86bab42d7049",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/witness/look.CUBE",
+      "sha256": "8e26b914ab9e264185b7a27e72bb331e06d831c14d74159ff96bb1b404aaa0b8",
+      "bytes": 132840,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/witness/look.bmp",
+      "sha256": "1f1466ed892323c63afb940195dcd85886500c9b78f129006daaefaefdd88804",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/zone/look.CUBE",
+      "sha256": "c7a24b78eaf058a39b420de71f1ac19a07ecc3e57b7dee3acc539a2170adc4d9",
+      "bytes": 132837,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks/zone/look.bmp",
+      "sha256": "2994d6992aa726da7d9f220241e87aed78df112a1a69cec9e63c35e79bca9a25",
+      "bytes": 2224,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/looks_manifest.json",
+      "sha256": "f07f93960ac9e709dc4ad838831396637aba91a0c80950e7eee0294bf9cb0128",
+      "bytes": 4142,
+      "origin": "codex_migration"
+    },
+    {
+      "path": "working/Infinite_Arch_Leica_Looks_v1.2/uploader.py",
+      "sha256": "c5d9120eb5a057dcfd0becf14d3f6637b4459f094f89ee8b7d1d5fa0d359b701",
+      "bytes": 13215,
+      "origin": "codex_migration"
+    }
+  ]
+}
