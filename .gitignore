@@ -9,3 +9,5 @@ generated/
 
 .venv/
 node_modules/
+
+/data/studio.sqlite3

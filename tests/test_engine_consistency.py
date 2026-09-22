@@ -161,3 +161,61 @@ def test_monochrome_filters_compile_and_favor_selected_color():
     colors = _sample_cube(np.array([[1, 0, 0], [0, 0, 1]], dtype=np.float32), parse_cube(data))
     assert colors[0, 0] > colors[1, 0]
     np.testing.assert_allclose(colors[:, 0], colors[:, 1], atol=1e-6)
+
+
+def test_cube_parser_preserves_extended_float_range():
+    data = b'LUT_3D_SIZE 2\n' + b'-0.125 0.5 1.25\n' * 8
+    cube = parse_cube(data)
+    np.testing.assert_allclose(cube.values[0], [-.125, .5, 1.25])
+
+
+def test_graph_does_not_destroy_highlights_between_reversible_nodes():
+    data, _ = compile_graph_cube(graph(
+        {'id': 'up', 'type': 'exposure', 'params': {'value': 1}},
+        {'id': 'down', 'type': 'exposure', 'params': {'value': -1}}))
+    np.testing.assert_allclose(parse_cube(data).values, identity(17).values, atol=1e-6)
+
+
+def test_desktop_export_preserves_negative_values_but_leica_is_bounded():
+    value = graph({'id': 'contrast', 'type': 'contrast', 'params': {'value': .5}}, name='Extended', look_id=1142)
+    desktop, report = compile_graph_cube(value, size=33, clip_output=False)
+    cube = parse_cube(desktop)
+    assert cube.size == 33
+    assert cube.values.min() == -.25
+    assert cube.values.max() == 1.25
+    leica = parse_cube(serialize_leica_cube(cube, 1142, 'Extended', 0))
+    assert leica.size == 17 and leica.values.min() == 0 and leica.values.max() == 1
+    assert report['range']['below_zero_by_channel'] == [6534, 6534, 6534]
+
+
+def test_identity_black_is_not_replaced_with_invented_data():
+    data, _ = compile_graph_cube(graph(), size=33, clip_output=False)
+    np.testing.assert_array_equal(parse_cube(data).values[0], [0, 0, 0])
+
+
+def test_desktop_and_camera_http_exports_use_separate_targets():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from server.auth import require_user
+    app = FastAPI(); app.include_router(studio.router)
+    app.dependency_overrides[require_user] = lambda: 'test-user'
+    client = TestClient(app)
+    value = graph({'id': 'contrast', 'type': 'contrast', 'params': {'value': .5}})
+    desktop = client.post('/studio/graph/cube?size=64', json=value)
+    assert desktop.status_code == 200
+    cube = parse_cube(desktop.content)
+    assert cube.size == 64 and cube.values.min() < 0 and cube.values.max() > 1
+    camera = client.post('/studio/graph/cube?target=leica', json=value)
+    cube = parse_cube(camera.content)
+    assert cube.size == 17 and cube.values.min() == 0 and cube.values.max() == 1
+    assert client.post('/studio/graph/cube?size=999', json=value).status_code == 422
+
+
+def test_gradient_stays_smooth_through_canceling_exposure_nodes():
+    data, _ = compile_graph_cube(graph(
+        {'id': 'up', 'type': 'exposure', 'params': {'value': 1}},
+        {'id': 'down', 'type': 'exposure', 'params': {'value': -1}}), size=33, clip_output=False)
+    ramp = np.repeat(np.linspace(0, 1, 4096)[:, None], 3, axis=1)
+    result = _sample_cube(ramp, parse_cube(data))
+    np.testing.assert_allclose(result, ramp, atol=1e-7)
+    assert (np.diff(result, axis=0) > 0).all()

@@ -9,6 +9,10 @@ type CatalogProfile = { catalog_id: string; display_name: string; brand: string;
 type Layer = { id: string; name: string; type: string; enabled: boolean; strength: number; role?: "base" | "creative"; source?: string; source_id?: string; component_id?: string; params?: Record<string, number> };
 type Graph = { name: string; version: string; look_id: number; base: string; layers: Layer[]; controls: Record<string, number>; solo?: string | null };
 type SavedGraph = { id: string; name: string; graph: Graph; updated_at: string };
+type Snapshot = { id?: string; name: string; graph: Graph };
+type LookVersion = { id: string; label: string; graph: Graph };
+type SavedLook = { id: string; name: string; status: "draft" | "published" | "experiment"; tags: string[]; notes: string; rating: number | null; favorite: boolean; version?: string; graph?: Graph; snapshots?: Snapshot[]; versions?: LookVersion[] };
+type WorkspaceState = { graph: Graph; history: Graph[]; future: Graph[]; snapshots: Snapshot[]; lookId: string | null; lookMeta: Omit<SavedLook, "id" | "name">; revision?: number; client_id?: string; client_sequence?: number };
 
 const errorMessage = (detail: unknown): string => {
   if (typeof detail === "string") return detail;
@@ -48,7 +52,11 @@ export function App() {
   const [graph, setGraph] = useState<Graph>({ name: "Untitled Leica Look", version: "v1.0", look_id: 1142, base: "Standard", layers: initialLayers, controls: defaultControls, solo: null });
   const [history, setHistory] = useState<Graph[]>([]);
   const [future, setFuture] = useState<Graph[]>([]);
-  const [snapshots, setSnapshots] = useState<{ name: string; graph: Graph }[]>([]);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [looks, setLooks] = useState<SavedLook[]>([]);
+  const [lookId, setLookId] = useState<string | null>(null);
+  const [currentLook, setCurrentLook] = useState<SavedLook | null>(null);
+  const [lookMeta, setLookMeta] = useState<Omit<SavedLook, "id" | "name">>({ status: "draft", tags: [], notes: "", rating: null, favorite: false });
   const [selectedLayer, setSelectedLayer] = useState<string>(initialLayers[0].id);
   const [solo, setSolo] = useState<string | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
@@ -64,6 +72,8 @@ export function App() {
   const [previewMode, setPreviewMode] = useState<"wipe" | "side">("wipe");
   const [wipe, setWipe] = useState(50);
   const [rendering, setRendering] = useState(false);
+  const [cubeSize, setCubeSize] = useState(33);
+  const [previewTarget, setPreviewTarget] = useState<"leica" | "desktop">("leica");
   const [zoom, setZoom] = useState<"fit" | "100">("fit");
   const [message, setMessage] = useState("");
   const [snapshotName, setSnapshotName] = useState("");
@@ -80,7 +90,50 @@ export function App() {
   const statusRequest = useRef<AbortController | null>(null);
   const profileRequestSequence = useRef(0);
   const profileCache = useRef(new Map<string, Source>());
+  const workspaceTimer = useRef<number | undefined>(undefined);
+  const workspaceRevision = useRef(0);
+  const workspaceClient = useRef(crypto.randomUUID());
+  const workspaceSequence = useRef(0);
+  const workspacePending = useRef<WorkspaceState | null>(null);
+  const workspaceSaving = useRef(false);
+  const openRequest = useRef(0);
+  const hydrated = useRef(false);
 
+  useEffect(() => {
+    Promise.all([
+      api<{ state: { graph: Graph; history?: Graph[]; future?: Graph[]; snapshots?: Snapshot[]; lookId?: string | null; lookMeta?: typeof lookMeta; revision?: number } | null }>("/api/studio/workspace"),
+      api<{ looks: SavedLook[] }>("/api/studio/versioned-looks"),
+    ]).then(([saved, library]) => {
+      setLooks(library.looks);
+      if (saved.state) {
+        setGraph(saved.state.graph); setSolo(saved.state.graph.solo || null);
+        setHistory(saved.state.history || []); setFuture(saved.state.future || []);
+        setSnapshots(saved.state.snapshots || []); setLookId(saved.state.lookId || null);
+        workspaceRevision.current = saved.state.revision || 0;
+        if (saved.state.lookMeta) setLookMeta(saved.state.lookMeta);
+      }
+      hydrated.current = true;
+      if (saved.state?.lookId) api<SavedLook>(`/api/studio/versioned-looks/${saved.state.lookId}`).then(setCurrentLook).catch(() => undefined);
+    }).catch((e) => setMessage(`Could not restore workspace; autosave paused: ${String(e)}`));
+  }, []);
+  useEffect(() => {
+    if (!hydrated.current) return;
+    window.clearTimeout(workspaceTimer.current);
+    workspaceTimer.current = window.setTimeout(() => {
+      queueWorkspace({ graph: { ...graph, solo }, history, future, snapshots, lookId, lookMeta });
+    }, 400);
+    return () => window.clearTimeout(workspaceTimer.current);
+  }, [graph, history, future, snapshots, lookId, lookMeta, solo]);
+  useEffect(() => {
+    const flush = () => {
+      if (!hydrated.current) return;
+      const expectedRevision = workspaceRevision.current;
+      const state = { graph: { ...graph, solo }, history, future, snapshots, lookId, lookMeta, revision: expectedRevision + 1, client_id: workspaceClient.current, client_sequence: ++workspaceSequence.current };
+      fetch("/api/studio/workspace", { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...state, expected_revision: expectedRevision }) }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
+  }, [graph, history, future, snapshots, lookId, lookMeta, solo]);
   useEffect(() => {
     if (view !== "studio" && view !== "sources") return;
     const query = new URLSearchParams({ search: sourceSearch, type: sourceType });
@@ -114,12 +167,40 @@ export function App() {
       previewRequest.current = controller;
       setRendering(true);
       const form = new FormData(); form.append("image", image); form.append("graph", JSON.stringify(toApiGraph({ ...graph, solo })));
-      try { const res = await fetch("/api/studio/graph/preview", { method: "POST", body: form, signal: controller.signal }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(errorMessage(body.detail || res.statusText || "Preview renderer unavailable")); } const blob = await res.blob(); if (controller.signal.aborted) return; const nextUrl = URL.createObjectURL(blob); setPreviewUrl((old) => { if (old) URL.revokeObjectURL(old); return nextUrl; }); } catch (e) { if ((e as Error).name !== "AbortError") setMessage(String(e)); } finally { if (previewRequest.current === controller) setRendering(false); }
+      try { const res = await fetch(`/api/studio/graph/preview?target=${previewTarget}&size=${cubeSize}`, { method: "POST", body: form, signal: controller.signal }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(errorMessage(body.detail || res.statusText || "Preview renderer unavailable")); } const blob = await res.blob(); if (controller.signal.aborted) return; const nextUrl = URL.createObjectURL(blob); setPreviewUrl((old) => { if (old) URL.revokeObjectURL(old); return nextUrl; }); } catch (e) { if ((e as Error).name !== "AbortError") setMessage(String(e)); } finally { if (previewRequest.current === controller) setRendering(false); }
     }, 120);
     return () => { window.clearTimeout(previewTimer.current); previewRequest.current?.abort(); };
-  }, [graph, image, solo]);
+  }, [graph, image, solo, cubeSize, previewTarget]);
 
   const displayedLayers = useMemo(() => solo ? graph.layers.map((l) => ({ ...l, enabled: l.id === solo || l.type === "normalization" || l.type === "output" })) : graph.layers, [graph.layers, solo]);
+  function queueWorkspace(state: WorkspaceState) {
+    workspacePending.current = { ...state, client_id: workspaceClient.current, client_sequence: ++workspaceSequence.current };
+    if (!workspaceSaving.current) void drainWorkspace();
+  }
+  async function drainWorkspace() {
+    workspaceSaving.current = true;
+    while (workspacePending.current) {
+      const state = workspacePending.current; workspacePending.current = null;
+      const expectedRevision = workspaceRevision.current;
+      try {
+        const res = await fetch("/api/studio/workspace", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...state, revision: expectedRevision + 1, expected_revision: expectedRevision }) });
+        const body = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          hydrated.current = false;
+          workspacePending.current = null;
+          setMessage("Workspace changed in another tab. Autosave paused; reload to restore it, or save these edits as a version.");
+          break;
+        }
+        if (!res.ok) throw new Error(body.detail || res.statusText);
+        workspaceRevision.current = body.state?.revision ?? expectedRevision + 1;
+      } catch (e) {
+        workspacePending.current = state;
+        setMessage(`Autosave failed: ${String(e)}`);
+        break;
+      }
+    }
+    workspaceSaving.current = false;
+  }
   function mutate(next: Graph) { setHistory((h) => [...h.slice(-29), graph]); setFuture([]); setGraph(next); setSolo(next.solo || null); }
   function setSoloLayer(layerId: string | null) { setSolo(layerId); setGraph((current) => ({ ...current, solo: layerId })); }
   function updateLayer(layerId: string, patch: Partial<Layer>) { mutate({ ...graph, layers: graph.layers.map((l) => l.id === layerId ? { ...l, ...patch } : l) }); }
@@ -186,7 +267,7 @@ export function App() {
     setMessage(`Ingesting ${files.length} source${files.length > 1 ? "s" : ""}…`);
     try { await api("/api/studio/sources/bulk", { method: "POST", body: form }); setMessage("Sources catalogued; duplicates are preserved by SHA-256 rules."); setSourceRevision((value) => value + 1); event.target.value = ""; } catch (e) { setMessage(String(e)); }
   }
-  async function buildCube() { try { const res = await fetch("/api/studio/graph/cube", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(errorMessage(body.detail || res.statusText || "CUBE export failed")); } download(await res.blob(), `${graph.name}.cube`); } catch (e) { setMessage(String(e)); } }
+  async function buildCube() { try { const res = await fetch(`/api/studio/graph/cube?target=desktop&size=${cubeSize}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toApiGraph({ ...graph, solo })) }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(errorMessage(body.detail || res.statusText || "CUBE export failed")); } download(await res.blob(), `${graph.name}.cube`); } catch (e) { setMessage(String(e)); } }
   async function buildPackage() { try { const form = new FormData(); form.append("graph", JSON.stringify(toApiGraph({ ...graph, solo }))); form.append("name", graph.name); form.append("look_id", String(graph.look_id)); form.append("base", graph.base); form.append("description", "Non-destructive creative graph from Film Look Studio"); const res = await fetch("/api/studio/graph/package", { method: "POST", body: form }); if (!res.ok) { const body = await res.json().catch(() => ({})); throw new Error(errorMessage(body.detail || res.statusText || "Package build failed")); } download(await res.blob(), `${graph.name.replace(/\s+/g, "-").toLowerCase()}-package.zip`); setMessage("Package ready: payload, injector, documentation and checksums."); } catch (e) { setMessage(String(e)); } }
   async function saveWorkspace() { try { await api("/api/studio/workspaces", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: graph.name, graph }) }); setMessage(`${graph.name} workspace saved privately`); } catch (e) { setMessage(String(e)); } }
   async function saveLook() { try { await api("/api/studio/looks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: graph.name, graph }) }); setMessage(`${graph.name} added to My Looks`); } catch (e) { setMessage(String(e)); } }
@@ -211,12 +292,57 @@ export function App() {
       setMessage(String(e));
     }
   }
+  async function saveVersion() {
+    const request = openRequest.current;
+    try {
+      const saved = await api<SavedLook>("/api/studio/versioned-looks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: lookId, name: graph.name, graph: { ...graph, solo }, ...lookMeta }) });
+      if (request !== openRequest.current) return;
+      setLookId(saved.id); setCurrentLook(saved); setLooks((all) => [saved, ...all.filter((item) => item.id !== saved.id)]);
+      setGraph((current) => ({ ...current, version: saved.version || current.version })); setMessage(`Saved ${saved.version}; earlier versions remain available.`);
+    } catch (e) { setMessage(String(e)); }
+  }
+  async function createSnapshot() {
+    if (!snapshotName.trim()) return;
+    const request = openRequest.current;
+    try {
+      let activeId = lookId;
+      if (!activeId) {
+        const saved = await api<SavedLook>("/api/studio/versioned-looks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: graph.name, graph: { ...graph, solo }, ...lookMeta }) });
+        if (request !== openRequest.current) return;
+        activeId = saved.id; setLookId(saved.id); setLooks((all) => [saved, ...all]);
+      }
+      const snapshot = await api<Snapshot>(`/api/studio/versioned-looks/${activeId}/snapshots`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: snapshotName.trim(), graph: { ...graph, solo } }) });
+      if (request !== openRequest.current) return;
+      setSnapshots((all) => [...all, snapshot]); setSnapshotName("");
+    } catch (e) { setMessage(String(e)); }
+  }
+  async function openLook(id: string) {
+    const request = ++openRequest.current;
+    try {
+      const saved = await api<SavedLook>(`/api/studio/versioned-looks/${id}`);
+      if (request !== openRequest.current) return;
+      if (!saved.graph) return;
+      setLookId(saved.id); setCurrentLook(saved); setGraph(saved.graph); setSolo(saved.graph.solo || null); setSnapshots(saved.snapshots || []);
+      setLookMeta({ status: saved.status, tags: saved.tags, notes: saved.notes, rating: saved.rating, favorite: saved.favorite });
+      setHistory([]); setFuture([]); setMessage(`Opened ${saved.name} ${saved.version || ""}`);
+    } catch (e) { if (request === openRequest.current) setMessage(String(e)); }
+  }
+  function openVersion(versionId: string) {
+    const version = currentLook?.versions?.find((item) => item.id === versionId);
+    if (version) { mutate(version.graph); setSolo(version.graph.solo || null); setMessage(`Restored ${version.label} into the editable workspace.`); }
+  }
+  function newLook() {
+    openRequest.current += 1;
+    const layers = initialLayers.map((layer) => ({ ...layer, id: id() }));
+    setLookId(null); setCurrentLook(null); setGraph({ name: "Untitled Look", version: "v1.0", look_id: 2000, base: "Standard", layers, controls: { ...defaultControls }, solo: null });
+    setLookMeta({ status: "draft", tags: [], notes: "", rating: null, favorite: false }); setSnapshots([]); setHistory([]); setFuture([]); setSolo(null); setSelectedLayer(layers[0].id);
+  }
 
   return <div className="app-shell">
     <aside><a className="brand" href="/"><span>FL</span><strong>Film Look<br />Studio</strong></a><nav>{[["studio", "Look Builder"], ["mylooks", "My Looks & workspaces"], ["library", "Leica library"], ["sources", "Source library"], ["inventory", "Provenance"], ["fuji", "Fuji recipes"]].map(([key, label]) => <button className={view === key ? "active" : ""} onClick={() => setView(key as View)} key={key}>{label}</button>)}</nav><div className="aside-foot"><span>{user?.firstName || user?.primaryEmailAddress?.emailAddress || "Signed in"}</span><button className="sign-out" onClick={() => signOut({ redirectUrl: "/" })}>Sign out</button><span><i className="online-dot" /> Leica Look Engine</span><a href="/look-building">How Looks are built</a><a href="/install-guide">Camera installation guide</a><a href="/docs">API documentation</a></div></aside>
     <main>{message && <div className="message" role="status">{message}</div>}{sourceError && <div className="error">{sourceError}</div>}
       {view === "studio" && <><div className="studio-head"><div><p className="eyebrow">Live color assembly bench / graph {graph.version}</p><h1>{graph.name}</h1></div><div className="head-actions"><button className="secondary" onClick={undo} disabled={!history.length}>Undo</button><button className="secondary" onClick={redo} disabled={!future.length}>Redo</button><button className="secondary" onClick={() => mutate({ ...graph, layers: initialLayers.map((l) => ({ ...l, id: id() })), controls: { ...defaultControls }, solo: null })}>Reset</button><span className="status-chip">{rendering ? "Rendering preview" : "Live preview"}</span></div></div>
-        <div className="toolbar"><input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option></select><button className="secondary" onClick={saveWorkspace}>Save workspace</button><button className="secondary" onClick={saveLook}>Save to My Looks</button><button className="secondary" onClick={reviewGraph}>Verify 17³ LUT</button><button className="secondary" onClick={buildCube} disabled={status?.ready !== true}>Export CUBE</button><button className="primary" onClick={buildPackage} disabled={status?.ready !== true}>Build Look package</button></div>
+        <div className="toolbar"><select aria-label="Versioned Look" value={lookId || ""} onChange={(e) => e.target.value ? openLook(e.target.value) : newLook()}><option value="">New Look</option>{looks.map((look) => <option key={look.id} value={look.id}>{look.name}</option>)}</select>{currentLook?.versions && <select aria-label="Look version" value={currentLook.versions.find((v) => v.label === graph.version)?.id || ""} onChange={(e) => openVersion(e.target.value)}><option value="">Current edits</option>{currentLook.versions.map((version) => <option value={version.id} key={version.id}>{version.label}</option>)}</select>}<input value={graph.name} onChange={(e) => setGraph({ ...graph, name: e.target.value })} aria-label="Look name" /><label className="source-meta">Look ID <input type="number" min="1" value={graph.look_id} onChange={(e) => setGraph({ ...graph, look_id: Number(e.target.value) || 1142 })} /></label><select value={graph.base} onChange={(e) => setGraph({ ...graph, base: e.target.value })}><option>Standard</option><option>Monochrome</option></select><button className="secondary" onClick={saveVersion}>Save version</button><button className="secondary" onClick={saveWorkspace}>Save workspace</button><button className="secondary" onClick={saveLook}>Save to My Looks</button><button className="secondary" onClick={reviewGraph}>Verify 17³ LUT</button><button className="secondary" onClick={buildCube} disabled={status?.ready !== true}>Export desktop CUBE</button><select aria-label="Desktop CUBE grid" value={cubeSize} onChange={(e) => setCubeSize(Number(e.target.value))}><option value={33}>33³ desktop</option><option value={64}>64³ desktop</option></select><button className="primary" onClick={buildPackage} disabled={status?.ready !== true}>Build Look package</button></div>
         <div className="bench">
           <section className="bench-panel">
             <div className="panel-title">Film simulations <span>{profiles.length}</span></div>
@@ -232,8 +358,8 @@ export function App() {
               </div>
             </div>
           </section>
-          <section className="bench-panel"><div className="preview-toolbar"><div><b>VIEWFINDER</b> <span className="source-meta"> · {previewMode === "wipe" ? "draggable wipe" : "side by side"}</span></div><div className="head-actions"><label className="tiny">Upload test image<input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={chooseImage} /></label><button className="tiny" onClick={() => setPreviewMode("wipe")}>Wipe</button><button className="tiny" onClick={() => setPreviewMode("side")}>Side by side</button><button className={`tiny ${zoom === "fit" ? "active" : ""}`} onClick={() => setZoom("fit")}>Fit</button><button className={`tiny ${zoom === "100" ? "active" : ""}`} onClick={() => setZoom("100")}>100%</button></div></div><div className={`preview-stage ${previewMode === "side" ? "side-by-side" : ""}`}>{originalUrl ? previewMode === "side" ? <><div className="compare-pane"><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><span className="preview-caption left">Original</span></div><div className="compare-pane"><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /><span className="preview-caption right">{previewUrl ? "Current look" : rendering ? "Rendering…" : "Preview unavailable"}</span></div></> : <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="wipe" style={{ clipPath: `inset(0 ${100 - wipe}% 0 0)` }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /></div><span className="wipe-divider" style={{ left: `${wipe}%` }} /><span className="preview-caption left">{previewUrl ? "Current look" : rendering ? "Rendering…" : "Preview unavailable"}</span><span className="preview-caption right">Original</span><input className="wipe-range" aria-label="Wipe position" type="range" min="0" max="100" value={wipe} onChange={(e) => setWipe(Number(e.target.value))} /></> : <div className="empty-preview">Upload one test photograph. Every graph edit will arrive here without a compile step.</div>}</div><div className="filmstrip"><button>MY IMAGE</button><button disabled>Portrait / skin</button><button disabled>Landscape</button><button disabled>City / street</button><button disabled>Foliage</button><button disabled>HDR chart</button></div></section>
-          <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const dragged = e.dataTransfer.getData("layer"); if (!dragged) return; e.stopPropagation(); const from = graph.layers.findIndex((item) => item.id === dragged); if (from >= 0) moveLayer(dragged, index - from); }} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayerStrength(layer.id, Number(e.target.value))} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={() => { if (snapshotName.trim()) { setSnapshots([...snapshots, { name: snapshotName, graph }]); setSnapshotName(""); } }}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status?.ready === true ? "ready" : "dirty"}>{status?.ready === true ? "READY" : status ? "NEEDS ATTENTION" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className={status?.ready === true ? "ready" : "dirty"}>{status?.ready === true ? "READY" : "NOT READY"}</b></div>{status?.ready === false && <p role="alert">{errorMessage(status.errors || status.unsupported)}</p>}<div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
+          <section className="bench-panel"><div className="preview-toolbar"><div><b>VIEWFINDER</b><select aria-label="Preview target" value={previewTarget} onChange={(e) => setPreviewTarget(e.target.value as "leica" | "desktop")}><option value="leica">Leica 17³</option><option value="desktop">Desktop {cubeSize}³</option></select> <span className="source-meta"> · {previewMode === "wipe" ? "draggable wipe" : "side by side"}</span></div><div className="head-actions"><label className="tiny">Upload test image<input type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={chooseImage} /></label><button className="tiny" onClick={() => setPreviewMode("wipe")}>Wipe</button><button className="tiny" onClick={() => setPreviewMode("side")}>Side by side</button><button className={`tiny ${zoom === "fit" ? "active" : ""}`} onClick={() => setZoom("fit")}>Fit</button><button className={`tiny ${zoom === "100" ? "active" : ""}`} onClick={() => setZoom("100")}>100%</button></div></div><div className={`preview-stage ${previewMode === "side" ? "side-by-side" : ""}`}>{originalUrl ? previewMode === "side" ? <><div className="compare-pane"><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><span className="preview-caption left">Original</span></div><div className="compare-pane"><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /><span className="preview-caption right">{previewUrl ? "Current look" : rendering ? "Rendering…" : "Preview unavailable"}</span></div></> : <><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={originalUrl} alt="Original" /><div className="wipe" style={{ clipPath: `inset(0 ${100 - wipe}% 0 0)` }}><img style={{ objectFit: zoom === "100" ? "none" : "contain" }} src={previewUrl || originalUrl} alt="Current look" /></div><span className="wipe-divider" style={{ left: `${wipe}%` }} /><span className="preview-caption left">{previewUrl ? "Current look" : rendering ? "Rendering…" : "Preview unavailable"}</span><span className="preview-caption right">Original</span><input className="wipe-range" aria-label="Wipe position" type="range" min="0" max="100" value={wipe} onChange={(e) => setWipe(Number(e.target.value))} /></> : <div className="empty-preview">Upload one test photograph. Every graph edit will arrive here without a compile step.</div>}</div><div className="filmstrip"><button>MY IMAGE</button><button disabled>Portrait / skin</button><button disabled>Landscape</button><button disabled>City / street</button><button disabled>Foliage</button><button disabled>HDR chart</button></div></section>
+          <section className="bench-panel"><div className="panel-title">Look stack <span>{graph.layers.length} nodes</span></div><div className="panel-body"><div className="stack" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const raw = e.dataTransfer.getData("component"); if (raw) addComponent(JSON.parse(raw)); }}>{displayedLayers.map((layer, index) => <div className={`stack-row ${layer.enabled ? "" : "disabled"}`} key={layer.id} draggable onDragStart={(e) => e.dataTransfer.setData("layer", layer.id)} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const dragged = e.dataTransfer.getData("layer"); if (!dragged) return; e.stopPropagation(); const from = graph.layers.findIndex((item) => item.id === dragged); if (from >= 0) moveLayer(dragged, index - from); }} onClick={() => setSelectedLayer(layer.id)}><div className="stack-main"><span className="drag">::</span><input type="checkbox" checked={layer.enabled} onChange={(e) => updateLayer(layer.id, { enabled: e.target.checked })} /><span className="stack-name">{layer.name}</span><button title="Solo" onClick={() => setSoloLayer(solo === layer.id ? null : layer.id)}>S</button><button title="Move up" onClick={() => moveLayer(layer.id, -1)}>↑</button><button title="Move down" onClick={() => moveLayer(layer.id, 1)}>↓</button><button title="Duplicate" onClick={() => { const copy = { ...layer, id: id(), name: `${layer.name} copy` }; mutate({ ...graph, layers: [...graph.layers.slice(0, index + 1), copy, ...graph.layers.slice(index + 1)] }); }}>+</button><button title="Delete" onClick={() => mutate({ ...graph, layers: graph.layers.filter((l) => l.id !== layer.id) })}>×</button></div><div className="range-line"><span>strength</span><input type="range" min="0" max="200" value={layer.strength} onChange={(e) => updateLayerStrength(layer.id, Number(e.target.value))} /><span className="range-value">{layer.strength}%</span></div></div>)}</div><div className="inspector"><h3>{graph.layers.find((l) => l.id === selectedLayer)?.name || "Select a component"}</h3><div className="button-row"><button className="tiny" onClick={() => setSelectedLayer("")}>Close details</button><button className="tiny" onClick={() => { const l = graph.layers.find((x) => x.id === selectedLayer); if (l) updateLayer(l.id, { strength: 100 }); }}>Reset node</button></div></div><div className="look-meta"><select aria-label="Look status" value={lookMeta.status} onChange={(e) => setLookMeta({ ...lookMeta, status: e.target.value as SavedLook["status"] })}><option value="draft">Draft</option><option value="published">Published</option><option value="experiment">Experiment</option></select><button onClick={() => setLookMeta({ ...lookMeta, favorite: !lookMeta.favorite })}>{lookMeta.favorite ? "★ Favorite" : "☆ Favorite"}</button><input aria-label="Look tags" placeholder="Tags, comma separated" value={lookMeta.tags.join(",")} onChange={(e) => setLookMeta({ ...lookMeta, tags: e.target.value.split(",") })} /><textarea aria-label="Look notes" placeholder="Notes" value={lookMeta.notes} onChange={(e) => setLookMeta({ ...lookMeta, notes: e.target.value })} /><label>Rating <select value={lookMeta.rating || ""} onChange={(e) => setLookMeta({ ...lookMeta, rating: e.target.value ? Number(e.target.value) : null })}><option value="">Unrated</option>{[1,2,3,4,5].map((rating) => <option key={rating}>{rating}</option>)}</select></label></div><ManualControls controls={graph.controls} onChange={updateControl} /><div className="control-section"><summary>Snapshots / history</summary><div className="snapshot-row"><input placeholder="Snapshot name" value={snapshotName} onChange={(e) => setSnapshotName(e.target.value)} /><button className="tiny" onClick={createSnapshot}>Save</button></div><div className="snapshot-list">{snapshots.map((s) => <button key={s.id || s.name} onClick={() => mutate(s.graph)}>{s.name}</button>)}</div></div><div className="target-card"><header><h3>Leica target</h3><span className={status?.ready === true ? "ready" : "dirty"}>{status?.ready === true ? "READY" : status ? "NEEDS ATTENTION" : "CHECKING"}</span></header><div className="target-line"><span>Name</span><b>{graph.name}</b></div><div className="target-line"><span>ID</span><b>{graph.look_id}</b></div><div className="target-line"><span>Base</span><b>{graph.base}</b></div><div className="target-line"><span>Compiler</span><b className={status?.ready === true ? "ready" : "dirty"}>{status?.ready === true ? "READY" : "NOT READY"}</b></div>{status?.ready === false && <p role="alert">{errorMessage(status.errors || status.unsupported)}</p>}<div className="target-line"><span>D860</span><b className="dirty">DIRTY / RECOMPILE</b></div></div></div></section>
         </div></>}
       {view === "sources" && <SourceLibrary sources={sources} uploadSources={uploadSources} search={sourceSearch} setSearch={setSourceSearch} type={sourceType} setType={setSourceType} open={openSource} openSource={openSourceDetails} add={addComponent} />}
       {view === "mylooks" && <MyLibrary workspaces={workspaces} looks={savedLooks} selected={selectedLooks} setSelected={setSelectedLooks} load={(saved) => { mutate(saved.graph); setView("studio"); }} download={downloadSelectedLooks} />}

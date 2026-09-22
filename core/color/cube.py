@@ -61,8 +61,8 @@ def parse_cube(data: bytes) -> CubeLUT:
             if len(parts) != 3:
                 raise ValueError(f"Invalid CUBE row: {line}")
             row = tuple(float(value) for value in parts)
-            if any(not math.isfinite(value) or value < 0.0 or value > 1.0 for value in row):
-                raise ValueError("CUBE output values must be in the range 0..1")
+            if any(not math.isfinite(value) or abs(value) > 1e37 for value in row):
+                raise ValueError("CUBE output values must be finite and within ±1e37")
             rows.append(row)
     if size is None or not 2 <= size <= 256:
         raise ValueError(f"Invalid or missing LUT_3D_SIZE: {size}")
@@ -120,6 +120,8 @@ def serialize_leica_cube(cube: CubeLUT, look_id: int, name: str, base: int) -> b
             + values[:, 2:3] * 0.0722
         )
         values = np.repeat(luminance, 3, axis=1)
+    # Camera output is bounded; general-purpose floating-point CUBEs are not.
+    values = np.clip(values, 0.0, 1.0)
     mode = "Monochrome" if base == 1 else "Standard"
     lines = [
         f"#Unique Leica Look ID: {look_id}",

@@ -7,10 +7,11 @@ import hashlib
 import copy
 import base64
 from pathlib import PurePath
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel, ConfigDict, Field
 
 from core.assets.library import SourceLibrary
 from core.assets.profile_catalog import catalog, find_profile, read_profile
@@ -23,11 +24,37 @@ from core.leica.authoritative import read_look_asset
 from core.leica.compiler import compile_look_payload
 from core.leica.package import build_look_package
 from server.auth import require_user
+from server.db.studio_repository import WorkspaceConflict
 
 router = APIRouter(prefix="/studio", tags=["studio"], dependencies=[Depends(require_user)])
 library = SourceLibrary()
+repository = library.repository
 MAX_SOURCE_BYTES = 50 * 1024 * 1024
 MAX_PREVIEW_BYTES = 20 * 1024 * 1024
+
+
+class LookSave(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str | None = Field(default=None, max_length=36)
+    name: str | None = Field(default=None, max_length=200)
+    graph: dict
+    status: Literal["draft", "published", "experiment"] = "draft"
+    tags: list[str] = Field(default_factory=list, max_length=30)
+    notes: str = Field(default="", max_length=20_000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+    favorite: bool = False
+
+
+class SnapshotSave(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    graph: dict
+
+
+class WorkspaceSave(BaseModel):
+    model_config = ConfigDict(extra="allow")
+    graph: dict
+    revision: int = Field(default=0, ge=0)
+    expected_revision: int = Field(default=0, ge=0)
 
 
 def _base_value(value: Any) -> int | Any:
@@ -54,6 +81,13 @@ def _ui_strength(value: Any) -> float:
 def _manual_node(node_id: str, node_type: str, value: float) -> dict:
     return {"id": node_id, "type": node_type, "enabled": True, "strength": 1.0,
             "params": {"value": float(value) / 100.0}}
+
+
+def _control_number(controls: dict, key: str) -> float:
+    try:
+        return float(controls.get(key, 0))
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid control value: {key}") from exc
 
 
 def _normalize_ui_graph(value: dict) -> dict:
@@ -124,32 +158,32 @@ def _normalize_ui_graph(value: dict) -> dict:
         ("highlight_grade", "highlightHue", "highlightSat", "highlightLum"),
     )
     for node_type, hue_key, sat_key, lum_key in grade_specs:
-        hue = float(controls.get(hue_key, 0))
-        sat = float(controls.get(sat_key, 0))
-        lum = float(controls.get(lum_key, 0))
+        hue = _control_number(controls, hue_key)
+        sat = _control_number(controls, sat_key)
+        lum = _control_number(controls, lum_key)
         if not 0 <= hue <= 360 or not -100 <= sat <= 100 or not -100 <= lum <= 100:
             raise HTTPException(status_code=422, detail=f"Invalid {node_type} controls")
         if hue or sat or lum:
             nodes.append({"id": f"control-{node_type}", "type": node_type, "enabled": True,
                           "strength": 1.0, "params": {"hue": hue, "amount": sat / 100.0,
                                                        "luminance": lum / 100.0,
-                                                       "balance": float(controls.get("balance", 0)) / 100.0}})
+                                                       "balance": _control_number(controls, "balance") / 100.0}})
 
     film_controls = (("toe", "film_toe"), ("shoulder", "film_shoulder"),
                      ("blackLift", "black_lift"), ("rolloff", "highlight_rolloff"))
     for control, node_type in film_controls:
-        raw = float(controls.get(control, 0))
+        raw = _control_number(controls, control)
         if not -100 <= raw <= 100:
             raise HTTPException(status_code=422, detail=f"Control {control} must be between -100 and 100")
         if raw:
             nodes.append(_manual_node(f"control-{node_type}", node_type, raw))
     for control, node_type in (("midContrast", "contrast"), ("density", "saturation")):
-        raw = float(controls.get(control, 0))
+        raw = _control_number(controls, control)
         if not -100 <= raw <= 100:
             raise HTTPException(status_code=422, detail=f"Control {control} must be between -100 and 100")
         if raw:
             nodes.append(_manual_node(f"control-{control}", node_type, raw))
-    filters = {key: float(controls.get(key, 0)) / 100.0 for key in
+    filters = {key: _control_number(controls, key) / 100.0 for key in
                ("monoMix", "yellowFilter", "orangeFilter", "redFilter", "greenFilter")}
     if any(not -1 <= value <= 1 for value in filters.values()):
         raise HTTPException(status_code=422, detail="Monochrome controls must be between -100 and 100")
@@ -228,6 +262,58 @@ def sources(search: str | None = None, type: str | None = None, asset_type: str 
     requested_type = aliases.get(requested_type.lower(), requested_type)
     items = library.list(search=search, asset_type=requested_type or None)
     return {"count": len(items), "sources": items}
+
+
+@router.get("/versioned-looks")
+def saved_looks(user_id: str = Depends(require_user)):
+    items = repository.list_looks(owner_id=user_id)
+    return {"count": len(items), "looks": items}
+
+
+@router.post("/versioned-looks", status_code=201)
+async def save_look(payload: LookSave, user_id: str = Depends(require_user)):
+    data = payload.model_dump()
+    _graph(data["graph"])
+    data["tags"] = [tag.strip() for tag in data["tags"] if tag.strip()]
+    try:
+        return repository.save_look(data, owner_id=user_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Look not found")
+
+
+@router.get("/versioned-looks/{look_id}")
+def saved_look(look_id: str, user_id: str = Depends(require_user)):
+    try:
+        return repository.get_look(look_id, owner_id=user_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Look not found")
+
+
+@router.post("/versioned-looks/{look_id}/snapshots", status_code=201)
+async def save_snapshot(look_id: str, payload: SnapshotSave, user_id: str = Depends(require_user)):
+    _graph(payload.graph)
+    try:
+        return repository.add_snapshot(look_id, payload.name.strip(), payload.graph, owner_id=user_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Look not found")
+
+
+@router.get("/workspace")
+def active_workspace(user_id: str = Depends(require_user)):
+    return repository.get_workspace(owner_id=user_id) or {"state": None}
+
+
+@router.put("/workspace")
+async def save_active_workspace(state: WorkspaceSave, user_id: str = Depends(require_user)):
+    data = state.model_dump()
+    _graph(data["graph"])
+    expected = data.pop("expected_revision")
+    try:
+        return repository.save_workspace(data, expected, owner_id=user_id)
+    except WorkspaceConflict as exc:
+        raise HTTPException(status_code=409, detail={
+            "message": str(exc), "current_revision": exc.revision,
+        }) from exc
 
 
 @router.post("/sources/bulk", status_code=201)
@@ -331,7 +417,7 @@ def source_download(source_id: str):
     )
 
 
-def _compiled(graph: dict) -> tuple[bytes, dict]:
+def _compiled(graph: dict, *, size: int = 17, clip_output: bool = True) -> tuple[bytes, dict]:
     try:
         validate_color_graph(graph)
     except (ValueError, TypeError) as exc:
@@ -344,7 +430,7 @@ def _compiled(graph: dict) -> tuple[bytes, dict]:
             "errors": status["errors"],
         })
     try:
-        cube, report = compile_graph_cube(graph, size=17)
+        cube, report = compile_graph_cube(graph, size=size, clip_output=clip_output)
         if not report.get("ready"):
             raise HTTPException(status_code=422, detail={
                 "message": "Disable or replace unsupported components before preview/export",
@@ -410,22 +496,26 @@ async def validate_graph(request: Request):
 
 
 @router.post("/graph/cube")
-async def graph_cube(request: Request):
+async def graph_cube(request: Request, target: Literal["desktop", "leica"] = "desktop", size: int = 33):
     graph = await _request_graph(request)
-    cube, report = _compiled(graph)
+    if size not in (17, 33, 64, 65):
+        raise HTTPException(status_code=422, detail="CUBE grid must be 17, 33, 64 or 65")
+    cube, report = _compiled(graph, size=17 if target == "leica" else size, clip_output=target == "leica")
     return Response(
         cube, media_type="text/plain",
         headers={
             "X-Graph-Valid": "true",
             "X-Graph-Status": "ready" if report.get("ready") else "non-blendable-components",
             "X-CUBE-SHA256": hashlib.sha256(cube).hexdigest(),
+            "X-CUBE-Grid": str(report["grid_size"]),
+            "X-CUBE-Range": "bounded" if target == "leica" else "extended-float",
             "Content-Disposition": 'attachment; filename="compiled-graph.CUBE"',
         },
     )
 
 
 @router.post("/graph/preview")
-async def graph_preview(request: Request):
+async def graph_preview(request: Request, target: Literal["desktop", "leica"] = "leica", size: int = 33):
     if "multipart/form-data" not in request.headers.get("content-type", ""):
         raise HTTPException(status_code=415, detail="Preview requires multipart graph and image fields")
     form = await request.form()
@@ -434,7 +524,9 @@ async def graph_preview(request: Request):
     if image is None or not hasattr(image, "read"):
         raise HTTPException(status_code=422, detail="Preview requires an image field")
     image_data = await _limited(image, MAX_PREVIEW_BYTES)
-    cube, report = _compiled(graph)
+    if size not in (17, 33, 64, 65):
+        raise HTTPException(status_code=422, detail="CUBE grid must be 17, 33, 64 or 65")
+    cube, report = _compiled(graph, size=17 if target == "leica" else size, clip_output=target == "leica")
     try:
         rendered = apply_cube_to_image(image_data, parse_cube(cube))
     except Exception as exc:

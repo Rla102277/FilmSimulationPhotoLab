@@ -179,7 +179,7 @@ def _node_transform(rgb: np.ndarray, node: dict) -> tuple[np.ndarray, bool, str 
     return rgb, False, f"Unsupported graph node type: {node_type}"
 
 
-def evaluate_graph(graph: dict, size: int = 17) -> tuple[CubeLUT, dict]:
+def evaluate_graph(graph: dict, size: int = 17, *, clip_output: bool = True) -> tuple[CubeLUT, dict]:
     validate_color_graph(graph)
     if not 2 <= size <= 65:
         raise ValueError("Compiled graph cube size must be between 2 and 65")
@@ -206,24 +206,36 @@ def evaluate_graph(graph: dict, size: int = 17) -> tuple[CubeLUT, dict]:
         values, blendable, reason = _node_transform(values, node)
         if not np.isfinite(values).all():
             raise ValueError(f"Node {node_id} produced non-finite color values")
-        values = np.clip(values, 0.0, 1.0)
         if not blendable:
             unsupported.append({"id": node_id, "type": node_type, "blendable": False, "reason": reason})
     if graph.get("base") == 1:
         values = np.repeat(np.sum(values * [0.2126, 0.7152, 0.0722], axis=-1, keepdims=True), 3, axis=-1)
+    range_report = {
+        "below_zero_by_channel": np.sum(values < 0, axis=0).tolist(),
+        "above_one_by_channel": np.sum(values > 1, axis=0).tolist(),
+        "exact_zero_by_channel": np.sum(values == 0, axis=0).tolist(),
+        "min": float(values.min()), "max": float(values.max()),
+        "clamped_at_output": clip_output,
+    }
+    if clip_output:
+        values = np.clip(values, 0.0, 1.0)
     unique_unsupported = {item["id"]: item for item in unsupported}
     cube = CubeLUT(str(graph.get("name", "Compiled graph")), size, (0.0, 0.0, 0.0),
                    (1.0, 1.0, 1.0), values.astype(np.float32, copy=False))
     report = graph_status(graph)
-    report.update({"compiled": True, "unsupported": list(unique_unsupported.values()),
+    report.update({"compiled": True, "range": range_report, "grid_size": size,
+                   "export": f"{size}^3 CUBE", "unsupported": list(unique_unsupported.values()),
                    "ready": report.get("ready", True) and not unique_unsupported})
     return cube, report
 
 
-def compile_graph_cube(graph: dict, size: int = 17) -> tuple[bytes, dict]:
-    cube, report = evaluate_graph(graph, size=size)
+def compile_graph_cube(graph: dict, size: int = 17, *, clip_output: bool = True) -> tuple[bytes, dict]:
+    cube, report = evaluate_graph(graph, size=size, clip_output=clip_output)
+    title = str(graph.get("name", "Compiled graph"))
+    if any(ord(c) < 32 or ord(c) > 126 or c == '"' for c in title):
+        raise ValueError("CUBE title must contain printable ASCII without quotes")
     lines = [
-        f'TITLE "{str(graph.get("name", "Compiled graph")).replace(chr(34), "")}"',
+        f'TITLE "{title}"',
         f"LUT_3D_SIZE {cube.size}",
         "DOMAIN_MIN 0.0 0.0 0.0",
         "DOMAIN_MAX 1.0 1.0 1.0",

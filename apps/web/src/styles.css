@@ -183,6 +183,7 @@ input,select,textarea { border:1px solid #35413c; border-radius:4px; background:
 .control-grid input[type=range] { padding:0; width:100%; accent-color:var(--rust); }
 .snapshot-row { display:flex; gap:6px; margin:10px 0; }.snapshot-row input { min-width:0; flex:1; }
 .snapshot-list { display:flex; flex-wrap:wrap; gap:5px; }.snapshot-list button { font-size:10px; background:#243029; color:#cbd4ca; border:1px solid #3b4d42; padding:6px 8px; cursor:pointer; }
+.look-meta { display:grid; gap:7px; margin-top:12px; }.look-meta textarea { min-height:64px; resize:vertical; }.look-meta label { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:10px; }
 .target-card { margin-top:12px; border:1px solid var(--line); padding:11px; background:#171e1b; }
 .target-card header { margin:0 0 8px; align-items:center; }.target-card header h3 { font:500 16px Georgia,serif; }
 .target-line { display:flex; justify-content:space-between; padding:5px 0; border-top:1px solid #29342f; color:var(--muted); font-size:10px; }.ready { color:var(--mint); }.dirty { color:var(--rust); }
