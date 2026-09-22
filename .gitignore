@@ -6,3 +6,8 @@ __pycache__/
 uploads/
 generated/
 
+
+.venv/
+node_modules/
+
+/data/studio.sqlite3

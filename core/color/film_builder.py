@@ -82,8 +82,8 @@ def build_film_cube(
         for green in axis:
             for red in axis:
                 rgb = np.array([red, green, blue], dtype=np.float32)
-                rgb = np.clip(rgb + settings["exposure"], 0.0, 1.0)
-                rgb = np.clip((rgb - 0.5) * settings["contrast"] + 0.5, 0.0, 1.0)
+                rgb = rgb + settings["exposure"]
+                rgb = (rgb - 0.5) * settings["contrast"] + 0.5
                 luminance = float(rgb @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32))
                 rgb = luminance + (rgb - luminance) * settings["saturation"]
                 rgb += np.array([settings["warmth"], settings["warmth"] * 0.2, -settings["warmth"]], dtype=np.float32)
@@ -91,7 +91,7 @@ def build_film_cube(
                 softness = settings["highlight_softness"]
                 rgb = np.where(rgb > 0.72, 0.72 + (rgb - 0.72) / (1.0 + softness * 4.0), rgb)
                 if settings["monochrome"]:
-                    gray = float(np.clip(rgb, 0.0, 1.0) @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32))
+                    gray = float(rgb @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32))
                     rgb[:] = gray
                 rows.append(np.clip(rgb, 0.0, 1.0))
     cube = CubeLUT(name, 17, (0.0, 0.0, 0.0), (1.0, 1.0, 1.0), np.asarray(rows))

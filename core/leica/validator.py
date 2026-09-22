@@ -26,6 +26,8 @@ def validate_components(look_id: int, name: str, icon: bytes, cube: bytes, d864:
     if cube_summary["size"] != 17:
         raise ValueError("D860 must contain a Leica 17-cube")
     rows = parse_cube(cube).values
+    if (rows < 0).any() or (rows > 1).any():
+        raise ValueError("Leica D860 output values must be bounded to 0..1")
     is_monochrome = bool(((abs(rows[:, 0] - rows[:, 1]) < 1e-9) & (abs(rows[:, 1] - rows[:, 2]) < 1e-9)).all())
     if is_monochrome != (base == 1):
         raise ValueError("D860 color/monochrome content must match D866 base")

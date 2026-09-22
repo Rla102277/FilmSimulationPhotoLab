@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import base64
 import struct
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -103,7 +104,21 @@ def inspect_source_asset(filename: str, content: bytes) -> dict:
         for element in root.iter():
             for key, value in element.attrib.items():
                 attributes[key] = value
-        metadata.update({"root_tag": root.tag, "xml": True, "attributes": attributes,
+        curves = {}
+        for element in root.iter():
+            key = element.tag.rsplit("}", 1)[-1]
+            if key not in {"ToneCurve", "ToneCurvePV2012", "ToneCurvePV2012Red", "ToneCurvePV2012Green", "ToneCurvePV2012Blue"}:
+                continue
+            points = []
+            for entry in element.iter():
+                if entry.tag.rsplit("}", 1)[-1] == "li" and entry.text:
+                    pair = [float(v.strip()) / 255 for v in entry.text.split(",")]
+                    if len(pair) != 2:
+                        raise ValueError("XMP curve entries must contain input, output pairs")
+                    points.append(pair)
+            if len(points) >= 2:
+                curves[key] = points
+        metadata.update({"root_tag": root.tag, "xml": True, "attributes": attributes, "curves": curves,
                          "settings": {key: value for key, value in attributes.items()
                                       if any(token in key.lower() for token in ("exposure", "contrast", "saturation",
                                                                                 "temperature", "tint", "highlight", "shadow"))},
@@ -111,12 +126,16 @@ def inspect_source_asset(filename: str, content: bytes) -> dict:
                          "characters": len(text)})
     elif asset_type == "lrtemplate":
         text = content.decode("utf-8", errors="strict")
-        import re
         settings = {}
         for key, raw in re.findall(r"\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))", text):
             settings[key] = float(raw) if "." in raw else int(raw)
+        curves = {}
+        for key, body in re.findall(r"\b(ToneCurve(?:PV2012)?(?:Red|Green|Blue)?)\s*=\s*\{([^{}]*)\}", text):
+            numbers = [float(v) / 255 for v in re.findall(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)", body)]
+            if len(numbers) >= 4 and len(numbers) % 2 == 0:
+                curves[key] = [[numbers[i], numbers[i + 1]] for i in range(0, len(numbers), 2)]
         metadata.update({"format": "lua-table-text", "characters": len(text),
-                         "settings": settings})
+                         "settings": settings, "curves": curves})
     elif asset_type == "dcp":
         try:
             tags = _tiff_tags(content)
@@ -151,7 +170,8 @@ def inspect_source_asset(filename: str, content: bytes) -> dict:
         for key, value in tags.items():
             if key in {"ColorMatrix1", "ColorMatrix2", "ForwardMatrix1", "ForwardMatrix2",
                        "CameraCalibration1", "CameraCalibration2", "ReductionMatrix1", "ReductionMatrix2"}:
-                components.append({"id": key, "type": "matrix", "blendable": True, "values": value})
+                components.append({"id": key, "type": "matrix", "blendable": False, "values": value,
+                                   "reason": "Camera calibration requires its camera/raw color space; it cannot be applied directly to a rendered RGB photograph"})
             elif key == "ProfileToneCurve":
                 points = value
                 if isinstance(value, list) and len(value) % 2 == 0:
@@ -161,11 +181,18 @@ def inspect_source_asset(filename: str, content: bytes) -> dict:
                 components.append({"id": key, "type": "table", "blendable": False,
                                    "reason": "DCP table interpolation is not implemented"})
     elif asset_type in {"xmp", "lrtemplate"}:
-        components.append({"id": "settings", "type": "settings", "blendable": True,
+        components.append({"id": "settings", "type": "settings", "blendable": False,
+                           "reason": "Adobe development settings are inspectable but not evaluated by this engine",
                            "metadata": metadata})
-        if metadata.get("has_curve") or metadata.get("settings", {}).get("ToneCurve"):
-            components.append({"id": "curve", "type": "tone_curve", "blendable": True,
-                               "values": metadata.get("settings", {}).get("ToneCurve", [])})
+        curves = metadata.get("curves", {})
+        for key, points in curves.items():
+            # PV2012 supersedes the legacy master curve when both are present.
+            if key == "ToneCurve" and "ToneCurvePV2012" in curves:
+                continue
+            channel = next((i for i, suffix in enumerate(("Red", "Green", "Blue")) if key.endswith(suffix)), None)
+            components.append({"id": key, "type": "tone_curve", "blendable": True,
+                               "values": points, "channel": channel,
+                               "interpretation": "Point curve applied to rendered RGB; not an Adobe raw-process reproduction"})
     elif asset_type == "hald":
         components.append({"id": "hald_lut", "type": "cube_lut", "blendable": True,
                            "metadata": metadata})
