@@ -81,6 +81,13 @@ def validate_color_graph(graph: dict) -> dict:
     return graph
 
 
+def active_nodes(graph: dict) -> list[dict]:
+    """One activation rule shared by validation, source hydration and evaluation."""
+    nodes = [n for n in graph["nodes"] if n.get("enabled", True) and n.get("strength", 1) != 0]
+    solo = any(n.get("solo") for n in nodes)
+    return [n for n in nodes if not solo or n.get("solo") or n.get("type") in {"input", "output", "camera_normalization"}]
+
+
 def graph_status(graph: dict) -> dict:
     """Return a non-throwing validation/capability report for an editor."""
     try:
@@ -90,13 +97,15 @@ def graph_status(graph: dict) -> dict:
     nodes = graph["nodes"]
     unsupported = []
     errors = []
-    for node in nodes:
+    for node in active_nodes(graph):
         component = node.get("component") if isinstance(node.get("component"), dict) else {}
         kind = node.get("component_type") or component.get("type") or node.get("type")
         if kind == "manual":
             params = node.get("params") if isinstance(node.get("params"), dict) else {}
             kind = params.get("kind") or params.get("control") or kind
-        if kind in {"huesat_table", "look_table", "table", "settings", "monochrome_filter", "grain"}:
+        if node.get("unsupported_reason"):
+            errors.append({"id": node.get("id"), "error": node["unsupported_reason"]})
+        if kind in {"huesat_table", "look_table", "table", "settings", "grain"}:
             unsupported.append({
                 "id": node.get("id", node.get("type")),
                 "type": kind,

@@ -13,6 +13,7 @@ from sqlalchemy import text
 from server.auth import require_user
 from server.db.database import engine
 from server.api.studio import build_graph_package_bytes
+from core.leica.package import combine_look_packages
 
 
 router = APIRouter(prefix="/studio", tags=["studio-workspaces"])
@@ -114,18 +115,16 @@ def package_looks(payload: PackageSelection, user_id: str = Depends(require_user
     if len(rows) != len(payload.look_ids):
         raise HTTPException(status_code=404, detail="One or more selected Looks were not found")
     by_id = {row["id"]: row for row in rows}
-    output = io.BytesIO()
-    manifest = []
-    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
-        for index, look_id in enumerate(payload.look_ids, start=1):
-            row = by_id[look_id]
-            graph = dict(row["graph"])
-            graph["name"] = row["name"]
-            package = build_graph_package_bytes(graph)
-            filename = f"{index:02d}-{row['name'].replace('/', '-')}.zip"
-            archive.writestr(filename, package)
-            manifest.append({"id": look_id, "name": row["name"], "package": filename})
-        archive.writestr("selected-looks.json", json.dumps(manifest, indent=2))
-    return Response(output.getvalue(), media_type="application/zip", headers={
+    packages = []
+    for look_id in payload.look_ids:
+        row = by_id[look_id]
+        graph = dict(row["graph"])
+        graph["name"] = row["name"]
+        packages.append(build_graph_package_bytes(graph))
+    try:
+        package = combine_look_packages(packages)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return Response(package, media_type="application/zip", headers={
         "Content-Disposition": 'attachment; filename="film-look-studio-selection.zip"',
     })

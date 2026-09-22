@@ -14,8 +14,8 @@ from fastapi.responses import Response
 
 from core.assets.library import SourceLibrary
 from core.assets.profile_catalog import catalog, find_profile, read_profile
-from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cube
-from core.color.graph import graph_status, validate_color_graph
+from core.color.cube import apply_cube_to_image, parse_cube, serialize_leica_cube, parse_hald
+from core.color.graph import graph_status, validate_color_graph, active_nodes
 from core.color.graph_compiler import compile_graph_cube
 from core.film.icons import generic_film_icon
 from core.film.samples import get_sample
@@ -132,7 +132,8 @@ def _normalize_ui_graph(value: dict) -> dict:
         if hue or sat or lum:
             nodes.append({"id": f"control-{node_type}", "type": node_type, "enabled": True,
                           "strength": 1.0, "params": {"hue": hue, "amount": sat / 100.0,
-                                                       "luminance": lum / 100.0}})
+                                                       "luminance": lum / 100.0,
+                                                       "balance": float(controls.get("balance", 0)) / 100.0}})
 
     film_controls = (("toe", "film_toe"), ("shoulder", "film_shoulder"),
                      ("blackLift", "black_lift"), ("rolloff", "highlight_rolloff"))
@@ -148,15 +149,14 @@ def _normalize_ui_graph(value: dict) -> dict:
             raise HTTPException(status_code=422, detail=f"Control {control} must be between -100 and 100")
         if raw:
             nodes.append(_manual_node(f"control-{control}", node_type, raw))
-    if float(controls.get("balance", 0)):
-        nodes.append({"id": "control-balance", "type": "midtone_grade", "enabled": True,
-                      "strength": 1.0, "params": {"balance": float(controls["balance"]) / 100.0}})
-    for control in ("monoMix", "yellowFilter", "orangeFilter", "redFilter", "greenFilter"):
-        raw = float(controls.get(control, 0))
-        if raw:
-            nodes.append({"id": f"control-{control}", "type": "monochrome_filter",
-                          "enabled": True, "strength": 1.0,
-                          "params": {"value": raw / 100.0}})
+    filters = {key: float(controls.get(key, 0)) / 100.0 for key in
+               ("monoMix", "yellowFilter", "orangeFilter", "redFilter", "greenFilter")}
+    if any(not -1 <= value <= 1 for value in filters.values()):
+        raise HTTPException(status_code=422, detail="Monochrome controls must be between -100 and 100")
+    if any(filters.values()):
+        nodes.append({"id": "control-monochrome", "type": "monochrome_filter", "enabled": True,
+                      "strength": 1.0 if graph["base"] == 1 or any(filters[k] for k in filters if k != "monoMix") else abs(filters["monoMix"]),
+                      "params": filters})
     if not any(node.get("type") == "output" for node in nodes):
         nodes.append({"id": "output", "type": "output", "enabled": True, "strength": 1.0})
     graph["nodes"] = nodes
@@ -332,6 +332,10 @@ def source_download(source_id: str):
 
 
 def _compiled(graph: dict) -> tuple[bytes, dict]:
+    try:
+        validate_color_graph(graph)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     graph = _hydrate_graph(graph)
     status = graph_status(graph)
     if status.get("errors"):
@@ -340,7 +344,13 @@ def _compiled(graph: dict) -> tuple[bytes, dict]:
             "errors": status["errors"],
         })
     try:
-        return compile_graph_cube(graph, size=17)
+        cube, report = compile_graph_cube(graph, size=17)
+        if not report.get("ready"):
+            raise HTTPException(status_code=422, detail={
+                "message": "Disable or replace unsupported components before preview/export",
+                "errors": report.get("errors", []), "unsupported": report.get("unsupported", []),
+            })
+        return cube, report
     except (ValueError, KeyError, TypeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -348,7 +358,7 @@ def _compiled(graph: dict) -> tuple[bytes, dict]:
 def _hydrate_graph(graph: dict) -> dict:
     """Resolve a library component reference without changing the master graph."""
     resolved = copy.deepcopy(graph)
-    for node in resolved.get("nodes", []):
+    for node in active_nodes(resolved):
         source_id = node.get("source_id")
         component_id = node.get("component_id")
         if not source_id or not component_id:
@@ -364,9 +374,15 @@ def _hydrate_graph(graph: dict) -> dict:
             raise HTTPException(status_code=422, detail=f"Component not found: {component_id}")
         if component.get("type") == "cube_lut":
             embedded = (component.get("metadata") or {}).get("embedded_base64")
-            node["cube"] = base64.b64decode(embedded) if embedded else source["content"]
+            if source.get("asset_type") == "hald":
+                node["_parsed_cube"] = parse_hald(source["content"])
+                node["cube"] = "hydrated Hald"
+            else:
+                node["cube"] = base64.b64decode(embedded) if embedded else source["content"]
             node["type"] = "cube_lut"
         elif component.get("type") == "matrix":
+            if source.get("asset_type") == "dcp":
+                node["unsupported_reason"] = "DCP camera calibration matrices require a raw color pipeline; use a creative curve or display-RGB LUT instead"
             values = component.get("values")
             if isinstance(values, list) and len(values) == 9 and not isinstance(values[0], list):
                 values = [values[index:index + 3] for index in range(0, 9, 3)]
@@ -374,6 +390,7 @@ def _hydrate_graph(graph: dict) -> dict:
             node["type"] = "matrix"
         elif component.get("type") == "tone_curve":
             node["points"] = component.get("values")
+            node["channel"] = component.get("channel")
             node["type"] = "tone_curve"
         else:
             node["component"] = component
@@ -385,7 +402,11 @@ def _hydrate_graph(graph: dict) -> dict:
 @router.post("/graph/status")
 async def validate_graph(request: Request):
     graph = await _request_graph(request)
-    return graph_status(graph)
+    try:
+        _, report = _compiled(graph)
+        return report
+    except HTTPException as exc:
+        return {"valid": False, "ready": False, "errors": [exc.detail]}
 
 
 @router.post("/graph/cube")
@@ -465,6 +486,16 @@ def _look_id(value: Any) -> int:
 def build_graph_package_bytes(graph: dict, icon: bytes | None = None) -> bytes:
     graph = _normalize_ui_graph(graph)
     cube, _report = _compiled(graph)
+    source_components = []
+    for node in graph["nodes"]:
+        if not node.get("source_id") or not node.get("component_id"):
+            continue
+        source = library.get(str(node["source_id"]))
+        if source:
+            source_components.append({"node_id": node.get("id"), "source_id": source["id"],
+                                      "source_sha256": source["sha256"], "filename": source["filename"],
+                                      "component_id": node["component_id"], "enabled": node.get("enabled", True),
+                                      "strength": node.get("strength", 1.0)})
     name = str(graph.get("name") or "Compiled Graph").strip()
     try:
         look_id = _look_id(graph.get("look_id", 2000))
@@ -482,6 +513,7 @@ def build_graph_package_bytes(graph: dict, icon: bytes | None = None) -> bytes:
             name=name, look_id=look_id, base=base, icon=icon, cube=leica_cube,
             payload=payload, provenance=str(graph.get("provenance", "editable graph")),
             description=str(graph.get("description", "Compiled from editable color graph")),
+            graph=graph, source_components=source_components,
         )
     except (ValueError, RuntimeError, TypeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

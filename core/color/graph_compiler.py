@@ -12,8 +12,8 @@ from typing import Any
 
 import numpy as np
 
-from core.color.cube import CubeLUT, parse_cube, resample_cube
-from core.color.graph import MANUAL_NODE_TYPES, SOURCE_NODE_TYPES, graph_status, validate_color_graph
+from core.color.cube import CubeLUT, parse_cube, resample_cube, sample_cube
+from core.color.graph import MANUAL_NODE_TYPES, SOURCE_NODE_TYPES, graph_status, validate_color_graph, active_nodes
 
 
 def _strength(node: dict) -> float:
@@ -38,27 +38,7 @@ def _cube_from_node(node: dict) -> CubeLUT:
     raise ValueError(f"Node {node.get('id', node.get('type'))} has no CUBE data")
 
 
-def _sample_cube(pixels: np.ndarray, cube: CubeLUT) -> np.ndarray:
-    normalized = np.clip(
-        (pixels - np.asarray(cube.domain_min)) /
-        (np.asarray(cube.domain_max) - np.asarray(cube.domain_min)), 0.0, 1.0
-    )
-    scaled = normalized * (cube.size - 1)
-    low = np.floor(scaled).astype(np.int32)
-    high = np.minimum(low + 1, cube.size - 1)
-    fraction = scaled - low
-
-    def sample(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
-        return cube.values[b * cube.size * cube.size + g * cube.size + r]
-
-    r0, g0, b0 = low[..., 0], low[..., 1], low[..., 2]
-    r1, g1, b1 = high[..., 0], high[..., 1], high[..., 2]
-    fr, fg, fb = fraction[..., 0:1], fraction[..., 1:2], fraction[..., 2:3]
-    c00 = sample(r0, g0, b0) * (1 - fr) + sample(r1, g0, b0) * fr
-    c01 = sample(r0, g0, b1) * (1 - fr) + sample(r1, g0, b1) * fr
-    c10 = sample(r0, g1, b0) * (1 - fr) + sample(r1, g1, b0) * fr
-    c11 = sample(r0, g1, b1) * (1 - fr) + sample(r1, g1, b1) * fr
-    return (c00 * (1 - fg) + c10 * fg) * (1 - fb) + (c01 * (1 - fg) + c11 * fg) * fb
+_sample_cube = sample_cube
 
 
 def _curve_value(x: np.ndarray, points: Any) -> np.ndarray:
@@ -69,6 +49,8 @@ def _curve_value(x: np.ndarray, points: Any) -> np.ndarray:
     parsed = np.asarray(points, dtype=np.float32)
     if parsed.ndim != 2 or parsed.shape[1] != 2:
         raise ValueError("Curve points must be [input, output] pairs")
+    if not np.isfinite(parsed).all() or len(np.unique(parsed[:, 0])) != len(parsed):
+        raise ValueError("Curve points must be finite with distinct inputs")
     order = np.argsort(parsed[:, 0])
     return np.interp(x, parsed[order, 0], parsed[order, 1])
 
@@ -78,24 +60,25 @@ def _matrix(node: dict) -> np.ndarray:
     if isinstance(values, dict):
         values = values.get("matrix")
     matrix = np.asarray(values, dtype=np.float32)
-    if matrix.shape != (3, 3):
+    if matrix.shape != (3, 3) or not np.isfinite(matrix).all():
         raise ValueError("Matrix node requires a 3x3 matrix")
     return matrix
 
 
 def _hsv_grade(rgb: np.ndarray, params: dict, mask: np.ndarray) -> np.ndarray:
-    """Apply a restrained color grade, with hue in degrees and sat in 0..1."""
+    """Tint toward the selected hue, with continuous tonal weighting."""
     amount = float(params.get("amount", params.get("saturation", 0.0)))
     hue = float(params.get("hue", 0.0)) / 360.0
     luminance = float(params.get("luminance", 0.0))
-    hsv = np.asarray([colorsys.rgb_to_hsv(*pixel) for pixel in rgb.reshape(-1, 3)],
-                     dtype=np.float32).reshape(rgb.shape)
-    hsv[..., 0] = (hsv[..., 0] + hue * np.minimum(1.0, abs(amount))) % 1.0
-    hsv[..., 1] = np.clip(hsv[..., 1] + amount, 0.0, 1.0)
-    hsv[..., 2] = np.clip(hsv[..., 2] + luminance, 0.0, 1.0)
-    transformed = np.asarray([colorsys.hsv_to_rgb(*pixel) for pixel in hsv.reshape(-1, 3)],
-                             dtype=np.float32).reshape(rgb.shape)
-    return np.where(mask[..., None], transformed, rgb)
+    luma = np.sum(rgb * [0.2126, 0.7152, 0.0722], axis=-1, keepdims=True)
+    tint = np.asarray(colorsys.hsv_to_rgb(hue % 1, 1, 1), dtype=np.float32)
+    tint -= np.sum(tint * [0.2126, 0.7152, 0.0722])
+    if amount >= 0:
+        transformed = rgb + tint * amount * 0.5
+    else:
+        transformed = luma + (rgb - luma) * (1 + amount)
+    transformed += luminance * 0.25
+    return _blend(rgb, transformed, mask[..., None])
 
 
 def _manual_transform(rgb: np.ndarray, node_type: str, params: dict) -> np.ndarray:
@@ -129,12 +112,13 @@ def _manual_transform(rgb: np.ndarray, node_type: str, params: dict) -> np.ndarr
         out = luma + (out - luma) * factor
     elif node_type in {"shadow_grade", "midtone_grade", "highlight_grade"}:
         luma = np.sum(out * np.asarray([0.2126, 0.7152, 0.0722]), axis=-1)
+        position = np.clip(luma - float(params.get("balance", 0)) * 0.25, 0, 1)
         if node_type == "shadow_grade":
-            mask = luma < 0.45
+            mask = (1 - position) ** 2
         elif node_type == "highlight_grade":
-            mask = luma > 0.65
+            mask = position ** 2
         else:
-            mask = (luma >= 0.35) & (luma <= 0.75)
+            mask = 4 * position * (1 - position)
         out = _hsv_grade(out, params, mask)
     elif node_type in {"film_toe", "black_lift"}:
         value = float(params.get("value", params.get("amount", 0.0)))
@@ -154,7 +138,18 @@ def _node_transform(rgb: np.ndarray, node: dict) -> tuple[np.ndarray, bool, str 
     if node_type in {"input", "output", "camera_normalization", "white_balance_intent", "tone",
                      "shadow_shaping", "highlight_shaping", "chroma"}:
         return rgb, True, None
-    if node_type in {"huesat_table", "look_table", "table", "settings", "monochrome_filter", "grain"}:
+    if node_type == "monochrome_filter":
+        params = node.get("params") or {}
+        weights = np.asarray([0.2126, 0.7152, 0.0722])
+        targets = {"yellowFilter": [0.4, 0.55, 0.05], "orangeFilter": [0.6, 0.35, 0.05],
+                   "redFilter": [0.8, 0.15, 0.05], "greenFilter": [0.1, 0.85, 0.05]}
+        for key, target in targets.items():
+            weights += float(params.get(key, 0)) * (np.asarray(target) - [0.2126, 0.7152, 0.0722])
+        weights = np.maximum(weights, 0)
+        weights /= weights.sum()
+        gray = np.repeat(np.sum(rgb * weights, axis=-1, keepdims=True), 3, axis=-1)
+        return _blend(rgb, gray, strength), True, None
+    if node_type in {"huesat_table", "look_table", "table", "settings", "grain"}:
         return rgb, False, "No safe interpolation strategy for this component"
     if node_type in {"cube_lut", "lut"}:
         transformed = _sample_cube(rgb, _cube_from_node(node))
@@ -166,6 +161,11 @@ def _node_transform(rgb: np.ndarray, node: dict) -> tuple[np.ndarray, bool, str 
     if node_type in {"curve", "tone_curve", "profile_tone_curve"}:
         points = node.get("points") or node.get("curve") or node.get("data")
         transformed = np.stack([_curve_value(rgb[..., channel], points) for channel in range(3)], axis=-1)
+        channel = node.get("channel")
+        if channel is not None:
+            if channel not in (0, 1, 2):
+                raise ValueError("Curve channel must be 0, 1 or 2")
+            transformed[..., [i for i in range(3) if i != channel]] = rgb[..., [i for i in range(3) if i != channel]]
         return _blend(rgb, transformed, strength), True, None
     if node_type in MANUAL_NODE_TYPES:
         transformed = _manual_transform(rgb, node_type, node.get("params") or node.get("data") or node)
@@ -184,7 +184,7 @@ def evaluate_graph(graph: dict, size: int = 17) -> tuple[CubeLUT, dict]:
     if not 2 <= size <= 65:
         raise ValueError("Compiled graph cube size must be between 2 and 65")
     nodes = []
-    for source_node in graph["nodes"]:
+    for source_node in active_nodes(graph):
         node = dict(source_node)
         if str(node.get("component_type") or node.get("type")) in {"cube_lut", "lut"}:
             node["_parsed_cube"] = _cube_from_node(node)
@@ -204,9 +204,13 @@ def evaluate_graph(graph: dict, size: int = 17) -> tuple[CubeLUT, dict]:
         if not node.get("enabled", True) or (solos and not node.get("solo")):
             continue
         values, blendable, reason = _node_transform(values, node)
+        if not np.isfinite(values).all():
+            raise ValueError(f"Node {node_id} produced non-finite color values")
         values = np.clip(values, 0.0, 1.0)
         if not blendable:
             unsupported.append({"id": node_id, "type": node_type, "blendable": False, "reason": reason})
+    if graph.get("base") == 1:
+        values = np.repeat(np.sum(values * [0.2126, 0.7152, 0.0722], axis=-1, keepdims=True), 3, axis=-1)
     unique_unsupported = {item["id"]: item for item in unsupported}
     cube = CubeLUT(str(graph.get("name", "Compiled graph")), size, (0.0, 0.0, 0.0),
                    (1.0, 1.0, 1.0), values.astype(np.float32, copy=False))
